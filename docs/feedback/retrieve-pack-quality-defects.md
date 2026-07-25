@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [tools/retrieve.py, ho:tokenEstimate, core:oa-inspection-external, core:pat-sub-agents]
 kind: defect
 related: [docs/feedback/retrieve-nondeterministic-pack.md, docs/plans/OPEN-ISSUES.md]
@@ -94,3 +94,6 @@ inspection 권고: **(A)+(B)**. (C)는 "왜 그 부품을 쓰면 안 되는지"�
 /usr/bin/python3 tools/retrieve.py "multi-agent harness that spawns short-lived sub-agents" # pat-sub-agents rel 8.1 1위
 grep -n "deprecat" tools/retrieve.py                                                        # 0건
 ```
+
+## 사용자 피드백
+(A) + (B)

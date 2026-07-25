@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [tools/retrieve.py]
 kind: defect
 related: [docs/feedback/verified/execution-mode-scope-multiagent.md]

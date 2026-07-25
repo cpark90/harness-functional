@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [tools/materialize.py, core:h-harness-factory, core:h-workspace-synthesis, core:h-peer-mesh, core:h-multiagent, core:gr-integration-coherence]
 kind: defect
 related: [docs/plans/disambiguation-audit.md, docs/plans/OPEN-ISSUES.md]
@@ -62,3 +62,6 @@ label로 해소한다"는 **계약 1줄**만 추가하면 된다.
 /usr/bin/python3 tools/materialize.py h-peer-mesh --out /tmp/mat-peer
 grep -noP ".{0,60}\bid:[a-z]+-[a-z0-9-]+.{0,40}" /tmp/mat-peer/CLAUDE.md
 ```
+
+## 사용자 피드백
+(B)

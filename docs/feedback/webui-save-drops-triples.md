@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [tools/webui/ttl_writer.py, tools/webui/server.py, tools/ontology_lib.py, core:chan-dispatch, core:role-inspection]
 kind: defect
 related: [docs/plans/OPEN-ISSUES.md, docs/feedback/retrieve-pack-quality-defects.md]
