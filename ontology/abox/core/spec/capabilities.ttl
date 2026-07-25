@@ -24,3 +24,40 @@ id:cap-traceability a ho:Capability ; skos:prefLabel "Traceability" ;
     skos:definition "Preserve a single source of truth: never delete a decision, only deprecate it with a reason and replacement, and increment identifiers without reuse." .
 id:cap-synthesis a ho:Capability ; skos:prefLabel "Synthesis" ;
     skos:definition "Converge the separate deliverables produced by multiple worker roles into one coherent, cross-checked final result -- the terminal convergence step of a multi-agent workflow, provided by a component that both reviews every contribution and compiles the integrated output." .
+
+# The skill-authoring/packaging capability: a component that PROVIDES it knows how
+# to author a well-formed Claude skill (an on-demand ho:Instruction emitted as a
+# named SKILL.md). Its verification contracts (below) judge the emitted skill tree.
+id:cap-skill a ho:Capability ; skos:prefLabel "Skill authoring and packaging" ; skos:altLabel "skill packaging" ;
+    skos:definition "Author and package a Claude skill -- an on-demand ho:Instruction procedure that tools/materialize.py emits as a named .claude/skills/<name>/SKILL.md -- in well-formed shape: a present frontmatter description and the required title heading, so the skill is discoverable, invocable and passes its structural contract." ;
+    ho:capabilityContract id:ct-well-formed-skill-description, id:ct-well-formed-skill-heading .
+
+#===================== Verification contracts =========================
+# ho:Contract instances (VerificationComponent) attached to the capabilities
+# above via ho:capabilityContract. These are the FIRST central ho:Contract
+# individuals (they close B22: the class + verify_contract.py mechanism existed
+# with zero ABox instances). Co-located with cap-skill because no dedicated
+# core/verification data unit exists yet; contract IRIs are location-independent,
+# so relocating them into one later is a pure move. Each carries EXACTLY ONE
+# ho:contractCheck (verify_contract.py reads it with g.value -- a single value)
+# and no ho:tokenEstimate (bind/verify metadata, no promptText -- the ho:Candidate
+# precedent). They judge the MATERIALIZED skill tree of any harness that binds a
+# cap-skill provider: the .claude/skills/well-formed-skill/SKILL.md that
+# materialize.py emits for id:ins-well-formed-skill (its provider). Because that
+# path is what materialize ACTUALLY emits, running verify_contract.py against the
+# binding harness (id:h-harness-factory) PASSES rather than false-failing -- the
+# contract is TRUE, not a target-mismatched assertion against a root-level
+# SKILL.md the harness never emits.
+id:ct-well-formed-skill-description a ho:Contract ;
+    skos:prefLabel "Well-formed skill: description present" ;
+    skos:definition "Structural contract on cap-skill: the emitted skill file carries a frontmatter description field, so the skill is discoverable and invocable. Judged against the .claude/skills/well-formed-skill/SKILL.md that materialize.py emits for id:ins-well-formed-skill." ;
+    ho:contractKind "structural" ;
+    ho:contractCheck "file-contains:.claude/skills/well-formed-skill/SKILL.md::description" ;
+    ho:maturity "draft" .
+
+id:ct-well-formed-skill-heading a ho:Contract ;
+    skos:prefLabel "Well-formed skill: title heading present" ;
+    skos:definition "Structural contract on cap-skill: the emitted skill file has its required Markdown title heading. Judged against the .claude/skills/well-formed-skill/SKILL.md that materialize.py emits for id:ins-well-formed-skill (the heading equals the instruction's prefLabel)." ;
+    ho:contractKind "structural" ;
+    ho:contractCheck "section:.claude/skills/well-formed-skill/SKILL.md::Well-formed skill authoring" ;
+    ho:maturity "draft" .

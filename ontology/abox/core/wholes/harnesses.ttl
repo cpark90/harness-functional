@@ -227,8 +227,12 @@ id:h-workspace-synthesis a ho:Harness ;
 # spawn-and-reclaim dispatch (id:wf-multiagent, inherited from id:h-multiagent),
 # while the verification and evolution phases (id:wf-verify-harness /
 # id:wf-harness-evolution) run as a standing team claiming and reporting work on
-# the shared board (id:chan-task-board). Still missing (later wave):
-# the cap-skill requirement.
+# the shared board (id:chan-task-board). It also carries the skill-authoring axis:
+# it requires id:cap-skill and ships id:ins-well-formed-skill (which provides it),
+# so the capability is satisfied internally and the cap-skill structural contracts
+# (id:ct-well-formed-skill-*) roll up here. Those contracts judge the emitted
+# .claude/skills/well-formed-skill/SKILL.md -- which materialize DOES emit for the
+# bound instruction -- so verify_contract.py PASSES against this harness's tree.
 id:h-harness-factory a ho:Harness ;
     skos:prefLabel "Harness-factory harness" ; skos:altLabel "harness-authoring methodology host" ;
     skos:definition "A neutral, domain-independent template that wires the harness-authoring methodology parts: the guardrails that bound multi-agent orchestration complexity and govern faithful authoring, verification and model selection, plus the shared task-board channel (id:chan-task-board) over which workers claim and report tasks. It is a meta-harness -- its subject is the methodology of composing, verifying and evolving harnesses themselves. Like id:h-workspace-synthesis it exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- the parts live here rather than on id:h-multiagent so binding them leaves that harness's materialized document byte-identical. It names no specific problem domain, tool or technology, derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -243,12 +247,13 @@ id:h-harness-factory a ho:Harness ;
         id:gr-generalize-not-overfit, id:gr-absolute-paths, id:gr-well-formed-skill, id:gr-opus-required,
         id:gr-execution-separation ;
     ho:usesModel id:mc-opus ;
+    ho:hasInstruction id:ins-well-formed-skill ;
     ho:hasChannel id:chan-task-board ;
     ho:hasTestScenario id:scn-compose-smoke, id:scn-trigger-near-miss ;
     ho:hasFailurePolicy id:fp-dispatch-timeout, id:fp-validation-fail ;
     ho:appliesPattern id:pat-orchestrator-workers ;
     ho:hasExecutionMode id:mode-hybrid ;
-    ho:requiresCapability id:cap-orchestration, id:cap-fileedit, id:cap-codeexec ;
+    ho:requiresCapability id:cap-orchestration, id:cap-fileedit, id:cap-codeexec, id:cap-skill ;
     ho:tagged id:c-multiagent, id:c-composition, id:c-agent-methodology ;
     ho:derivedFrom id:h-multiagent ;
     ho:maturity "draft" .

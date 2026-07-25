@@ -63,6 +63,7 @@
 - [recipe-newsletter-engine-content-domain](recipe-newsletter-engine-content-domain.md) — QA gate 2종(convergence=중앙 synthesizer / producing=LOCAL). ★tool scope가 harness capability set 결정.
 - [recipe-references-not-stored-artifacts](recipe-references-not-stored-artifacts.md) — recipe=parts+methodology+references+README, build 문서 저장금지(vendoring). materialize FETCH 대칭.
 - [odr-contract-verify](odr-contract-verify.md) — capability에 `ho:Contract`+contractKind/Check(3-link chain), `verify_contract.py` dual.
+- [revfactory-f-cap-skill-first-contract](revfactory-f-cap-skill-first-contract.md) — 첫 중앙 ho:Contract(B22). ★contractCheck를 materialize 실제 emit 경로(`.claude/skills/<name>/SKILL.md`, 루트 아님)로 겨눠 거짓계약 회피=옵션B(provider Instruction을 그 skill emit하는 h-harness-factory에 hasInstruction). contractCheck 노드당 1개(g.value)→assertion 2개면 Contract 2개. Contract=tokenEstimate無·tag無(rollup orphan-free). validate가 per-harness capability만족 강제. file-contains=substring(약체, 삭제tamper로 teeth확인). GAP: 부재 assertion·field-anchor grammar없음+verification unit부재.
 - [materialize-atomic-emit-closed-policy](materialize-atomic-emit-closed-policy.md) — materialize 하드닝: atomic emit+closed policy set(미인식 값 raise).
 - [instruction-skill-emitter](instruction-skill-emitter.md) — Claude SKILL=`ho:Instruction`⊑HC(스키마 무수정), recipe LOCAL, emitter=`## Skills`+MANIFEST.
 - [materialize-channel-emitter](materialize-channel-emitter.md) — `ho:Channel` EMIT: channel_record() helper+if-channels 가드, 중앙 산출 불변.

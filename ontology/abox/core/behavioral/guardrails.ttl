@@ -125,6 +125,21 @@ id:gr-absolute-paths a ho:Guardrail ; skos:prefLabel "Absolute workspace paths" 
 id:gr-well-formed-skill a ho:Guardrail ; skos:prefLabel "Well-formed skill" ;
     ho:promptText "Author every skill in well-formed shape: a present description, the required section headings and no forbidden files, so the skill is discoverable, invocable and passes its structural contract." ;
     ho:tagged id:c-skill-authoring ; ho:tokenEstimate 46 ; ho:maturity "draft" .
+# The ENFORCEMENT counterpart of the guardrail above: a skill-authoring skill
+# (ho:Instruction, a BehavioralComponent leaf) that PROVIDES id:cap-skill, so the
+# structural contracts on that capability roll up (hasComponent o providesCapability
+# o capabilityContract) to any harness that ships it. Co-located with its guardrail
+# half; the ho:Instruction IRI is location-independent. When a harness binds it via
+# ho:hasInstruction, materialize.py emits .claude/skills/well-formed-skill/SKILL.md
+# from this node's graph data (prefLabel -> title heading, skos:definition ->
+# frontmatter description), which is exactly what the cap-skill contracts assert.
+id:ins-well-formed-skill a ho:Instruction ; skos:prefLabel "Well-formed skill authoring" ;
+    skos:notation "well-formed-skill" ;
+    skos:definition "Author every skill as a well-formed SKILL.md with a present frontmatter description and the required title heading, so the skill is discoverable, invocable and passes its structural contract." ;
+    ho:providesCapability id:cap-skill ;
+    ho:tagged id:c-skill-authoring ;
+    ho:promptText "When authoring a skill, package it as a well-formed SKILL.md: a present description field in the frontmatter and the required title/section headings, and keep forbidden bookkeeping files (README, CHANGELOG) out of the skill directory, so the skill is discoverable, invocable and passes its structural contract." ;
+    ho:tokenEstimate 72 ; ho:maturity "draft" .
 id:gr-opus-required a ho:Guardrail ; skos:prefLabel "Opus model required" ; skos:altLabel "dispatch model floor" ;
     ho:promptText "Spawn quality-critical dispatch roles (authoring and judgment) on the top-tier model, since their output determines final correctness; make the model requirement explicit rather than leaving it to template default." ;
     ho:tagged id:c-multiagent ; ho:tokenEstimate 50 ; ho:maturity "draft" .
