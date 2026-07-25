@@ -6,7 +6,17 @@ observed in and generalized from the orchestrators of wshobson/agents
 (https://github.com/wshobson/agents), Copyright (c) 2024 Seth Hobson,
 licensed under the MIT License.
 
+This product also includes a neutral harness guardrail whose human-in-the-loop
+approval discipline was observed in and generalized from the "PHASE CHECKPOINT"
+of those same orchestrators and from the progressive-disclosure agent rule of
+rohitg00/awesome-claude-code-toolkit
+(https://github.com/rohitg00/awesome-claude-code-toolkit), licensed under the
+Apache License 2.0.
+
 No source text is copied. Each derived node records its provenance via
 dct:source and dct:license. Currently: id:pat-blackboard (Blackboard
 coordination), a neutralized coordination pattern abstracted from the
-shared-state / durable-artifact handoff recurring across those orchestrators.
+shared-state / durable-artifact handoff recurring across those orchestrators;
+and id:gr-human-checkpoint (Human approval checkpoint), a neutralized
+human-in-the-loop approval gate abstracted from the phase-checkpoint /
+progressive-disclosure discipline recurring across both sources above.

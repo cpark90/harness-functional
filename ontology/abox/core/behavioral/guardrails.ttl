@@ -5,6 +5,7 @@
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:   <http://purl.org/dc/terms/> .
 
 # Core data unit -- Guardrail partition of the `core` domain. Imports the
 # central TBox only; cross-unit references resolve in the root union
@@ -157,3 +158,21 @@ id:gr-sequenced-artifacts a ho:Guardrail ; skos:prefLabel "Sequenced workspace a
 id:gr-three-flow-acceptance a ho:Guardrail ; skos:prefLabel "Three-flow acceptance coverage" ; skos:altLabel "normal, resumed and error fixtures" ;
     ho:promptText "Cover all three run flows with behaviour fixtures before calling a harness accepted: the normal path from empty state, the path resumed over existing input, and the error path; a fixture set that exercises only the happy path is a demonstration, not an acceptance." ;
     ho:tagged id:c-acceptance-coverage ; ho:tokenEstimate 58 ; ho:maturity "draft" .
+
+#===================== Human-in-the-loop oversight =====================
+# A human-approval GATE anchored at milestones -- the HITL axis observed as an
+# explicit "PHASE CHECKPOINT" across ~26 orchestrator commands (wshobson) and as
+# "Progressive Disclosure" (present the plan, get confirmation before executing)
+# in cc-toolkit's agents rule. Neutralised: no source text copied. Distinct from
+# the two nearest existing policies -- id:gr-no-arbitrary-decision (REACTIVE
+# escalation of a specific open question) and id:gr-verify-proceed (advance on any
+# confirmed machine state, not elapsed time) -- so the "Distinct from" clauses in
+# promptText carry that disambiguation. Bound below into id:h-multiagent (its
+# orchestrator presents plans for user approval at phase boundaries): that harness
+# gains exactly one operating-rules bullet; the other six harnesses are unchanged.
+id:gr-human-checkpoint a ho:Guardrail ; skos:prefLabel "Human approval checkpoint" ;
+    skos:altLabel "phase checkpoint" , "human-in-the-loop gate" , "plan-approval gate" ;
+    ho:promptText "Insert an explicit human-approval checkpoint at defined milestones: present the plan or approach and obtain confirmation before proceeding with consequential or irreversible work, and surface high-impact decisions for human review early rather than executing them unattended. Distinct from id:gr-no-arbitrary-decision (which escalates a specific open question) -- this is a proactive gate placed at milestones even when nothing is contested; and from id:gr-verify-proceed (which forbids treating elapsed time as readiness) -- this requires a human sign-off, not merely any confirmed machine state." ;
+    ho:tagged id:c-escalation ; ho:tokenEstimate 88 ; ho:maturity "draft" ;
+    dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" , "https://github.com/wshobson/agents" ;
+    dct:license "Apache-2.0" , "MIT" .

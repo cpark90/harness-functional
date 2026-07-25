@@ -105,7 +105,7 @@ id:h-multiagent a ho:Harness ;
         id:gr-grounding, id:gr-no-arbitrary-decision, id:gr-least-privilege, id:gr-report-over-prompt,
         id:gr-controlled-vocabulary, id:gr-root-cause, id:gr-simplicity, id:gr-bounded-context,
         id:gr-dispatch-execution, id:gr-delegated-orchestration, id:gr-execution-separation,
-        id:gr-structural-coverage, id:gr-reuse-first ;
+        id:gr-structural-coverage, id:gr-reuse-first, id:gr-human-checkpoint ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-orchestrator, id:role-inspection, id:role-developer, id:role-research,
         id:role-inspection-worker, id:role-vnv, id:role-design ;
