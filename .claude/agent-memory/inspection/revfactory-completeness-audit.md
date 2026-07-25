@@ -32,7 +32,17 @@ land됐는데 강제측(capability+contract)이 빔. **탐지 신호**: 그래�
 (later wave): the cap-skill requirement" + concept 정의가 "the capability and guardrail"을 예고하는데 capability
 절반이 공석. → **그래프 자신이 명시 기록한 의도적 지연**이므로 silent 아님. 완결 판정은 **HOLD**(refresh 금지).
 
-## 부수 발견 (revfactory 밖, 그러나 source-mapping의 "EXISTING Contract" 주장에 영향)
+## RESOLVED (2026-07-25, delta F land = commit 36084c3): GAP·Contract-0 둘 다 해소
+유일 GAP(cap-skill/F)이 저작·land됨: `id:cap-skill` + **첫 중앙 `ho:Contract` 개체 2개**
+(`ct-well-formed-skill-{description,heading}`, structural) + provider `ins-well-formed-skill`,
+`h-harness-factory` dogfood 배선. 신규 클래스/술어 0, 226→230. → **아래 "abox Contract 0"
+부수발견은 이제 STALE**(0→2). revfactory reflection 완결 → refresh 실행(inbox+audit 제거,
+`verified/revfactory-delta-f-finalize.md`가 승계). land 재검증법(재사용): **Contract teeth는
+파이프 없이 exit code**(materialize→`verify_contract --tree`=2/2 exit0; SKILL.md 삭제 tamper→0/2 exit1);
+**중앙 abox 델타 blast-radius=federation +N 균일**(central symlink를 HEAD worktree로 임시 repoint→
+federate로 baseline 얻고 복원; 16-fullstack 248→252·21-code-reviewer 246→250 = +4).
+
+## (STALE — 위 RESOLVED 참조) 부수 발견 (revfactory 밖, source-mapping "EXISTING Contract" 주장에 영향)
 **abox에 `ho:Contract` 개체가 0개**다(`git log -S capabilityContract -- ontology/abox` = 이력 0). 08ed4df
 "ODR contract-VERIFY axis"는 TBox 클래스 `ho:Contract`(10회 언급) + `capabilityContract` 속성 + `tools/verify_contract.py`
 **메커니즘만** 심고 인스턴스는 미저작. 즉 P6 "assertion 평가 = EXISTING Contract 강한 재사용"은 **메커니즘 수준에서만
