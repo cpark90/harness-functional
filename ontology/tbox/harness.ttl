@@ -606,10 +606,8 @@ ho:dependsOn a owl:ObjectProperty, owl:TransitiveProperty ;
     skos:definition "A component requires another to function (e.g. a workflow depends on a tool)." .
 
 ho:specializes a owl:ObjectProperty, owl:TransitiveProperty ;
-    rdfs:domain ho:Harness ;
-    rdfs:range ho:Harness ;
     rdfs:label "specializes" ;
-    skos:definition "This harness is a more specific variant of a more general harness." .
+    skos:definition "A node is a more specific variant of a more general node of the SAME kind: either a harness that specialises a broader harness, or a typed harness component (e.g. an ho:Role) that specialises a broader component of its own class — a concrete/local role narrowing a neutral archetype role. Domain and range are deliberately left open: this is a relation spanning ho:Harness and ho:HarnessComponent (which have no common superclass), like ho:derivedFrom, so an RDFS domain would over-constrain it; same-kind typing of the two ends is enforced instead by ho:SpecializesTypingShape. Distinguished from ho:derivedFrom, which is provenance (a node generated/adapted FROM a source) rather than an is-a narrowing within one kind." .
 
 ho:derivedFrom a owl:ObjectProperty ;
     rdfs:label "derived from" ;

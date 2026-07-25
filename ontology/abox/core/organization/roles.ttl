@@ -77,6 +77,7 @@ id:role-inspection-worker a ho:Role ;
     ho:roleTool id:tool-retriever, id:tool-shell ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-report-over-prompt, id:gr-verify-proceed ;
+    ho:specializes id:role-inspection ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable investigation notes at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .

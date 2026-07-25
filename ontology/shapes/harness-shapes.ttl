@@ -104,6 +104,26 @@ ho:EdgeTypingShape a sh:NodeShape ;
     sh:property [ sh:path ho:requiresCapability ; sh:class ho:Capability ] ;
     sh:property [ sh:path ho:constrainedBy ; sh:class ho:Constraint ] .
 
+#--- specializes: same-kind narrowing (anti-drift) -------------------
+# ho:specializes carries no rdfs:domain/range because it spans ho:Harness
+# and ho:HarnessComponent, which have no common superclass. This shape
+# reinstates typed-edge safety AND the same-kind rule the definition states:
+# a specialization narrows WITHIN one family — a harness specialises a
+# harness, a component (e.g. an ho:Role) specialises a component — so it
+# cannot point at an untyped node or cross the harness/component partition.
+# [권장] leaf-class sameness (Role→Role, not Role→Tool) is a convention the
+# definition states; this shape enforces the coarser, cleanly-checkable
+# harness-vs-component partition.
+ho:SpecializesTypingShape a sh:NodeShape ;
+    sh:targetSubjectsOf ho:specializes ;
+    sh:or (
+        [ sh:class ho:Harness ;
+          sh:property [ sh:path ho:specializes ; sh:class ho:Harness ] ]
+        [ sh:class ho:HarnessComponent ;
+          sh:property [ sh:path ho:specializes ; sh:class ho:HarnessComponent ] ]
+    ) ;
+    sh:message "ho:specializes must narrow within one family: a Harness specialises a Harness, or a HarnessComponent specialises a HarnessComponent (not untyped, not across the harness/component partition)." .
+
 #--- SystemPrompt must carry text so it is actually usable -----------
 ho:SystemPromptShape a sh:NodeShape ;
     sh:targetClass ho:SystemPrompt ;
