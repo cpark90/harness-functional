@@ -31,3 +31,23 @@ main. (branch-first 일반규칙보다 이 repo 운영모델·orchestrator dispa
 - push 후 `git status --short` empty(clean). CI(`validate-ontology`) `gh run watch --exit-status`.
   유일 annotation=Node20 deprecation(인프라·비차단, 모든 run 공통).
 - 실측: `12ee623..925f7ba`, CI run 30153495341 validate success 1m34s. 230→231 individuals.
+
+## Guardrail land = taxonomy-only과 다른 byte-identity 패턴 (Wave 3, 2026-07-25)
+- **wired 노드는 materialize에 반영된다**: DesignPattern(taxonomy-only)은 어느 harness도 참조 안 해
+  7 harness 전부 CLAUDE.md IDENTICAL이었지만, **Guardrail은 `hasGuardrail`로 배선되면 그 harness의
+  CLAUDE.md가 정확히 바뀐다**. `gr-human-checkpoint`→`h-multiagent`만 배선 = h-multiagent CLAUDE.md
+  **+1 bullet(0 삭제)**, 나머지 6 IDENTICAL. 재현: HEAD worktree vs working tree materialize 7종 →
+  `diff -rq -x harness.lock.json`가 h-multiagent만 DIFFERS(CLAUDE.md + MANIFEST). CLAUDE.md는 정확히
+  `21a22` 한 줄 add, `--old-line-format`로 deletions=0 확인. MANIFEST는 guardrail 엔트리 +
+  tokenEstimate 2433→2521(노드 promptText 반영). = "1 wired harness만 변경"이 정상 signature.
+- **2-source 귀속**: guardrail 하나가 `dct:source` 2개(cc-toolkit Apache-2.0 + wshobson MIT) + `dct:license`
+  2개. NOTICE는 기존 pat-blackboard 문단 뒤에 gr-human-checkpoint 문단 추가(둘 다 "No source text copied"
+  우산 아래). 파생 0인 소스(agent-rules-books)는 NOTICE 미기재.
+- **federate blast-radius(+1 균일)**: 중앙 +1 individual → 각 recipe union도 +1(recipe가 central root를
+  import→모든 core unit 전파). 표본 federate: `HARNESS_CATALOG=catalog-v001.xml
+  HARNESS_ROOT_ONTOLOGY=.../recipes/<r> central/tools/validate.py`(staging `central` 심링크가 워킹트리 가리킴).
+  03=255·21=252 PASS. guardrail이 anti-orphan(h-multiagent hasGuardrail)이라 federation reachability도 통과.
+- **Wave 2 = 저작 0 land**: 252 외부 role 전부 기존 7 archetype에 collapse → abox 무변경, 메모리·OPEN-ISSUES만
+  커밋(문서 lane). ontology 미변경 커밋이라 CI validate는 직전 상태와 동일 PASS.
+- 실측: A `9ca09d5`(guardrail 5 files) + B `5c35528`(W2 records 2 files), 한 push `98326fd..5c35528`.
+  CI run 30154399237 validate success 1m36s @232. 개별 add·`commit -F`·영어 메시지·Node20 annotation 비차단.
