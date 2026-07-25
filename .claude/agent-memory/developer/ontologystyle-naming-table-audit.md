@@ -24,10 +24,15 @@ grep -oE "^ho:[A-Za-z]+ a owl:Class" ontology/tbox/harness.ttl | sed 's/ a owl:C
 - **표의 예시 IRI가 허구**: `id:ins-verify-then-proceed`(존재 안 함), `id:ex-…`(ellipsis
   placeholder), `id:aoi-orchestrator-external`(실제는 `id:aoi-orchestrator`). 새 행뿐 아니라
   **기존 행도 전수 grep**로 존재 확인해야 한다.
-- **중앙 core에 인스턴스가 0인 클래스**: `ho:Instruction`(`ins-`)·`ho:Contract`(`contract-`)·
-  `ho:Candidate`(`cand-`)는 실재 개체가 `staging/harness-recipes/recipes/**`(data repo 도메인)에만
-  있다. 중앙만 grep하면 "미사용"으로 오판한다 → 접두사 규약은 federation 전체에 적용되므로
-  표에는 남기되 예시는 recipe의 실재 IRI를 쓴다. `ho:Example`은 **repo 전체에 개체 0**.
+- **중앙 core에 인스턴스가 0인 클래스**: `ho:Instruction`(`ins-`)·`ho:Candidate`(`cand-`)는
+  실재 개체가 `harness-recipes/recipes/**`(data repo 도메인)에만 있다. 중앙만 grep하면 "미사용"
+  으로 오판 → 접두사 규약은 federation 전체 적용이라 표에 남기되 예시는 recipe 실재 IRI를 쓴다.
+  `ho:Example`은 **repo 전체에 개체 0**.
+- **★Contract 접두사 divergence(2026-07 감사, UPDATE)**: 중앙 core는 이제 `ct-`
+  (`id:ct-well-formed-skill-heading`·`-description`, `spec/capabilities.ttl`) 실개체 보유. 반면
+  **recipe data repo는 `contract-`**(`id:contract-greeter-emitted` 등 contract-demo/lpranging).
+  같은 `ho:Contract`에 두 접두사 유통 = cross-repo drift. §2 표는 **중앙 canonical `ct-`로 정정**
+  (개체 rename은 ID재사용금지 위반). recipe `contract-` 통일은 recipe repo 소관 = GAP(orchestrator).
 - **`grep -r --include=* .`가 staging을 건너뛸 수 있다**(셸의 grep이 gitignore 인식 도구로
   aliasing된 환경). 경로를 `ontology/ staging/`로 **명시**해 재확인할 것.
 - **DA-4 중간 superclass**(`*Component`·`SpecConcept`·`InformationSpace`)는 직접 인스턴스가
@@ -47,4 +52,14 @@ grep -oE "^ho:[A-Za-z]+ a owl:Class" ontology/tbox/harness.ttl | sed 's/ a owl:C
 `wf-`→`wfs-`→`dlv-`, `sp-`→`ps-`, `cap-`→`contract-`, `tool-`→`cand-`.
 조직(`role-`/`chan-`)·상태(`mem-`)·검증(`scn-`/`fp-`)·조립(`as-`)은 `h-` 직전에 둔다.
 §2 하단 "[지킴] 관용 축약만 표에 등록된 대로" 규칙 덕에, 축약형 접두사(`wfs`/`dlv`/`ps`/`chan`)는
-표에 등재되는 순간 합법이 된다(=등재가 곧 anti-drift 조치).
+표에 등재되는 순간 합법이 된다(=등재가 곧 anti-drift 조치). Hook(`hook-`)은 behavioral 계열이라
+Guardrail(`gr-`) 바로 뒤에 배치.
+
+## §3 predicate 순서도 신규 조립술어로 stale해진다
+
+새 조립/모드 술어는 §3 순서 목록에서 빠지기 쉽다(2026-07: hasHook/hasRole/hasChannel/hasMemory/
+hasAgent/hasGlobalState/hasAssemblySection/hasExecutionMode/hasTestScenario/hasFailurePolicy 미열거).
+**실측 절차**: 가장 술어가 많은 노드 2개(`h-multiagent`·`h-harness-factory`)의 블록을 그대로 읽어
+관찰된 순서를 기록(규칙 발명 아님). 관찰 결과: block4 tail = usesModel→hasInstruction→hasExample→
+hasRole→hasChannel→hasMemory→hasAgent→hasGlobalState→hasAssemblySection→hasHook→hasTestScenario→
+hasFailurePolicy. block5 = appliesPattern→**hasExecutionMode**→requiresCapability→…→specializes.

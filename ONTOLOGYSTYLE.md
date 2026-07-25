@@ -130,7 +130,7 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 | Domain | `dom-` | `id:dom-coding` |
 | Task | `task-` | `id:task-bugfix` |
 | Capability | `cap-` | `id:cap-codeexec` |
-| Contract | `contract-` | `id:contract-greeter-emitted` |
+| Contract | `ct-` | `id:ct-well-formed-skill-heading` |
 | Concept | `c-` | `id:c-softeng` |
 | DesignPattern | `pat-` | `id:pat-react` |
 | ExecutionMode | `mode-` | `id:mode-sub-agents` |
@@ -142,6 +142,7 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 | WorkflowStep | `wfs-` | `id:wfs-plan-dispatch` |
 | Deliverable | `dlv-` | `id:dlv-dispatch-brief` |
 | Guardrail | `gr-` | `id:gr-cite` |
+| Hook | `hook-` | `id:hook-post-tool-use` |
 | SystemPrompt | `sp-` | `id:sp-coding` |
 | PromptSection | `ps-` | `id:ps-methodical-decisions` |
 | Instruction | `ins-` | `id:ins-check-docs` |
@@ -174,9 +175,13 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 3. `skos:definition`
 4. 타게팅·조립: `ho:targetsDomain` → `ho:addressesTask` → `ho:hasSystemPrompt` →
    `ho:usesTool` → `ho:hasWorkflow` → `ho:hasGuardrail` → `ho:usesModel` →
-   `ho:hasInstruction` → `ho:hasExample`
-5. `ho:appliesPattern` → `ho:requiresCapability` / `ho:providesCapability` →
-   `ho:constrainedBy` → `ho:dependsOn` → `ho:specializes` / `ho:derivedFrom`
+   `ho:hasInstruction` → `ho:hasExample` →
+   `ho:hasRole` → `ho:hasChannel` → `ho:hasMemory` → `ho:hasAgent` →
+   `ho:hasGlobalState` → `ho:hasAssemblySection` → `ho:hasHook` →
+   `ho:hasTestScenario` → `ho:hasFailurePolicy`
+5. `ho:appliesPattern` → `ho:hasExecutionMode` → `ho:requiresCapability` /
+   `ho:providesCapability` → `ho:constrainedBy` → `ho:dependsOn` →
+   `ho:specializes` / `ho:derivedFrom`
 6. `ho:tagged`
 7. 데이터: `ho:promptText` → `ho:observedTokenVolume` → `ho:tokenEstimate` →
    `ho:salience` → `ho:maturity`
