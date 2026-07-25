@@ -7,8 +7,10 @@
 | 레지스트리 | 위치 | 미등록 시 증상 |
 |---|---|---|
 | `INSTANCE_CLASSES` | `tools/ontology_lib.py` | 개체가 카운트/reachability/팩에서 증발(추론이 가림) |
-| `INSTANCE_LINK_PREDICATES` | 같은 파일 | 노드는 보이는데 **edge만** 안 보임(그래프뷰·전파) |
-| `ORDER` / `STRING_PREDS` | `tools/webui/ttl_writer.py` | webui 저장 시 그 술어가 **블록에서 삭제됨** |
+| ~~`INSTANCE_LINK_PREDICATES`~~ | 같은 파일 | ~~노드는 보이는데 edge만 안 보임~~ **B14로 제거** — `link_predicates(g)`가 TBox `owl:ObjectProperty` 전수 파생(§B14 아래) |
+| ~~`ORDER`(=whitelist)~~ | `tools/webui/ttl_writer.py` | ~~webui 저장 시 그 술어 삭제~~ **B13으로 제거** — 이제 merge, ORDER는 순서만(§3 아래) |
+
+## ★ 이 3종은 결국 전부 "화이트리스트→파생/merge"로 근절됨 (B13/B14). 새 어휘 land 시 갱신 불요.
 
 ## 1. `INSTANCE_CLASSES`: 추론이 결함을 가린다 → 파리티가 유일한 게이트
 
@@ -40,15 +42,34 @@
 - 잔여 취약점: `server.abox_mtimes()`가 **basename을 키로** 쓴다. 지금은 18개 basename이 유일해
   무해하지만, 다른 그룹에 같은 파일명이 생기면 낙관적 잠금이 조용히 뭉개진다(상대경로 키가 정답).
 
-## 3. webui `ORDER` 화이트리스트 = **부분 저장이 곧 데이터 삭제**
+## 3. webui `ORDER` 화이트리스트 = 부분 저장이 곧 데이터 삭제 → **B13에서 merge로 근절**
 
-`render_block`은 `ORDER`에 있는 술어만 그리고, `_replace_block`이 **블록 전체를 치환**한다 →
-목록 밖 술어는 소리 없이 사라진다. 실측(2026-07): 그래프에 존재하나 `ORDER`에 없는 술어 **56종**,
-영향 개체 **82/205**. 예: `id:chan-dispatch`를 UI로 저장하면 `channelParticipant`·`channelMedium`·
-`involvesUser`·`tagged`·`definition`이 통째로 날아간 2줄 블록이 된다.
-서버가 validate FAIL 시 `restore`하므로 **shape이 요구하는 술어만** 우연히 방어되고, 선택 술어는
-초록인 채로 유실된다. 감사 스니펫 = 전 개체의 `predicate_objects`를 qname으로 접어 `ORDER` 차집합 카운트.
-**확장은 "편집 UI가 무엇을 다뤄야 하는가"라는 범위 결정**이므로 developer가 임의로 넓히지 말 것.
+(과거 결함) `render_block`이 `ORDER`(28종)만 그리고 `_replace_block`이 블록 전체 치환 → 목록 밖
+술어 소리없이 삭제. 실측 82/205 개체·375 트리플(코퍼스 커지며 재실측 94/225·437). validate는
+shape 요구 술어만 우연히 방어, 선택 술어는 초록인 채 유실.
+
+**B13 수정 = 병합(inspection 권고 B+C 구조).** 핵심 설계:
+- `plan_upsert`가 기존 노드를 **rdflib로 파싱**(`_existing_preds`)해 on-disk 트리플을 얻고,
+  `render_block(node, existing, managed)`가 **편집 안 한 술어는 그대로 재방출**. ORDER는 이제
+  whitelist가 아니라 **순서 힌트**(present인 것만 순서, 목록 밖은 뒤에 안정정렬)라 목록 표류=무해.
+- **삭제 신호 = `_managed`**(payload 필드). managed인데 payload에 없으면=삭제(사용자가 비움),
+  managed 아니면=보존. 프런트가 `_managed`=7리터럴+전 schema objectProperty로 보냄. `_managed`
+  없으면 기본=payload 키(absence=보존=무손실 기본). 이게 없으면 objectProp 비우기로 **삭제 불가**.
+- 보존 트리플 렌더는 원 lexical 유지(`_term_ttl`: bare int/decimal/bool, string은 quote, else `^^type`)
+  →triple byte-value 동일. editor값은 `_render_editor_value`(number→bare, ref패턴→id:ref, else quote).
+- GET(`server.api_node`)도 `DATA_PREDS` 7종 whitelist 제거→**RDF term 타입으로 분기**(Literal 전부
+  dataProps, URIRef 전부 objectProps). 안 그러면 GET에 없는 리터럴은 편집 못 봄.
+- **무손실 불변식**: 225개체 전수 "GET→SAVE round-trip"의 subject triple diff=0(gate script는
+  plan_upsert가 안 쓰므로 read-only, 스크래치에서). OLD경로 94/437 → NEW 0/0.
+
+## 3b. B14 = link 술어 파생, B15 = mtime relpath 키
+- **B14**: `INSTANCE_LINK_PREDICATES` 상수 삭제→`link_predicates(g)`가 TBox의 `ho:` `owl:ObjectProperty`
+  전수 + SKOS 3종 파생. `instance_edges`가 양끝 instance 필터하므로 range 비-개체 술어는 edge 0.
+  누락 9종(channelParticipant 25 등 78 edge) 자동 복구, 새 ObjectProperty도 코드변경 없이 노출.
+- **B15**: `server.abox_mtimes()`+`ttl_writer._check_mtime()` 키를 basename→`relpath(p, ABOX_DIR)`.
+  DA-4 그룹에 동명파일(spec/patterns.ttl vs process/patterns.ttl) 생겨도 낙관잠금 안 뭉갬.
+- ★도구만 수정(`tools/webui/*`+`ontology_lib.py`+frontend Editor.svelte). ontology 무변경—validate
+  PASS·determinism PASS. (frontend `_managed`는 npm rebuild 필요; static은 gitignore 산출물.)
 
 ## 4. `tokenEstimate` vs `observedTokenVolume` 계약을 스타일 문서에 못박기
 

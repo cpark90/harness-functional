@@ -45,26 +45,23 @@ CATALOG = os.environ.get("HARNESS_CATALOG", os.path.join(ROOT, "catalog-v001.xml
 ROOT_ONTOLOGY_IRI = os.environ.get(
     "HARNESS_ROOT_ONTOLOGY", "https://harness-ontology.dev/ontology")
 
-# Predicates that connect one *instance* to another (used for the graph
-# view). Datatype/annotation predicates are intentionally excluded.
-INSTANCE_LINK_PREDICATES = {
-    HO.hasComponent, HO.componentOf, HO.hasSystemPrompt, HO.usesTool,
-    HO.hasGuardrail, HO.hasWorkflow, HO.usesModel, HO.hasExample,
-    HO.hasInstruction, HO.hasRole, HO.rolePersona, HO.roleTool,
-    HO.roleGuardrail, HO.implementationCandidate, HO.capabilityContract,
-    HO.hasStep, HO.stepUsesTool, HO.stepByRole, HO.stepGuardedBy,
-    HO.stepProduces, HO.stepConsumes, HO.stepDependsOn,
-    HO.hasSection, HO.hasAssemblySection,
-    HO.hasTestScenario, HO.hasFailurePolicy, HO.scenarioReferences,
-    HO.agentObservation, HO.hasAreaOfInterest, HO.hasAreaOfObservation,
-    HO.coversInterest,
-    HO.scopedFrom, HO.describesDomain, HO.hasGlobalState, HO.projectsFrom,
-    HO.targetsDomain, HO.addressesTask, HO.addressedBy,
-    HO.requiresCapability, HO.providesCapability, HO.appliesPattern,
-    HO.hasExecutionMode,
-    HO.constrainedBy, HO.dependsOn, HO.specializes, HO.derivedFrom,
-    HO.tagged, SKOS.broader, SKOS.narrower, SKOS.related,
-}
+# Predicates that connect one *instance* to another (used for the graph view
+# and pack propagation). Rather than hand-maintaining a whitelist — which drifts
+# out of sync every time a new ObjectProperty lands and then silently hides those
+# edges — we DERIVE the set from the TBox: every `ho:` ObjectProperty links two
+# individuals by definition, so `link_predicates(g)` collects them from the graph
+# at call time. Only the SKOS relational predicates (not `ho:` ObjectProperties)
+# are named explicitly. `instance_edges` still filters to triples whose subject
+# AND object are both instance nodes, so an ObjectProperty whose range is not an
+# individual simply contributes no edges.
+_SKOS_LINK_PREDICATES = {SKOS.broader, SKOS.narrower, SKOS.related}
+
+
+def link_predicates(g: Graph) -> set[URIRef]:
+    """Instance→instance link predicates, derived from the TBox (anti-drift)."""
+    preds = {p for p in g.subjects(RDF.type, OWL.ObjectProperty)
+             if isinstance(p, URIRef) and str(p).startswith(str(HO))}
+    return preds | _SKOS_LINK_PREDICATES
 
 # The classes we treat as first-class ontology individuals.
 #
@@ -191,8 +188,9 @@ def instance_edges(g: Graph) -> list[tuple[URIRef, URIRef, URIRef]]:
     """(subject, predicate, object) triples that link two individuals."""
     edges = []
     nodes = instance_nodes(g)
+    preds = link_predicates(g)
     for s, p, o in g:
-        if p in INSTANCE_LINK_PREDICATES and s in nodes and o in nodes:
+        if p in preds and s in nodes and o in nodes:
             edges.append((s, p, o))
     return edges
 

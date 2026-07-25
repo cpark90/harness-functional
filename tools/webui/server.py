@@ -32,7 +32,7 @@ sys.path.insert(0, _HERE)                        # tools/webui/
 from fastapi import Body, FastAPI, HTTPException           # noqa: E402
 from fastapi.responses import HTMLResponse                 # noqa: E402
 from fastapi.staticfiles import StaticFiles                # noqa: E402
-from rdflib import RDF, RDFS, URIRef                        # noqa: E402
+from rdflib import Literal, RDF, RDFS, URIRef              # noqa: E402
 from rdflib.namespace import OWL, SKOS                      # noqa: E402
 
 import ontology_lib as lib                                  # noqa: E402
@@ -49,8 +49,14 @@ ID_NS = "https://harness-ontology.dev/id/core/"
 _NS = {"ho": HO_NS, "id": ID_NS, "skos": str(SKOS), "rdfs": str(RDFS),
        "rdf": str(RDF), "owl": str(OWL)}
 
-DATA_PREDS = {"skos:prefLabel", "skos:altLabel", "skos:definition",
-              "ho:promptText", "ho:tokenEstimate", "ho:salience", "ho:maturity"}
+# Literal predicates the editor renders as first-class form fields. This is NOT
+# a filter — GET returns EVERY literal predicate a node carries (see api_node,
+# which splits on the RDF term type), so the editor can see and round-trip any
+# datatype value. Dropping the old 7-predicate whitelist is what closes the
+# save-side data-loss path (a literal absent from GET could never be re-sent).
+KNOWN_LITERAL_FIELDS = {"skos:prefLabel", "skos:altLabel", "skos:definition",
+                        "ho:promptText", "ho:tokenEstimate", "ho:salience",
+                        "ho:maturity"}
 
 # SKOS relational predicates the editor should surface so they round-trip
 # (they are not ho: object properties, so the tbox scan below won't find them).
@@ -103,7 +109,12 @@ def expand(q: str) -> URIRef:
 
 
 def abox_mtimes() -> dict:
-    return {os.path.basename(p): os.path.getmtime(p)
+    # Key by path RELATIVE to the ABox root, not basename: the DA-4 group
+    # directories can hold same-named files (e.g. spec/patterns.ttl vs
+    # process/patterns.ttl), and a basename key would let two files share one
+    # optimistic-lock slot and silently mask a concurrent edit. ttl_writer.
+    # _check_mtime uses the same relpath key.
+    return {os.path.relpath(p, ttl_writer.ABOX_DIR): os.path.getmtime(p)
             for p in ttl_writer.abox_files()}
 
 
@@ -166,7 +177,11 @@ def api_node(node_id: str):
         if p == RDF.type:
             continue
         pq = qname(p)
-        if pq in DATA_PREDS:
+        # Split on the RDF term type, not a predicate whitelist: EVERY literal
+        # is returned (so any datatype value can round-trip through the editor)
+        # and every URIRef object is an edge. This is the read side of the
+        # save-merge; a literal that GET omitted could never be re-sent.
+        if isinstance(o, Literal):
             node["dataProps"].setdefault(pq, []).append(str(o))
         elif isinstance(o, URIRef):
             node["objectProps"].setdefault(pq, []).append(qname(o))

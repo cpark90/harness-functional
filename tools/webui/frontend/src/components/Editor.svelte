@@ -120,6 +120,16 @@
     if (String(tokenEstimate).trim() !== "") node["ho:tokenEstimate"] = Number(tokenEstimate);
     if (String(salience).trim() !== "") node["ho:salience"] = Number(salience);
     if (maturity) node["ho:maturity"] = maturity;
+    // Predicates this editor is authoritative over. The writer MERGES: a managed
+    // predicate omitted from the payload is a deletion (the user cleared it),
+    // while any predicate NOT listed here (e.g. a literal this form doesn't
+    // surface) is preserved from disk. Without this list, clearing an object-
+    // property slot could never delete it (absence would mean "keep").
+    node._managed = [
+      "skos:prefLabel", "skos:altLabel", "skos:definition",
+      "ho:promptText", "ho:tokenEstimate", "ho:salience", "ho:maturity",
+      ...$schema.objectProperties.map((p) => p.id),
+    ];
     if ($mtimes) node._mtimes = $mtimes;
 
     saving = true;
