@@ -1,5 +1,13 @@
 # Persisting corpus refs: local artifactTemplate path vs canonical dct:source URL
 
+> **SUPERSEDED (importer) — see `importer-artifacttemplate-canonical-url.md`.** The
+> "artifactTemplate = LOCAL absolute path" role below was reversed for a SECURITY
+> reason: a local `/home/<user>/...` path in a recipe TTL leaks the authoring
+> host when pushed to a public repo. `import_corpus.py` now emits BOTH
+> artifactTemplate and dct:source from the canonical `UPSTREAM_BASE` URL. The
+> two-role distinction below is historical; the fetch-vs-attribution split no
+> longer holds for importer output (both are the public GitHub URL).
+
 Resolution of the inc3 pilot flag ("ephemeral scratchpad artifactTemplate paths →
 persona materialize hard-fails once scratchpad clears"). User decision: clone the
 corpus to a STABLE LOCAL path and repoint; keep the persona hard-fail behavior.
