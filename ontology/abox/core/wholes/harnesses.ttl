@@ -170,7 +170,8 @@ id:h-peer-mesh a ho:Harness ;
 # severity triage, declared hand-off routes, sequenced workspace artifacts,
 # three-flow acceptance) and the domain-independent error rows such a team
 # declares (worker failure, thin input, critical review finding, unreachable
-# source, contradicting deliverables). They are hosted here for the same reason
+# source, contradicting deliverables, a request beyond the team's competence or
+# authority referred to an expert). They are hosted here for the same reason
 # as the parts above -- this is the library carrier, so wiring them leaves every
 # other harness's materialized document byte-identical.
 id:h-workspace-synthesis a ho:Harness ;
@@ -192,7 +193,7 @@ id:h-workspace-synthesis a ho:Harness ;
     ho:hasChannel id:chan-workspace ;
     ho:hasFailurePolicy id:fp-agent-failure-retry, id:fp-insufficient-input,
         id:fp-review-critical-rework, id:fp-source-unavailable,
-        id:fp-conflict-contradiction ;
+        id:fp-conflict-contradiction, id:fp-refer-to-expert ;
     ho:hasExecutionMode id:mode-sub-agents ;
     ho:requiresCapability id:cap-synthesis ;
     ho:tagged id:c-multiagent, id:c-design, id:c-synthesis ;

@@ -64,10 +64,12 @@ id:fp-validation-fail a ho:FailurePolicy ;
 #===================== Failure policies (neutral archetypes) ===========
 # The error rows a delegating, document-producing team declares regardless of
 # its problem domain: a worker that fails, an input too thin to work from, a
-# critical review finding, an unreachable source, and two deliverables that
-# contradict each other. They are generalised archetypes, siblings of the two
-# methodology-specific rows above -- each says how it differs from the nearest
-# one so the set stays discriminating rather than overlapping.
+# critical review finding, an unreachable source, two deliverables that
+# contradict each other, and a request that exceeds the team's competence or
+# authority to decide (referred to a qualified expert). They are generalised
+# archetypes, siblings of the two methodology-specific rows above -- each says
+# how it differs from the nearest one so the set stays discriminating rather
+# than overlapping.
 
 id:fp-agent-failure-retry a ho:FailurePolicy ;
     skos:prefLabel "Dispatched worker fails its task" ;
@@ -103,3 +105,10 @@ id:fp-conflict-contradiction a ho:FailurePolicy ;
     ho:failureCondition "Two deliverables that must be merged state incompatible facts or incompatible recommendations." ;
     ho:recoveryStrategy "Do not silently keep one: have the reviewing role state both positions, name the direction of resolution with the reason for it, and record the discarded position so the choice stays traceable." ;
     ho:tokenEstimate 105 ; ho:maturity "draft" .
+
+id:fp-refer-to-expert a ho:FailurePolicy ;
+    skos:prefLabel "Request exceeds the agent's competence or authority" ;
+    skos:definition "Pre-decides what a team does when a request lands outside what it is competent or authorised to decide -- the boundary where an agent either overreaches and issues a decision it has no standing for, or stalls with nothing to show. Choose it for any harness that can be handed work whose determination belongs to a qualified expert or an external authority. Distinguished from id:fp-insufficient-input, where the input is merely too thin so MORE input would let the same agent decide; here the input suffices but the DECISION itself is beyond the agent's remit. Distinguished from id:fp-conflict-contradiction, which resolves two clashing deliverables rather than a limit of authority." ;
+    ho:failureCondition "The requested work exceeds the agent's competence or authority to decide." ;
+    ho:recoveryStrategy "Deliver a bounded, reduced analysis of what is determinable, explicitly mark the out-of-scope decision, and refer it to a qualified expert or the relevant authority, rather than deciding beyond remit or stopping without a usable result." ;
+    ho:tokenEstimate 150 ; ho:maturity "draft" .
