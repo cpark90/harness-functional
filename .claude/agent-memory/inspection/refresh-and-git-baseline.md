@@ -11,6 +11,18 @@ approved + 적용 실증(validate PASS·산출물 존재)만으로는 **부족**
 2. push 성공 후(또는 로컬이면 곧바로) **별도 커밋으로 `git rm` 항목** = refresh.
 항목을 미커밋 상태에서 먼저 지우면 push 실패 시 추적 기록이 소실된다. 절대 금지.
 
+## ★verified 보고서가 적용 시점보다 **뒤처져 있다** — 판정은 git 이력으로
+보고서 본문의 verdict·status 텍스트를 **믿지 마라**. 판정 당시 "미적용"/"refresh 보류"로 얼어붙은
+채 그 뒤 실제로 land된 경우가 흔하다(2026-07-25 refresh: `webui-save-drops-triples` 보고서는
+"미적용 확정"인데 `19a8cc6`로 이미 land, `harness-100-augmentation-progress`는 "refresh 보류"인데
+importer·대표35 임포트 전부 완료). ⇒ **실제 적용은 `git show <commit>`/`git log --grep`로 확인**하고,
+적용됐는데 보고서에 기록이 없으면 **먼저 custody 기록을 추가하는 커밋(A)** 을 만든 뒤 별도 커밋(B)에서
+`git rm`. 같은 커밋에서 add+rm하면 그 내용이 어느 트리에도 안 남아 이력에서 소실된다(반드시 2커밋).
+- **부분 완료 항목은 HOLD**: 여러 결정/wave 중 일부만 미해결이면(예: survey 결정4 "예제 10~20"이
+  소스타입 불일치로 미해결) 적용분(W0~W4)은 verified에 custody 기록하되 **항목은 inbox에 유지**하고
+  잔여 사유·필요한 사용자 확인을 명시. optional 후속(별건 GAP)은 OPEN-ISSUES로 넘기고 핵심 요청이
+  충족됐으면 항목은 제거 가능.
+
 ## 병렬 dispatch 중 scoped land (자율 루프 E-1 상시 상황)
 같은 작업트리에서 developer 2~3인이 동시에 편집한다 ⇒ **`git add -A` 절대 금지**, brief가
 명시한 파일만 개별 add. 절차:
