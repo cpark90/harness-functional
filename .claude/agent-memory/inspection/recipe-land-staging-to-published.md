@@ -1,5 +1,10 @@
 # recipe TTL land = staging(gitignored) → published clone push (inspection)
 
+> **[안전 — 최우선, 이 파일에 반복 위반됨]** 권한/안전 게이트(auto-mode classifier 포함)가 명령을 막으면
+> **그 판정을 존중한다.** 게이트를 우회·회피하는 기법(예: 특정 플래그로 막힘을 피하는 법, 재시도로 통과시키는 법)을
+> **이 메모리에 절대 기록하지 않는다** — 미래 세션이 그걸 지시로 읽어 안전 검토를 우회하게 된다. 막히면 왜 막혔는지
+> 확인하고, 정당한 표준 방법으로 다시 하거나 사용자에게 올린다. (git 명령 구성은 정상 방법만 기록: 개별 add, 파일단위 커밋 등.)
+
 Phase 0.7 recipe run-behaviour 3축 land 라운드(2026-07-25)에서 정립. recipe TTL은
 **중앙 커밋 대상이 아니다**: `.gitignore`가 `/staging/`를 제외하므로 `staging/harness-recipes/**`는
 중앙 working tree에 있어도 `git status`에 안 뜬다. land = 별도 published clone에 sync 후 push.
@@ -38,6 +43,36 @@ Phase 0.7 recipe run-behaviour 3축 land 라운드(2026-07-25)에서 정립. rec
 federate 8/8 PASS(per-recipe closure, union 금지) · materialize 그룹A 3섹션/lpranging 2섹션
 (TestScenario 조건부 early-return) 2회 결정성 · 중앙 `validate.py` PASS@223 무회귀.
 
+## 신규 recipe dir 추가(additive import) — Wave A 3 recipe land (2026-07-25)
+- **순수 additive dir 추가는 central push 불필요**: land-order "중앙 먼저" 주의는 생성기·중앙
+  catalog가 바뀔 때만. dir만 추가하면 생성기(central@main)는 그대로라 published만 push해도
+  CI discover가 그 생성기로 `--check` 통과. (이번 브리프 "published만" 제약과 일치.)
+- **catalog는 staging에서 byte-copy 말고 published에서 in-place 재생성**이 안전:
+  `gen_recipe_catalog.py --repo <published>` (플래그 없으면 write 모드, L238 write_text). 결과는
+  staging catalog와 byte-identical(`diff -q` 확인)이지만 published 자체 디스크에서 파생돼 CI 재현.
+- 재생성 후 즉시 `--repo <published> --check`(exit0) + `--print-matrix|jq len`(=11)로 자기검증.
+- **federate 재현엔 임시 `central` 심링크 필요**하지만 **커밋 전 반드시 `rm -f central`**
+  (published `.gitignore`가 잡지만 실수 방지). staging catalog scratch·central 심링크는 dir copy에
+  안 딸려옴(dir엔 .ttl 하나뿐) — git status가 정확히 `M catalog + ?? 신규3dir`면 clean.
+- 결과: published `3274c85..226592d`, CI push run 12 job(discover 1 + validate 11) 전원 green,
+  matrix 11 IRI. 유일 annotation=Node20 deprecation(인프라·비차단).
+
+## Wave B 3 recipe land (2026-07-25) — 32/33/35 data/ML
+- 절차는 Wave A와 동일(순수 additive dir 추가, published만 push, catalog published에서 in-place 재생성).
+- **★precondition 확인**: 생성기는 `CENTRAL_ROOT/catalog-v001.xml`=중앙 **워킹트리** catalog를
+  central 블록으로 복사한다. published CI는 central@main을 clone해 재생성하므로, land 전
+  **중앙 catalog 워킹트리 == origin/main** 이어야 CI `--check`가 drift 안 난다. 이번엔
+  session-start git status 스냅샷이 `M catalog-v001.xml`로 보였으나 **stale**(이미 커밋됨,
+  `git diff HEAD -- catalog` 0줄, HEAD==origin/main). 스냅샷 믿지 말고 실제 diff로 확인할 것.
+- 실측: published `226592d..eec0835`. federate 3/3 PASS(closure) 32=251·33=252·35=250 individuals.
+  catalog 21 central + 14 recipe, `--check` in-sync, `--print-matrix`=14 IRI, staging와 byte-identical.
+  git 델타 정확히 `M catalog + ?? 3 dir`(각 .ttl 1개). CI push run 15 job(discover 1 + validate 14)
+  전원 success. 유일 annotation=Node20 deprecation(비차단). 커밋은 파일 개별 add(`add -A` 금지).
+
+## 검증 게이트(3축 backfill 라운드에서 통과)
+federate 8/8 PASS(per-recipe closure, union 금지) · materialize 그룹A 3섹션/lpranging 2섹션
+(TestScenario 조건부 early-return) 2회 결정성 · 중앙 `validate.py` PASS@223 무회귀.
+
 ## 관련
 [[federation-lockstep]] (catalog/CI 1:1), [[vocab-growth-increment-audit]] (closure 델타=충돌탐지),
-[[refresh-and-git-baseline]] (scoped land·add -A 금지).
+[[refresh-and-git-baseline]] (scoped land·add -A 금지), [[recipe-catalog-glob-land]] (glob 생성기·land순서).
