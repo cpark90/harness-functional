@@ -28,6 +28,29 @@
   소비자는 `instance_edges()`를 쓰는 3곳뿐: `server.py:150`(그래프뷰, asserted라 78 전부 누락)·
   `retrieve.py:160,249`·`validate.py:67`.
 
+## 2b. 수정 후 왕복 무손실 검증 레시피 (B13 해소 확인, 2026-07-25 `19a8cc6`)
+수정은 `render_block`의 **merge**("absence == preserve")로 왔다(ORDER를 97로 늘린 게 아님 — 29에 머묾).
+따라서 게이트는 "ORDER 크기"가 아니라 **GET→SAVE 왕복 트리플 불변**이다. read-only로 재현:
+```python
+import webui.server as srv, webui.ttl_writer as tw; from rdflib import Graph
+def flatten(n):  # 프런트가 PUT 전 objectProps+dataProps를 평탄 술어키로 합침
+    f={"id":n["id"],"type":n["type"]}
+    for p,v in n.get("objectProps",{}).items(): f[p]=list(v)
+    for p,v in n.get("dataProps",{}).items():   f[p]=v if len(v)>1 else v[0]
+    return f
+uri=srv.expand("id:"+nid); g=srv._graph("asserted")
+before={(srv.qname(p),str(o)) for p,o in g.predicate_objects(uri) if p!=srv.RDF.type}
+plan=tw.plan_upsert(flatten(srv.api_node(nid)))     # 쓰지 않음. 전체 파일 텍스트 = plan["new"]
+ng=Graph(); ng.parse(data=plan["new"],format="turtle")
+after={(srv.qname(p),str(o)) for p,o in ng.predicate_objects(uri) if p!=srv.RDF.type}
+assert not (before-after)                            # 손실 0
+```
+- **함정 3**: ① `plan_upsert` 반환 키는 `new`(전체 파일), `text` 아님. ② `api_node` 출력을 **그대로**
+  넣지 말 것 — render_block은 평탄 술어키를 기대하므로 objectProps/dataProps가 그대로 들어가면
+  그 이름이 술어로 렌더돼 TTL 파싱 실패. ③ `id:` base는 `.../id/core/`(= `/id/` 아님).
+- 실측: chan-dispatch·role-inspection·h-multiagent(75)·role-coordinator·gr-execution-separation·
+  oa-inspection-external 6노드 **손실 0**. 서명: `verified/execution-sep-and-webui-verify.md`.
+
 ## 3. 레지스트리 표류(registry drift)가 이 repo의 반복 결함 패턴
 `INSTANCE_CLASSES`(§B3) · `abox_files()` glob(§B8) · `ORDER`/`DATA_PREDS`(§B13) ·
 `INSTANCE_LINK_PREDICATES`(§B14) — 전부 **TBox/디스크가 진실인데 파이썬 리터럴이 사본**이라
