@@ -314,6 +314,30 @@ def _template_bases() -> list[str]:
     return bases
 
 
+# Canonical harness-100 corpus URLs (emitted by import_corpus.py as the PORTABLE
+# ho:artifactTemplate / dct:source ref) still need a readable file to inline /
+# byte-copy at build time. We map such a URL to its path in a LOCAL clone of the
+# corpus: `.../tree/main/en/<rest>` -> `<clone>/en/<rest>`. The clone root is
+# configurable via HARNESS_100_CLONE (default: the conventional checkout);
+# nothing past that fallback is hard-coded. A URL that maps to a missing file (no
+# clone in this environment) degrades to a reference stub — the build never
+# crashes and never re-introduces a machine-specific absolute path into OUTPUT.
+HARNESS_100_URL_PREFIX = "https://github.com/revfactory/harness-100/tree/main/"
+
+
+def _harness_100_clone() -> str:
+    return os.environ.get("HARNESS_100_CLONE", "/home/cpark/git/harness-100")
+
+
+def _map_corpus_url(ref: str) -> str | None:
+    """If `ref` is a canonical harness-100 corpus URL, return its path in the
+    local clone (whether or not that file exists); otherwise None."""
+    if ref and ref.startswith(HARNESS_100_URL_PREFIX):
+        rest = ref[len(HARNESS_100_URL_PREFIX):]
+        return os.path.normpath(os.path.join(_harness_100_clone(), rest))
+    return None
+
+
 def resolve_template(rel_path: str) -> str:
     for base in _template_bases():
         cand = os.path.normpath(os.path.join(base, rel_path))
@@ -325,8 +349,25 @@ def resolve_template(rel_path: str) -> str:
 
 def render_from_template(g: Graph, node: URIRef, tmpl_path: str) -> str:
     """Read the template fragment and substitute the node's graph data.
-    Supported placeholders: {{prefLabel}}, {{promptText}}, {{definition}}."""
-    with open(resolve_template(tmpl_path), encoding="utf-8") as fh:
+    Supported placeholders: {{prefLabel}}, {{promptText}}, {{definition}}.
+
+    A repo-relative template resolves under the repo/recipe roots exactly as
+    before. A canonical harness-100 corpus URL is mapped to the local clone (see
+    _map_corpus_url) and inlined from there — yielding output byte-identical to
+    the former local-path era, since the URL maps to that same file. If the clone
+    file is absent, or the ref is any other URL, or a bare absolute path we refuse
+    to re-open (would re-leak a machine path into the inlined body), the build
+    degrades to a reference stub instead of crashing."""
+    mapped = _map_corpus_url(tmpl_path)
+    if mapped is not None:
+        if not os.path.isfile(mapped):
+            return _ref_stub("artifactTemplate", tmpl_path, str(node)).rstrip("\n")
+        src = mapped
+    elif tmpl_path.startswith(("http://", "https://")) or os.path.isabs(tmpl_path):
+        return _ref_stub("artifactTemplate", tmpl_path, str(node)).rstrip("\n")
+    else:
+        src = resolve_template(tmpl_path)
+    with open(src, encoding="utf-8") as fh:
         text = fh.read()
     subs = {
         "{{prefLabel}}": lib.label_of(g, node),
@@ -956,8 +997,16 @@ def _resolve_ref_path(ref: str) -> str | None:
     root, the recipe dir (dirname of the catalog), then the ref as an absolute
     path (a possibly-EXTERNAL source, e.g. a real source harness on this
     machine). A URL or a path that resolves to nothing returns None so the
-    caller can emit a fail-safe stub instead of crashing."""
-    if not ref or ref.startswith(("http://", "https://")):
+    caller can emit a fail-safe stub instead of crashing. A canonical harness-100
+    corpus URL is first mapped to the local clone (HARNESS_100_CLONE) and returned
+    if that file exists, so a URL-ref'd skill body byte-copies identically to the
+    former local-path era; absent the clone it degrades to a stub."""
+    if not ref:
+        return None
+    mapped = _map_corpus_url(ref)
+    if mapped is not None:
+        return mapped if os.path.isfile(mapped) else None
+    if ref.startswith(("http://", "https://")):
         return None
     for base in _template_bases():  # repo root, then recipe/catalog dir
         cand = os.path.normpath(os.path.join(base, ref))

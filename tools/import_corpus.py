@@ -355,6 +355,15 @@ def analyze_run_behaviour(orch_body):
 # --------------------------------------------------------------------------- #
 # Model of one corpus harness
 # --------------------------------------------------------------------------- #
+def corpus_relpath(abspath, corpus_dir):
+    """Path of a corpus file relative to the corpus harness dir, as POSIX
+    (`.claude/agents/<x>.md`). Appended to the canonical UPSTREAM_BASE URL so an
+    artifactTemplate ref names the PUBLIC corpus file, never a local machine path
+    (`/home/<user>/...`) that would leak the authoring host when pushed."""
+    rel = os.path.relpath(abspath, corpus_dir)
+    return rel.replace(os.sep, "/")
+
+
 def read_file(path):
     with open(path, "r", encoding="utf-8") as fh:
         return fh.read()
@@ -388,7 +397,7 @@ def load_corpus(corpus_dir):
                 "name": fm.get("name", slug),
                 "description": fm.get("description", ""),
                 "lead": lead_paragraph(body),
-                "abspath": os.path.join(agents_dir, fn),
+                "ref": corpus_relpath(os.path.join(agents_dir, fn), corpus_dir),
             })
     agent_slugs = {a["slug"] for a in agents}
 
@@ -426,7 +435,7 @@ def load_corpus(corpus_dir):
                 "has_target_section": bool(
                     re.search(r"^##\s+target agents?\b", body, re.IGNORECASE | re.MULTILINE)),
                 "word_count": wc_words(text),
-                "abspath": skill_md,
+                "ref": corpus_relpath(skill_md, corpus_dir),
             })
 
     run_behaviour = analyze_run_behaviour(orch_body)
@@ -517,7 +526,8 @@ def emit(corpus, flags):
         out.append("id:sp-role-%s a ho:SystemPrompt ; skos:prefLabel %s ;"
                    % (a["slug"], ttl_str(cap_first(a["name"]) + " persona")))
         out.append("    ho:promptText %s ;" % ttl_str(pt))
-        out.append("    ho:artifactTemplate %s ;" % ttl_str(a["abspath"]))
+        out.append("    ho:artifactTemplate %s ;"
+                   % ttl_str("%s/%s" % (src_url, a["ref"])))
         out.append("    ho:tokenEstimate %d ; ho:maturity \"draft\" ." % wc_words(pt))
     out.append("")
 
@@ -542,7 +552,8 @@ def emit(corpus, flags):
         out.append("    skos:definition %s ;" % ttl_str(defn))
         for t in s["targets"]:
             out.append("    ho:augmentsRole id:role-%s ;" % t)
-        out.append("    ho:artifactTemplate %s ;" % ttl_str(s["abspath"]))
+        out.append("    ho:artifactTemplate %s ;"
+                   % ttl_str("%s/%s" % (src_url, s["ref"])))
         out.append("    ho:tokenEstimate %d ; ho:maturity \"draft\" ." % s["word_count"])
     out.append("")
 
