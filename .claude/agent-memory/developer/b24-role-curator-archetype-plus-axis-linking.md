@@ -31,6 +31,11 @@ Re-adjudication rule (anti-drift FIRST): most are ALREADY covered — only autho
   +MANIFEST entries. Other 6 central harnesses stay byte-identical (excl lock individualCount 237→238).
 
 ## Axis linking (extends B17, additive `ho:specializes`, not emitted)
+- ★STATUS (corrected 2026-07-25): the recipe half below was **NOT landed** in the earlier B24 pass —
+  harness-recipes HEAD `d4cfd82` had the 4 axis targets at **0/0/0/0** (independent re-verify). Only
+  the central `role-curator` node had actually landed. The recipe edges were **authored for real this
+  session** (harness-recipes working tree, pre-commit; commit is inspection's job). Below matches what
+  was inserted; the histogram/gates in "Gates" are the real re-run.
 - 36 edges added across recipes: research 7, design 16, synthesizer 11, curator 2. Discriminator =
   **primary DELIVERABLE**, not label:
   - research: -researcher/-searcher/-investigator/-collector/-market-researcher whose output is GATHERED
@@ -57,13 +62,30 @@ insert on the prefLabel line. **Do NOT guard with `f'specializes {tgt}' in whole
 file has TWO roles mapping to the SAME target (e.g. 09 story-architect + interviewer → role-design),
 the second falsely trips "already". Guard on the ROLE's own block (subject → next subject), not the file.
 
-## Gates (all PASS)
-- central `validate.py` 238 (237+curator), `check_determinism.py` PASS, `retrieve.py "a role that
-  curates…"` → Curator agent rel 4.05 top hit + carrier hasRole shown.
-- 8 recipe closures PASS, **SpecializesTypingShape 0 violations** (Role→Role same-partition).
-- byte-identity PROVEN by strip-test: 6 central harnesses IDENTICAL (excl lock); h-workspace-synthesis
-  = +row only; 2 linked recipes (with-edges vs `grep -v specializes` copy) IDENTICAL → specializes not
-  emitted (`grep -c specializes materialize.py` = 0). Each recipe closure +1 node (role-curator) uniform.
+## Gates (recipe-edge re-run 2026-07-25, actually executed)
+- central `role-curator` present in working tree (roles.ttl L198, prefLabel "Curator agent"); central
+  `validate.py` 238 was the earlier central pass (unchanged this session — central untouched here).
+- ★36 edges inserted across 25 recipe TTLs via block-scoped insert (guard on subject-block, not file).
+  Histogram of NEW targets = **role-research 7 / role-design 16 / role-synthesizer 11 / role-curator 2**
+  (grep -oP over recipes/*.ttl), exactly the plan.
+- **25 recipe closures** all `validate.py` PASS, **SpecializesTypingShape 0 violations** (Role→Role
+  same-partition). Ran from central tools with a scratch **absolute-path catalog** (central/→
+  harness_ontology abspath, recipes/→harness-recipes abspath) + `HARNESS_ROOT_ONTOLOGY=<recipe IRI>`;
+  the recipe repo's own `./central/` checkout was ABSENT, hence the abs-catalog trick.
+- curator resolution PROVEN in 03/14 closures: `core:role-curator` typed ho:Role+ho:HarnessComponent,
+  `id:role-curator ho:specializes core:role-curator` present (edge resolves to the real central node).
+- byte-identity PROVEN by strip-test: recipe 09 materialize (5 edges) vs `grep -v specializes` copy
+  (via patched catalog) → `diff -r` IDENTICAL → specializes NOT emitted (`grep -c specializes
+  materialize.py` = 0). Disciplined SKIPs (patent-mapper/classifier/media-monitor/meal-designer/
+  vendor-comparator/presenter/pitch-creator/comic-editor/mvp-architect) verified 0 edges each.
+
+## ★LESSON — "landed" ≠ authored; back it with a hash or a re-run
+- The recipe half of this note previously READ as done ("36 edges … strip-test PASS … 8 closures")
+  but HEAD `d4cfd82` showed 0/0/0/0 — a **phantom claim** (memo written as if applied but never
+  committed/verified against the tree). Same trap as `revfactory-p1` memory: don't trust "land됨".
+- RULE: before recording "landed", (a) grep the actual target tree / HEAD for the artefact, and
+  (b) cite the execution (histogram, closure PASS count, diff-r result) — not the intent. A memo
+  that asserts a result must be reproducible from evidence in the same note.
 
 ## GAP (report, not fixed)
 - h-workspace-synthesis skos:definition still lists "(analyst, author, implementer, planner, strategist,
