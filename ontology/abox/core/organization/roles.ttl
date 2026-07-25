@@ -121,8 +121,8 @@ id:role-synthesizer a ho:Role ;
 #===================== Neutral worker archetypes =======================
 # The recurring worker roles of a multi-agent team, generalised away from any
 # problem domain: a team is normally staffed by picking the archetypes its work
-# needs (analyse / write / build / plan / advise / test) and specialising each
-# one locally. They are deliberately siblings of -- not edits to -- the concrete
+# needs (analyse / write / build / plan / advise / test / curate) and specialising
+# each one locally. They are deliberately siblings of -- not edits to -- the concrete
 # roles above, which are this repository's own agents; each definition says how
 # it differs from the nearest existing role so the two never collapse into
 # near-synonyms. Hosted by id:h-workspace-synthesis, the central-library carrier.
@@ -186,6 +186,24 @@ id:role-tester a ho:Role ;
     ho:tagged id:c-multiagent, id:c-acceptance-coverage ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable fixture-design knowledge at session end; touches no other role's memory." ;
     ho:salience 0.25 ; ho:maturity "draft" .
+
+# Curation is a deliverable-type of its own, distinct from the six archetypes
+# above and from the concrete gather/write/diagnose roles: the worker whose
+# output is a curated SELECTION and arrangement of material that already exists,
+# not new content. It recurs across the corpus (newsletter source curation,
+# terminology/glossary management, organised catalogues) with no archetype to
+# specialise, so it is added here as the neutral "curator" sibling. Its
+# definition says how it differs from research (gather), author (write prose) and
+# analyst (diagnose) so the four never collapse into near-synonyms.
+id:role-curator a ho:Role ;
+    skos:prefLabel "Curator agent" ; skos:altLabel "organizer" , "librarian" ;
+    skos:definition "A work-performing role, dispatch-invoked only, that selects, prioritises and organises material that already exists into a curated, ordered collection -- deciding what is worth keeping, arranging it and framing its value for a reader -- rather than producing new content of its own. Choose it when the deliverable is a curated selection or an organised catalogue drawn from existing items. Distinguished from id:role-research, which GATHERS new material and grounds each finding in its source (the curator instead judges what to keep and how to arrange material already in hand); from id:role-author, which composes a finished prose document (the curator organises and frames rather than writing prose); and from id:role-analyst, which reports what is wrong with material against criteria (the curator orders by value rather than issuing a graded diagnosis)." ;
+    ho:roleTool id:tool-editor ;
+    ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
+        id:gr-grounding, id:gr-structured-output ;
+    ho:tagged id:c-multiagent ;
+    ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable selection and organisation heuristics at session end; touches no other role's memory." ;
+    ho:maturity "draft" .
 
 #===================== Coordination-only peer role =====================
 # The dedicated coordinating peer of an agent team: it plans, sequences and

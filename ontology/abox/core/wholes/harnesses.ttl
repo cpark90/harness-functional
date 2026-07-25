@@ -189,7 +189,7 @@ id:h-workspace-synthesis a ho:Harness ;
     ho:hasRole id:role-developer, id:role-research, id:role-inspection-worker,
         id:role-vnv, id:role-design, id:role-synthesizer,
         id:role-analyst, id:role-author, id:role-implementer,
-        id:role-planner, id:role-strategist, id:role-tester ;
+        id:role-planner, id:role-strategist, id:role-tester, id:role-curator ;
     ho:hasChannel id:chan-workspace ;
     ho:hasFailurePolicy id:fp-agent-failure-retry, id:fp-insufficient-input,
         id:fp-review-critical-rework, id:fp-source-unavailable,
