@@ -53,9 +53,43 @@ Emitting these is judgment; the importer leaves them unbound + a FLAG header com
 `hasExecutionMode core:mode-agent-teams` (Agent Team 100/100), `derivedFrom core:h-multiagent`,
 `dct:source`(canonical github URL)/`dct:license "Apache-2.0"`, `ho:maturity "draft"`.
 
-## Out of THIS brief's SHOULD (not emitted; future importer extension)
-TestScenario + FailurePolicy extraction (sources provide them, pilots got them via a later
-backfill). Brief SHOULD didn't list them → respected the boundary, flagged as future work.
+## Run-behaviour 3-axis extraction (B21 -- now IMPLEMENTED, was future work)
+Automates the Phase-0.7 hand-backfill so a 30x bulk import doesn't clone the miss.
+- **execMode**: unchanged corpus-uniform constant `core:mode-agent-teams`.
+- **TestScenario** (`analyze_run_behaviour`→`parse_scenarios`): read the ORCHESTRATOR
+  skill's `## Test Scenarios` section, split on `### <name> Flow`. `scenario_kind()`
+  keyword-maps heading→closed kind (normal/happy/standard→normal, existing→existing-input,
+  error/edge/failure→error); heading naming NO kind OR carrying no `**Prompt**`
+  → left UNMAPPED + flagged (never guess a kind — fabrication worse than gap). id =
+  `id:scn-<slugify(head)>` (drops "flow"), prompt from `**Prompt**:` line, expected =
+  `**Expected Result(s)**` bullet list → one scenarioExpected literal per bullet. Bound
+  `ho:hasTestScenario` (⊑hasComponent→reachable). prompt/expected/prefLabel wording is a
+  ② seed (won't byte-match pilots' hand-rewrites — same class as promptText).
+- **FailurePolicy** (`FP_ARCHETYPES` table + `map_failure_row`): parse `## Error Handling`
+  markdown table (skip header/separator), match the Error-Type cell against the 5 central
+  archetypes' regex lists. EXACTLY-ONE match → reuse that `core:fp-*` IRI (dedup, order-
+  preserving; NEVER author a local dup). ZERO match → domain-specific → FLAG as local
+  `id:fp-*` candidate (importer does NOT author — recovery machinery is judgment). >1 match
+  → FLAG ambiguous, unbound. Bind `ho:hasFailurePolicy core:fp-*`. Patterns kept
+  CONSERVATIVE (insufficient-input requires `missing (context|input|...)` not bare "missing",
+  so "Data not provided"/"No GPU" correctly fall through to LOCAL, matching the 31 pilot).
+
+## Acceptance re-verify (pilots regenerated to scratch, 3 axes vs hand-authored)
+- 21: kinds {normal,existing-input,error} ✓; central {agent-failure-retry,conflict-
+  contradiction,insufficient-input} ✓; LOCAL-flagged {Language not identified, Large
+  codebase} = the 2 hand-authored id:fp-* ✓ (importer flags, doesn't author).
+- 31 (the local-fp stress case): central {insufficient-input,agent-failure-retry,review-
+  critical-rework} ✓; LOCAL-flagged {Data not provided, No GPU, Training divergence} =
+  the 3 hand id:fp-* ✓. `grep -c "a ho:FailurePolicy"` on both drafts = 0 (no local node
+  authored, as required). All structural axes match; only prose wording differs (②).
+- Corpus sweep (100 harnesses, all import + rdflib-parse, 2-run diff 0): 90/100 bind
+  hasTestScenario, 95/100 bind hasFailurePolicy — tracks source provision (~90/~95) exactly.
+- GAP: 4 sources are MANGLED (`27/28/29/30`-* contain broken find-replace tokens
+  "inthisbefore"/"onlycases"; headings become `## test`/`## error`, prompts `****:`) →
+  correctly SCENARIO/FAILURE-MISSING flagged (not fabricated). 26 SCENARIO-UNMAPPED are
+  EXTRA flows beyond the standard 3 (e.g. "Partial Flow","Analysis-Only Flow") whose kind
+  isn't in the closed set — flagged for human, standard 3 still bound. These ~5-10 harnesses
+  need manual run-behaviour authoring in the bulk import.
 
 ## Gotchas hit
 - The capability hard-stop guard regex must **skip comment lines** first, else it matches the

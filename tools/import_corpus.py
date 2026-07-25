@@ -18,12 +18,20 @@ It does the MECHANICAL, DETERMINISTIC part of composition and nothing else:
     - ho:tokenEstimate (word-count based), ho:maturity "draft",
       derivedFrom core:h-multiagent, hasExecutionMode core:mode-agent-teams,
       hasWorkflow core:wf-multiagent (corpus-uniform constants), dct:source/license
+    - run-behaviour axes 2+3 from the orchestrator skill: each `### <name> Flow`
+      of `## Test Scenarios` -> a recipe-local ho:TestScenario (scenarioKind mapped
+      1:1 to the heading) bound by ho:hasTestScenario; each `## Error Handling` row
+      whose error-type matches exactly ONE central fp-* archetype -> that central
+      IRI reused (no local duplicate) and bound by ho:hasFailurePolicy
 
   MUST NOT (this tool refuses -- these are human judgment; it FLAGS them):
     - invent vocabulary (Concept/Capability/Guardrail/Domain/Task/Tool/ModelConfig)
     - assign tools/model/guardrails/capabilities to roles or the harness
     - guess capability satisfaction (would hard-stop; none are emitted)
     - vendor persona/instruction bodies inline (external refs only)
+    - author a LOCAL id:fp-* for a domain-specific error row (recovery machinery is
+      judgment); fabricate a TestScenario/FailurePolicy the source does not provide;
+      guess a scenarioKind a heading does not name -- all are left unbound + FLAGGED
 
 The generated draft is INTENTIONALLY HarnessShape-incomplete: targetsDomain and
 addressesTask are semantic judgments and are left unbound + flagged. That
@@ -147,6 +155,203 @@ def section_body(body, heading_regex):
     return "\n".join(out)
 
 
+def slugify(text):
+    """'Existing File Flow' -> 'existing-file'; drops a trailing ' flow' word so the
+    scenario id reads like the source heading, deterministic and TTL-safe."""
+    s = text.strip().lower()
+    s = re.sub(r"\bflow\b", "", s)
+    s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+    return s or "scenario"
+
+
+def clean_inline(s):
+    """Collapse whitespace and strip surrounding markdown emphasis markers."""
+    s = s.strip()
+    s = re.sub(r"^\*+", "", s)
+    s = re.sub(r"\*+$", "", s)
+    return " ".join(s.split()).strip()
+
+
+# --------------------------------------------------------------------------- #
+# Run-behaviour axis 2: Test Scenarios (source ### <name> Flow subsections)
+# --------------------------------------------------------------------------- #
+def scenario_kind(heading):
+    """Map a `### <name> Flow` heading to the closed ho:scenarioKind value it
+    denotes, by keyword. Returns None if the heading names no known kind (the
+    importer then leaves it unmapped + flags it rather than guessing a kind)."""
+    h = heading.lower()
+    if "normal" in h or "happy" in h or "standard" in h or "basic" in h:
+        return "normal"
+    if "existing" in h:
+        return "existing-input"
+    if "error" in h or "edge" in h or "failure" in h or "invalid" in h:
+        return "error"
+    return None
+
+
+def parse_flow_body(lines):
+    """From the lines of one `### <name> Flow` block, extract the `**Prompt**`
+    line and the `**Expected Result(s)**` bullet list. Returns (prompt, expected[])."""
+    prompt = None
+    expected = []
+    in_expected = False
+    for ln in lines:
+        s = ln.strip()
+        mp = re.match(r"^\*\*prompt\*\*:?\s*(.*)$", s, re.IGNORECASE)
+        if mp:
+            prompt = clean_inline(mp.group(1))
+            in_expected = False
+            continue
+        me = re.match(r"^\*\*expected result[s]?\*\*:?\s*(.*)$", s, re.IGNORECASE)
+        if me:
+            in_expected = True
+            rest = clean_inline(me.group(1))
+            if rest:
+                expected.append(rest)
+            continue
+        if in_expected:
+            mb = re.match(r"^[-*]\s+(.*)$", s)
+            if mb:
+                expected.append(clean_inline(mb.group(1)))
+            elif not s:
+                continue
+            else:
+                in_expected = False
+    return prompt, expected
+
+
+def parse_scenarios(section_text):
+    """Parse the `## Test Scenarios` section into scenario dicts, one per
+    `### <name> Flow` subheading. Returns (scenarios, unmapped_headings).
+    A subheading is unmapped (flagged, not emitted) if it names no known
+    scenarioKind or carries no Prompt -- fabricating either is worse than a gap."""
+    if not section_text.strip():
+        return [], []
+    blocks = []
+    cur_head, cur_lines = None, []
+    for ln in section_text.splitlines():
+        m = re.match(r"^###\s+(.*)$", ln)
+        if m:
+            if cur_head is not None:
+                blocks.append((cur_head, cur_lines))
+            cur_head, cur_lines = m.group(1).strip(), []
+        elif cur_head is not None:
+            cur_lines.append(ln)
+    if cur_head is not None:
+        blocks.append((cur_head, cur_lines))
+
+    scenarios, unmapped = [], []
+    seen_ids = set()
+    for head, lines in blocks:
+        kind = scenario_kind(head)
+        prompt, expected = parse_flow_body(lines)
+        if kind is None or not prompt:
+            unmapped.append(head)
+            continue
+        sid = slugify(head)
+        base, n = sid, 2
+        while sid in seen_ids:
+            sid = "%s-%d" % (base, n)
+            n += 1
+        seen_ids.add(sid)
+        scenarios.append({"id": sid, "head": head, "kind": kind,
+                          "prompt": prompt, "expected": expected})
+    return scenarios, unmapped
+
+
+# --------------------------------------------------------------------------- #
+# Run-behaviour axis 3: Failure policies (source `## Error Handling` table)
+# --------------------------------------------------------------------------- #
+# Each source error row is matched against the five central neutral archetypes.
+# A row that matches exactly ONE archetype binds that central IRI (mechanical
+# reuse, never a local duplicate). A row that matches NONE is domain-specific
+# recovery machinery -> flagged as a LOCAL id:fp-* authoring candidate (judgment;
+# the importer never authors it). A row that matches MORE THAN ONE is ambiguous
+# -> flagged for a human to disambiguate (never mis-bound).
+FP_ARCHETYPES = [
+    ("core:fp-agent-failure-retry",
+     [r"agent\s+fail", r"sub-?agent\s+fail", r"worker\s+fail", r"delegat\w*\s+fail"]),
+    ("core:fp-review-critical-rework",
+     [r"\U0001f534", r"blocker", r"critical\s+(finding|issue|review|severity)",
+      r"review\s+(critical|reject|fail|blocker)", r"found in review",
+      r"critical.*found", r"rework"]),
+    ("core:fp-conflict-contradiction",
+     [r"conflict", r"contradict", r"cross-domain", r"disagree", r"inconsisten"]),
+    ("core:fp-source-unavailable",
+     [r"source\s+(unavail|unreach|fail|down|missing)", r"external\s+(unavail|unreach|fail|down)",
+      r"cannot\s+(be\s+)?reach", r"\bapi\b.*(down|unavail|fail|error)",
+      r"fetch\s+fail", r"network\s+(fail|down|error)", r"unreachable", r"timeout.*source"]),
+    ("core:fp-insufficient-input",
+     [r"insufficient", r"ambiguous", r"unclear", r"under-?specified", r"vague",
+      r"missing\s+(context|input|requirement|detail|spec|information)",
+      r"too\s+(thin|little|vague)", r"not\s+(enough|specified)", r"lack\w*\s+context"]),
+]
+
+
+def parse_failure_rows(section_text):
+    """Parse the `## Error Handling` markdown table into (error_type, strategy)
+    rows, skipping the header and separator rows."""
+    rows = []
+    for ln in section_text.splitlines():
+        s = ln.strip()
+        if not s.startswith("|"):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        etype, strat = cells[0], cells[1]
+        if not etype or set(etype) <= set("-: "):        # separator row
+            continue
+        if etype.lower() in ("error type", "error", "type", "condition") \
+                and strat.lower() in ("strategy", "handling", "recovery", "action"):
+            continue                                       # header row
+        rows.append((etype, strat))
+    return rows
+
+
+def map_failure_row(etype):
+    """(central_iri | None, ambiguous_bool) for one error-type cell."""
+    e = etype.lower()
+    matched = []
+    for iri, pats in FP_ARCHETYPES:
+        if any(re.search(p, e) for p in pats):
+            matched.append(iri)
+    if len(matched) == 1:
+        return matched[0], False
+    if len(matched) > 1:
+        return None, True
+    return None, False
+
+
+def analyze_run_behaviour(orch_body):
+    """Extract the two source-derived run-behaviour axes from the orchestrator
+    skill body: test scenarios and the failure-policy mapping. (The third axis,
+    execution mode, is the corpus-uniform constant core:mode-agent-teams.)"""
+    scn_sec = section_body(orch_body, r"^##\s+test scenarios?\b")
+    scenarios, scn_unmapped = parse_scenarios(scn_sec)
+
+    err_sec = section_body(orch_body, r"^##\s+error handling\b")
+    central, local_rows, ambig_rows = [], [], []
+    for etype, strat in parse_failure_rows(err_sec):
+        iri, ambiguous = map_failure_row(etype)
+        if iri:
+            if iri not in central:                         # dedup, preserve order
+                central.append(iri)
+        elif ambiguous:
+            ambig_rows.append((etype, strat))
+        else:
+            local_rows.append((etype, strat))
+    return {
+        "scenarios": scenarios,
+        "scenario_unmapped": scn_unmapped,
+        "scenario_section_present": bool(scn_sec.strip()),
+        "fp_central": central,
+        "fp_local": local_rows,
+        "fp_ambiguous": ambig_rows,
+        "error_section_present": bool(err_sec.strip()),
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Model of one corpus harness
 # --------------------------------------------------------------------------- #
@@ -189,6 +394,7 @@ def load_corpus(corpus_dir):
 
     # skills/*/skill.md -> list of dicts, sorted by dir name (determinism)
     skills = []
+    orch_body = ""
     skills_dir = os.path.join(claude_dir, "skills")
     if os.path.isdir(skills_dir):
         for sd in sorted(os.listdir(skills_dir)):
@@ -198,6 +404,8 @@ def load_corpus(corpus_dir):
             text = read_file(skill_md)
             fm, body = parse_frontmatter(text)
             is_orch = (sd == shortname)
+            if is_orch:
+                orch_body = body
             targets = []
             if not is_orch:
                 sec = section_body(body, r"^##\s+target agents?\b")
@@ -221,12 +429,15 @@ def load_corpus(corpus_dir):
                 "abspath": skill_md,
             })
 
+    run_behaviour = analyze_run_behaviour(orch_body)
+
     return {
         "dirname": dirname,
         "shortname": shortname,
         "claude_text": claude_text,
         "agents": agents,
         "skills": skills,
+        "run_behaviour": run_behaviour,
     }
 
 
@@ -335,6 +546,47 @@ def emit(corpus, flags):
         out.append("    ho:tokenEstimate %d ; ho:maturity \"draft\" ." % s["word_count"])
     out.append("")
 
+    # -- run-behaviour axis 2: test scenarios ------------------------------
+    rb = corpus["run_behaviour"]
+    scenarios = rb["scenarios"]
+    if scenarios:
+        out.append("#===================== Run-behaviour: test scenarios ==================")
+        out.append("# The behaviour-acceptance fixtures from the source orchestrator skill's")
+        out.append("# `## Test Scenarios` section: each `### <name> Flow` -> one TestScenario,")
+        out.append("# ho:scenarioKind mapped 1:1 to the heading (normal/existing-input/error).")
+        out.append("# Prompt + expected are source CONTENT (recipe-local); wording is a draft")
+        out.append("# seed a reviewer refines. Bound by ho:hasTestScenario (a Harness->")
+        out.append("# TestScenario sub-property of hasComponent -> reachable, orphan-free).")
+        for sc in scenarios:
+            out.append("id:scn-%s a ho:TestScenario ; skos:prefLabel %s ;"
+                       % (sc["id"], ttl_str(cap_first(sc["head"]) + " scenario")))
+            out.append("    ho:scenarioKind \"%s\" ;" % sc["kind"])
+            out.append("    ho:scenarioPrompt %s ;" % ttl_str(sc["prompt"]))
+            if sc["expected"]:
+                joined = " ,\n        ".join(ttl_str(x) for x in sc["expected"])
+                out.append("    ho:scenarioExpected %s ;" % joined)
+            toks = wc_words(sc["prompt"] + " " + " ".join(sc["expected"]))
+            out.append("    ho:tokenEstimate %d ; ho:maturity \"draft\" ." % toks)
+        out.append("")
+
+    # -- run-behaviour axis 3: failure policies (central archetype reuse) ---
+    fp_central = rb["fp_central"]
+    if fp_central or rb["fp_local"] or rb["fp_ambiguous"]:
+        out.append("#===================== Run-behaviour: failure policies =================")
+        out.append("# The source `## Error Handling` rows mapped to the central neutral")
+        out.append("# archetypes by IRI where exactly one fits (mechanical reuse, NO local")
+        out.append("# duplicate -- that is the drift this repo prevents). Bound below via")
+        out.append("# ho:hasFailurePolicy. Domain-specific rows no archetype covers are left")
+        out.append("# UNBOUND and FLAGGED as local id:fp-* authoring candidates (authoring")
+        out.append("# domain recovery machinery is judgment; the importer does not do it).")
+        if fp_central:
+            out.append("#   central reuse: %s" % ", ".join(fp_central))
+        for etype, _ in rb["fp_local"]:
+            out.append("#   LOCAL candidate (author id:fp-*): %s" % ttl_str(etype))
+        for etype, _ in rb["fp_ambiguous"]:
+            out.append("#   AMBIGUOUS (disambiguate by hand): %s" % ttl_str(etype))
+        out.append("")
+
     # -- harness assembly ---------------------------------------------------
     out.append("#===================== HARNESS (skeleton assembly) ====================")
     out.append("# targetsDomain / addressesTask / usesModel / hasGuardrail / usesTool /")
@@ -354,6 +606,11 @@ def emit(corpus, flags):
         out.append("    ho:hasRole %s ;"
                    % ", ".join("id:role-%s" % a["slug"] for a in agents))
     out.append("    ho:hasExecutionMode core:mode-agent-teams ;")
+    if scenarios:
+        out.append("    ho:hasTestScenario %s ;"
+                   % ", ".join("id:scn-%s" % sc["id"] for sc in scenarios))
+    if fp_central:
+        out.append("    ho:hasFailurePolicy %s ;" % ", ".join(fp_central))
     out.append("    ho:derivedFrom core:h-multiagent ;")
     out.append("    dct:source %s ;" % ttl_str(src_url))
     out.append("    dct:license \"Apache-2.0\" ;")
@@ -391,6 +648,28 @@ def collect_flags(corpus):
         flags.append("QA-GATE: kept local role(s) for %s -- a reviewer may instead REUSE "
                      "core:role-synthesizer (promote-once) to satisfy a required capability, "
                      "or keep it local (varies per recipe)." % ", ".join(qa_like))
+
+    # Run-behaviour: domain-specific failure rows the importer refuses to author.
+    rb = corpus["run_behaviour"]
+    for etype, strat in rb["fp_local"]:
+        flags.append("FAILURE-LOCAL: error row '%s' -> '%s' matches no central fp-* "
+                     "archetype -- author a recipe-local id:fp-* (domain recovery "
+                     "machinery is a judgment; the importer does not author it)."
+                     % (etype, strat))
+    for etype, strat in rb["fp_ambiguous"]:
+        flags.append("FAILURE-AMBIGUOUS: error row '%s' -> '%s' matched more than one "
+                     "central archetype -- disambiguate by hand (left unbound)."
+                     % (etype, strat))
+    if not rb["error_section_present"]:
+        flags.append("FAILURE-MISSING: orchestrator skill has no `## Error Handling` "
+                     "section -- ho:hasFailurePolicy left unbound (not fabricated).")
+    for head in rb["scenario_unmapped"]:
+        flags.append("SCENARIO-UNMAPPED: Test-Scenarios subheading '%s' names no known "
+                     "scenarioKind or carries no **Prompt** -- left unbound (not "
+                     "fabricated)." % head)
+    if not rb["scenario_section_present"]:
+        flags.append("SCENARIO-MISSING: orchestrator skill has no `## Test Scenarios` "
+                     "section -- ho:hasTestScenario left unbound (not fabricated).")
 
     # Extending skills whose target agent could not be resolved.
     for s in corpus["skills"]:
