@@ -1,5 +1,10 @@
 # Data-repo CI gate (D4, docs/federation-design.md).
 #
+# DEPRECATED / reference-only: this PURE-DATA-repo template is superseded by the
+# recipe-repo glob CI (tools/gen_recipe_catalog.py generates the recipe catalog +
+# CI matrix). No live pure-data repo currently uses it; kept as a worked example
+# of the central-schema union pattern. Env values below are illustrative.
+#
 # Drop this into a PURE-DATA ontology repo as .github/workflows/validate.yml.
 # It pulls the central schema+tooling repo, composes the UNION (central TBox +
 # core data + this repo's data unit) and runs the central validate.py so every
@@ -32,10 +37,11 @@ on:
 
 env:
   # The central schema+tooling repo (owner/name). Change to your fork/mirror.
-  CENTRAL_REPO: hhmm2728/harness_ontology
+  CENTRAL_REPO: cpark90/harness-ontology
   CENTRAL_REF: main
   # This data repo's ontology (document) IRI — its import closure IS the union.
-  HARNESS_ROOT_ONTOLOGY: https://harness-ontology.dev/data/lpranging
+  # Example domain only (ONTOLOGYSTYLE §2a); set to your own .../data/<domain>.
+  HARNESS_ROOT_ONTOLOGY: https://harness-ontology.dev/data/acme-support
 
 jobs:
   validate:

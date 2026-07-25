@@ -48,8 +48,9 @@ reads its `CODESTYLE.md`.
 5. Write it back to `ontology/abox/` as new individuals:
    - give it `skos:prefLabel`, `ho:maturity "draft"`, and `ho:derivedFrom` the
      template
-   - set `ho:tokenEstimate` on any node carrying text (keeps future projections
-     budget-accurate)
+   - set `ho:tokenEstimate` per ONTOLOGYSTYLE §1c's scope — nodes carrying
+     `promptText` (SystemPrompt/Instruction/Guardrail/Example) plus Tool/Workflow
+     (keeps future projections budget-accurate)
    - tag it with existing `ho:Concept`s so it is discoverable, not orphaned
 6. Run `validate.py`. Green means the new harness is connected, well-typed, and
    buildable. Promote `maturity` to `reviewed`/`stable` after review.

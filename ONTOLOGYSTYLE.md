@@ -74,7 +74,12 @@ SHACL 연결성 shape + 전역 reachability BFS가 이를 강제한다. (설계 
 
 - **[지킴]** **텍스트를 지닌 노드에는 `ho:tokenEstimate`를 반드시 붙인다**
   (`promptText`가 있는 SystemPrompt/Instruction/Guardrail/Example, 그리고 Tool/Workflow).
-  빠지면 projection 예산이 부정확해져 context rot 방어가 샌다.
+  빠지면 projection 예산이 부정확해져 context rot 방어가 샌다. 이 규칙이 `ho:tokenEstimate`의
+  **적용 범위 단일 기준**이다(다른 문서가 "텍스트를 지닌 모든 노드"처럼 넓게 적더라도 이 범위로
+  읽는다).
+- **[지킴]** `ho:observedTokenVolume`(`ho:AreaOfObservation`의 런타임 관측량, §3)은 이
+  `tokenEstimate` 규칙과 **별개 축**이다 — projection 비용이 아니라 관측량이므로 위 필수 대상에
+  포함되지 않는다(둘의 구분은 §3 참조).
 - **[지킴]** **온톨로지 전체를 context에 로드하지 않는다.** 요청 처리·composition은 항상
   `python3 tools/retrieve.py "<request>"`가 준 pack에서 시작한다 (CLAUDE.md 골든룰 1).
 - **[권장]** `promptText`는 최소·자기완결로. 긴 프롬프트를 한 노드에 몰지 말고 재사용
