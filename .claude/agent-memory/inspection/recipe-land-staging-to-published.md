@@ -155,6 +155,23 @@ federate 8/8 PASS(per-recipe closure, union 금지) · materialize 그룹A 3섹�
   published-wide `git grep /home/cpark origin/main -- recipes/` = **0**(TTL·README 통틀어).
   CI run 30149996529 = 39 job(discover 1 + validate 38) 전원 success.
 
+## specializes-edge land (2026-07-25) — archetype↔instance 링킹 82 edges/35 recipe
+- **엣지-only land은 순수 additive·catalog 무변경**: `ho:specializes core:X`는 기존 노드에 술어 추가라
+  신규 개체 0 → catalog(노드/URI 파생) 불변(`--check` in-sync 유지), federate 개체수 불변(21=257·32=265·
+  70=259 링크 前後 동일). commit `35 files 82 insertions(+) 0 deletions`가 additive 지표.
+- **byte-identity 증명 = strip-and-compare**: `grep -c specializes tools/materialize.py`=0(미emit)이면,
+  recipe ttl에서 `grep -v "ho:specializes core:"`로 엣지 제거한 사본을 materialize한 것과 원본 materialize를
+  `diff -r`(lock 포함까지) → **완전 동일**(lock individualCount조차 동일, 엣지는 개체 아님). 표본 2개면 충분.
+  materialize harness 인자는 **bare slug**(`h-code-reviewer`, `id:` prefix 붙이면 no-match exit 2).
+- **★README-scrub-lag 함정**: staging↔published `diff -rq`에 pilot 5(03·16·21·31·46) **README.md differ**가
+  낀다. 이는 R2 로컬경로 스크럽(`a7ad725`)이 **published에만** 적용되고 staging엔 역전파 안 돼서 —
+  **staging README가 published보다 뒤처짐**(로컬경로 잔존). 엣지 land 스코프는 **recipe .ttl만**이니
+  README는 **절대 copy 금지**(staging→published 복사 시 로컬경로 재도입 = 금지 위반). 스코프 필터를
+  `.ttl`로 명시하고 README/lpranging은 손대지 말 것.
+- 실측: published `a7ad725..d4cfd82`(35 M .ttl only), CI run 30156685557 = 39 job(discover1+validate38) success.
+  중앙 `2d5873a..c99fd1e`(docs/memory only, validate-ontology 1 job success). 둘 다 Node20 annotation 비차단.
+  survey close도 같은 라운드: compression-cap 해석("10~20"=상한, 모든 축 미만 압축)으로 결정4 잔여 해소·refresh.
+
 ## 검증 게이트(3축 backfill 라운드에서 통과)
 federate 8/8 PASS(per-recipe closure, union 금지) · materialize 그룹A 3섹션/lpranging 2섹션
 (TestScenario 조건부 early-return) 2회 결정성 · 중앙 `validate.py` PASS@223 무회귀.
