@@ -18,7 +18,7 @@
 | 항목 | 상태 | 남은 일 |
 |---|---|---|
 | `harness-100-augmentation.md` | **REFRESHED (채널 제거, 2026-07-25)** — 핵심 요청 충족 | ✅0.5~P0-b~importer~**대표 35 임포트 완료**(published `ccb2cbb`, catalog **38**, CI 39 job green, 로컬경로 스크럽 `a7ad725`). approved + 적용결과 custody(`verified/`에 기록 후 제거, git 이력 보존). **잔여(별건 GAP, optional 후속) = D1 `fp-refer-to-expert` recipe 재바인딩** — 아래 배치 해소 로그 D1에서 추적. |
-| `harness-repo-survey.md` | **W0~W4 land 완료 — 예제 잔여 HOLD(유지)** | ①로드맵(c)·②`ho:Hook` 신설·③agent-rules-books·④role 원형 = **W0 `c7ae890`·W1 `925f7ba`·W2 `5c35528`(252→기존7, 신규0)·W3 `9ca09d5`·W4 `f7214b6`(ho:Hook)** 전부 적용. **잔여 = 결정4 "예제 10~20"만** — 소스타입 불일치(role 라이브러리엔 임포트할 하네스 없음, W2 커밋이 GAP 명시) → **사용자 확인 필요**. custody: `verified/harness-repo-survey.md`. |
+| `harness-repo-survey.md` | **CLOSED — REFRESHED (채널 제거, 2026-07-25)** | ①로드맵(c)·②`ho:Hook` 신설·③agent-rules-books·④role 원형 = **W0 `c7ae890`·W1 `925f7ba`·W2 `5c35528`(252→기존7, 신규0)·W3 `9ca09d5`·W4 `f7214b6`(ho:Hook)** 전부 적용 + **archetype↔instance 링킹**(recipe-local role/fp → 중앙 archetype `ho:specializes` **82 edges/35 recipe**, additive; published `a7ad725..d4cfd82`, CI 30156685557 success 39 job; materialize byte-identical·federate 개체수 불변·SpecializesTypingShape 위반 0). **결정4 "예제 10~20" 잔여 = close(compression-cap 해석)**: 사용자④ "10~20개로 압축"을 **상한**으로 해석 — 253 role→0 catalog·20 hook→4·+1 pattern·+1 guardrail로 모두 상한 미만 압축, 채택 소스는 component 라이브러리라 "예제 하네스 임포트" 해석은 소스 부재로 불성립. ★**orchestrator 해석 — 사용자가 "예제 하네스 10~20 임포트" 의도 시 별도 harness 코퍼스 지정으로 재개**. custody: `verified/harness-repo-survey.md`(companion `harness-repo-survey/` 잔존). inbox 제거. |
 | `revfactory-harness-reflection.md` | **거의 완료 — 미반영 1건** | 전수 감사 완료(`verified/revfactory-completeness-audit.md`): delta A~E·G 전부 반영, 의도적 미반영 5류. **미반영 GAP = delta F(`cap-skill` Capability + `capabilityContract` 구조 Contract)** — `gr-well-formed-skill`의 강제측. 그래프가 `harnesses.ttl:229`에 "later wave"로 명시 지연. **F 저작 시 완결→refresh.** refresh HOLD |
 | `retrieve-nondeterministic-pack.md` | **land 완료** (`d1ac476`, CI green) | 파일 태그만 `open` 유지 — 사용자가 `approved`로 고치면 즉시 refresh 가능. 근거: `verified/retrieve-determinism-finalize.md`. negative control로 가드 실효 확인(8/8 FAIL) |
 
@@ -36,6 +36,18 @@
   (`role-implementer`↔`role-developer` L0.00 — 원형은 일반어·구체는 도메인어라 어휘가 안 겹치는데 의미가 겹침).
 - **B18. `retrieve.py`엔 IRI 해소가 없다** (B7의 미해소 축). materialize는 emit 시 `id:`→라벨 해소하지만
   retrieve 팩엔 그대로 실린다 — 텍스트 술어 내 참조 **32/17노드 → 41/24노드**로 증가 중. B7을 "materialize 한정"으로 정정.
+- **B23. refer-to-expert fp definition 텍스트 stale — 69/70/72** (inspection 발견, specializes 링킹 후속).
+  이 3 recipe의 `refer-to-expert` FailurePolicy definition이 아직 "no central archetype covers ..."라 적혀 있으나
+  이제 `core:fp-refer-to-expert`를 specialize한다(82 링킹 라운드, pre-D1 작성분). **미수정 이유**: fp
+  definition/failureCondition은 recipe materialize의 **error-handling 테이블로 emit**되므로 텍스트를 고치면
+  byte-identity가 깨진다(specializes 엣지 추가는 미emit이라 무해했지만 def 텍스트는 emit). → **소프트 결정
+  항목**(materialize-affecting refresh). 착수 시 3 recipe def 재저작 = developer dispatch. **미착수.**
+- **B24. 7 role archetype이 커버하지 못하는 축 — research/design/curation/synthesis** (inspection, 링킹 라운드
+  disciplined SKIP의 근본). 중앙 중립 role 원형은 7종(analyst/author/implementer/planner/strategist/tester/
+  coordinator)뿐이라, recipe-local의 research/gather·design/architect·curation·synthesis-gate role은 specialize할
+  archetype이 없어 **무연결로 남았다**(anti-drift 판단 — 억지 링크 금지). 더 완전한 세분화를 원하면 **중앙 archetype
+  신설**(design/curation/gather 등)이 필요하나 이는 TBox/중앙-abox 성장(설계 결정)이라 recipe 편집으로 못 닫는다.
+  **미착수(설계 결정 대기).**
 - **B22. Contract 축 abox 개체 0 — 메커니즘만 존재** (revfactory 감사 발견). `08ed4df`가 `ho:Contract` 클래스 +
   `capabilityContract` 속성 + `tools/verify_contract.py` **메커니즘만** 심고 인스턴스는 안 만들었다(reorg 회귀 아님,
   원래 0). source-mapping·delta가 "EXISTING Contract 강한 재사용"으로 기댄 축이 개체로 예시되지 않은 상태.
@@ -49,6 +61,11 @@
 > `harness-100-augmentation`(대표 35 임포트 완료, published `ccb2cbb`/`a7ad725`). 각 원문·verified 보고서는
 > git 이력에 보존(복원 가능). `harness-repo-survey`는 **HOLD 유지**(결정4 "예제 10~20"만 잔여, 사용자 확인
 > 필요) → inbox에 남김. refresh 후 inbox approved 잔여 = **1**(survey, 예제 잔여).
+>
+> **채널 refresh 2차 (inspection, 2026-07-25)**: `harness-repo-survey`의 마지막 잔여(결정4 "예제 10~20")를
+> **compression-cap 해석으로 close** + archetype↔instance 링킹(82 edges/35 recipe, published `d4cfd82`)
+> land 후 inbox 항목 제거. close 판정·override 여지는 `verified/harness-repo-survey.md`에 durable 기록,
+> companion `harness-repo-survey/`는 잔존. → **inbox approved 잔여 = 0**(모든 승인 피드백 채널 소진).
 - **execution-separation-invariant** (approved) → **land `fce72af`**: `gr-execution-separation`+`role-coordinator`,
   4 multi-agent 하네스 배선. 단일에이전트 byte-identical, multi-agent operating-rules +1줄(승인된 의도 변경).
 - **webui B13/B14/B15** (approved) → **land `19a8cc6`**: merge-not-replace 무손실(94노드 손실→0), link predicate **TBox 파생**

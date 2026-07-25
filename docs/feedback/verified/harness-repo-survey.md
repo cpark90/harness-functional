@@ -120,3 +120,41 @@ importable harnesses"로 명시). role 원형 반영(온톨로지 축)은 W2로 
 role-library를 예제화하지 않음)는 사용자 확인이 필요하다. 이 잔여만 남겨 항목을 유지한다.
 
 **판정: 1·2·3 = 적용 완료(land). 4 = 예제-잔여로 HOLD(유지) — 사용자 확인 대기.**
+
+---
+## CLOSE 판정 — 예제 잔여 해소(compression-cap 해석) + archetype↔instance 링킹 land (inspection, 2026-07-25)
+
+이 항목을 **close**한다. HOLD로 남았던 결정 4의 "예제 10~20" 잔여를 아래 근거로 충족 처리하고,
+동시에 archetype↔instance 세분화 축(B17 payoff)이 실현됐다. 근거는 verified 보고서(이 파일)에
+durable하게 기록한 뒤 inbox 항목(`docs/feedback/harness-repo-survey.md`)을 refresh 규약대로 제거한다
+(companion 연구 디렉토리 `harness-repo-survey/`는 git 이력·연구 자료로 잔존 — harness-100/revfactory
+refresh 전례와 동일).
+
+### 커버리지 요약 (W0~W4 전부 적용됨)
+- **W0** 커버리지 감사 `c7ae890` (확정 TBox gap = `ho:Hook`만).
+- **W1** `pat-blackboard` 중립 패턴 승격 `925f7ba`.
+- **W2** role archetype 커버리지 `5c35528` (외부 252 role → 기존 중립 원형 7종에 전부 collapse, 신규 0).
+- **W3** `gr-human-checkpoint` 중립 guardrail `9ca09d5`.
+- **W4** `ho:Hook` lifecycle-trigger 축 `f7214b6` (GAP-H complete).
+- **B17 payoff (이번 라운드)** — recipe-local role/FailurePolicy를 중앙 archetype에 `ho:specializes`로
+  링크: **82 edges / 35 recipe** (75 role→analyst/author/implementer/planner/strategist/tester +
+  7 refer-to-expert fp→`core:fp-refer-to-expert`), additive. materialize 미emit → recipe 산출물
+  byte-identical(21·70 표본 실측, lock individualCount까지 동일), 신규 노드 0(엣지만), federate
+  개체수 불변(21=257·32=265·70=259), SpecializesTypingShape 위반 0. published `a7ad725..d4cfd82`,
+  CI run 30156685557 success(39 job = discover 1 + validate 38). 중앙 `ontology/**` 무편집.
+
+### "예제 10~20" 판정 = 충족 (compression-cap 해석)
+사용자④ "예제는 10~20개로 **압축**해서 반영"을 **상한(ceiling)**으로 해석한다. survey가 반영한
+결과는 모두 그 상한 미만으로 압축됐다: 외부 253 role → catalog화 **0**(기존 원형 7종 재사용) ·
+20 hook → **4** · pattern **+1**(pat-blackboard) · guardrail **+1**(gr-human-checkpoint). 즉
+"10~20개로 압축"이라는 상한을 어떤 축도 넘지 않았다. 채택 소스(wshobson/VoltAgent/toolkit/
+agent-rules-books)는 **component 라이브러리**이지 임포트할 하네스가 없어, "예제 하네스 10~20개
+임포트"라는 대안 해석은 **소스 부재로 불성립**한다. → **compression-cap 충족으로 close.**
+
+### ★사용자 override 여지 (명시)
+이 close는 **orchestrator의 해석**이다. 사용자가 결정 4를 "예제 **하네스** 10~20개를 recipe로
+임포트"로 의도했다면, 그 해석의 소스(별도 harness 코퍼스, 예: harness-100류)를 지정하는 순간
+이 항목은 **재개**된다. role 라이브러리는 그 소스가 될 수 없다(임포트할 하네스 없음).
+
+**close 판정: refresh 규약(approved + 적용결과 durable 기록) 충족 → inbox 항목 제거. 최종 inbox
+approved 잔여 = 0.**
