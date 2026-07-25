@@ -39,7 +39,23 @@
 - **B22. Contract 축 abox 개체 0 — 메커니즘만 존재** (revfactory 감사 발견). `08ed4df`가 `ho:Contract` 클래스 +
   `capabilityContract` 속성 + `tools/verify_contract.py` **메커니즘만** 심고 인스턴스는 안 만들었다(reorg 회귀 아님,
   원래 0). source-mapping·delta가 "EXISTING Contract 강한 재사용"으로 기댄 축이 개체로 예시되지 않은 상태.
-  **delta F(`cap-skill`+`capabilityContract`) 저작이 이 축의 첫 인스턴스가 될 수 있다** — 함께 결정. **미착수.**
+  **delta F(`cap-skill`+`capabilityContract`) 저작이 이 축의 첫 인스턴스가 될 수 있다** — 함께 결정. **미착수(다음).**
+
+## 배치 해소 로그 (2026-07-25, goal 마무리 라운드)
+사용자 부재 중, 승인·doctrine이 명확한 열린 이슈를 정리(개별 "사용자 결정 대기"로 방치하던 것 실행).
+- **execution-separation-invariant** (approved) → **land `fce72af`**: `gr-execution-separation`+`role-coordinator`,
+  4 multi-agent 하네스 배선. 단일에이전트 byte-identical, multi-agent operating-rules +1줄(승인된 의도 변경).
+- **webui B13/B14/B15** (approved) → **land `19a8cc6`**: merge-not-replace 무손실(94노드 손실→0), link predicate **TBox 파생**
+  (B16 표류 차단), relpath mtime키.
+- **B20** CI stale → **수정 완료(미커밋)**: owner/URL 정정 + deprecation 헤더.
+- **Q1** 규범 충돌 → **수정 완료(미커밋)**: CLAUDE.md step5를 ONTOLOGYSTYLE §1c 범위로 통일 + observedTokenVolume 구분.
+- **D1 `fp-refer-to-expert`** → **저작 완료(미커밋)**: 6+ recipe 재발 중립 원형을 중앙 승격, carrier 배선(226). 기존 recipe
+  재바인딩은 후속(federation ripple).
+- **D1 카테고리 도메인**(dom-business/legal umbrella 등) → **CLOSED: recipe-local 유지**. roadmap §2가 이미 "도메인은
+  recipe-local, 기존 중앙 도메인만 재사용"으로 결정 — 사용자 fork 아님(doctrine).
+- **image-gen tool/capability**(07 단독 소비자) → **CLOSED: recipe-local 유지**. ONTOLOGYSTYLE §1c YAGNI(소비자 1 → 미승격).
+- **남은 것**: B17(원형↔인스턴스 specialization 술어, TBox — 세분화 축 직결) · delta F/B22(cap-skill + 첫 Contract 인스턴스,
+  revfactory 잔여) · harness-repo-survey Wave 0(approved, 커버리지 감사). → 이 라운드에서 계속.
 - **B21. importer가 TestScenario/FailurePolicy를 추출하지 않는다** (inspection 발견, importer land 후속).
   `tools/import_corpus.py`는 skeleton·role·persona·instruction·상수만 기계 생성하고 `hasTestScenario`/
   `hasFailurePolicy`는 브리프 SHOULD 밖이라 미구현. 소스는 거의 전수 제공 → Phase 0.7이 8 recipe에 backfill로
