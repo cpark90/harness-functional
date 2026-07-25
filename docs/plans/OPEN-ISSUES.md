@@ -19,7 +19,7 @@
 |---|---|---|
 | `harness-100-augmentation.md` | **진행 중 — 대량 임포트 직전에서 사용자 결정 대기** | ✅0.5 인벤토리(`4575e11`) → ✅0.6 중앙 어휘 18개체(`27c6582`) → ✅0.7 recipe 3축(`f096036`) → ✅P0-b catalog/CI glob(`5084827`/`d9ebf0c`) → ✅importer(`9f22590`). **남은 것 = 대표 35 대량 임포트뿐**, 그 앞에 **D2 결정 + B21(importer 3축 확장)** 필요. 계획: `harness-100-scaleup-plan.md` |
 | `harness-repo-survey.md` | **미착수** (승인+답변 완료) | ①전체 로드맵(c) ②**`ho:Hook` 신설** ③agent-rules-books는 온톨로지에만 ④role 원형: 온톨로지 전량 + 예제 10~20. 계획: `harness-repo-survey/mining-plan.md` Wave 0~4 |
-| `revfactory-harness-reflection.md` | **거의 완료** | P1·P2 land 완료. **잔여 확인 필요** — delta-inventory 대조로 미반영분이 정말 없는지 1회 감사 |
+| `revfactory-harness-reflection.md` | **거의 완료 — 미반영 1건** | 전수 감사 완료(`verified/revfactory-completeness-audit.md`): delta A~E·G 전부 반영, 의도적 미반영 5류. **미반영 GAP = delta F(`cap-skill` Capability + `capabilityContract` 구조 Contract)** — `gr-well-formed-skill`의 강제측. 그래프가 `harnesses.ttl:229`에 "later wave"로 명시 지연. **F 저작 시 완결→refresh.** refresh HOLD |
 | `retrieve-nondeterministic-pack.md` | **land 완료** (`d1ac476`, CI green) | 파일 태그만 `open` 유지 — 사용자가 `approved`로 고치면 즉시 refresh 가능. 근거: `verified/retrieve-determinism-finalize.md`. negative control로 가드 실효 확인(8/8 FAIL) |
 
 ## B. 기술 GAP — 미해결
@@ -36,6 +36,10 @@
   (`role-implementer`↔`role-developer` L0.00 — 원형은 일반어·구체는 도메인어라 어휘가 안 겹치는데 의미가 겹침).
 - **B18. `retrieve.py`엔 IRI 해소가 없다** (B7의 미해소 축). materialize는 emit 시 `id:`→라벨 해소하지만
   retrieve 팩엔 그대로 실린다 — 텍스트 술어 내 참조 **32/17노드 → 41/24노드**로 증가 중. B7을 "materialize 한정"으로 정정.
+- **B22. Contract 축 abox 개체 0 — 메커니즘만 존재** (revfactory 감사 발견). `08ed4df`가 `ho:Contract` 클래스 +
+  `capabilityContract` 속성 + `tools/verify_contract.py` **메커니즘만** 심고 인스턴스는 안 만들었다(reorg 회귀 아님,
+  원래 0). source-mapping·delta가 "EXISTING Contract 강한 재사용"으로 기댄 축이 개체로 예시되지 않은 상태.
+  **delta F(`cap-skill`+`capabilityContract`) 저작이 이 축의 첫 인스턴스가 될 수 있다** — 함께 결정. **미착수.**
 - **B21. importer가 TestScenario/FailurePolicy를 추출하지 않는다** (inspection 발견, importer land 후속).
   `tools/import_corpus.py`는 skeleton·role·persona·instruction·상수만 기계 생성하고 `hasTestScenario`/
   `hasFailurePolicy`는 브리프 SHOULD 밖이라 미구현. 소스는 거의 전수 제공 → Phase 0.7이 8 recipe에 backfill로
@@ -120,11 +124,25 @@
   `definition` 누락 **56**(`Guardrail` 34/34는 관례상 `promptText`가 본문) · **접두사 위반 0**.
   → 진단 정정: ONTOLOGYSTYLE §1c의 **명시 범위 위반은 0**이다. "규칙 위반"이 아니라 **규칙 범위가 좁다**.
 - **Q2**: 라벨 근사중복 J≥0.5 **81쌍**(대부분 `os-*`/`as-*` 작명 패밀리 노이즈) · 정의 근사중복 J≥0.55 **9쌍**
-  (전부 `AreaOfObservation` internal 패밀리, 최고 J=0.86 `oa-developer-internal`↔`oa-synthesizer-internal`
-  — **템플릿 저작인지 복붙 blob인지 판단 필요**) · deprecated 3개 inbound 참조 0(그래프는 clean).
+  (전부 `AreaOfObservation` internal 패밀리) · deprecated 3개 inbound 참조 0(그래프는 clean).
+  > **판정 완료 (orchestrator 직접 판독, 2026-07-25)**: 정의 근사중복 9쌍은 **정당한 대칭 템플릿 — drift 아님**.
+  > `oa-{developer,vnv,synthesizer}-internal` 등이 "X's introspection over its own constituent parts: its role
+  > and its task-scoped cache memory"를 **agent별로 인스턴스화**한 것으로, 각 agent가 자기 ObservationSpace를
+  > 갖는 모델의 본질적 병렬성이다(J=0.86은 구조 동일성이지 중복 저작이 아님). 라벨 근사중복 2쌍
+  > (`role-inspection`↔`role-inspection-worker`, `wf-harness-evolution`↔`wf-verify-harness`)도 이름만 유사할 뿐
+  > 별개 개념(agent vs worker role / evolution vs verify). ⇒ **Q2 건전성: 실제 drift 0, 정리 불필요.**
 - **Q3**: definition 길이 median 210 / p90 485 / **max 1019**(`wf-compose-harness`). blob 후보: `chan-peer` 832 ·
   `h-harness-factory` 818 · `h-workspace-synthesis` 771 · `pat-peer-mesh` 770 · `h-multiagent` 746.
   **다중정책 Guardrail 10/34** — 특히 `gr-design-for-loss`는 한 문장에 정책 4개.
+  > **판정 (orchestrator 직접 판독, 2026-07-25) — 사용자 결정 필요, 임의 분해 안 함**:
+  > ① **응집도 애매**: `gr-design-for-loss`의 4절(confirm-completion / hold-custody / absolute-state / observable-
+  > counters)은 "손실을 정상으로 다루기"라는 **단일 응집 원칙의 4측면**이지 4개 독립 정책이 아니다. 쪼개면
+  > "이 4개를 다 바인딩해야 loss-tolerance"라는 응집을 잃어 오히려 나쁠 수 있다. inspection의 "10/34"는
+  > promptText 문장 수 기반 기계 신호이지 의미상 다중책임 확정이 아니다.
+  > ② **파급 있음**: 후보 전부 하네스 바인딩(`gr-design-for-loss`·`gr-structural-coverage`→`h-multiagent`,
+  > `gr-integration-coherence`→`h-harness-factory`) → 분해 시 그 CLAUDE.md가 바뀐다(byte-identity 파괴).
+  > ⇒ 세분화가 goal의 "충분히 세분화" 취지에 부합하는지 + 응집원칙을 어디까지 쪼갤지는 **사용자/모델링 결정**.
+  > 부재 중 임의 저작하지 않는다. definition blob(길이 상위)은 대부분 하네스/채널의 선택근거 서술이라 분해 대상 아님.
 
 ## D. 현재 건전성 기준선 (2026-07-25, 갱신)
 `validate.py` **PASS** · 205 individuals · TBox 클래스 44 · abox 18파일 · 기본 assembly order 12 sections ·
