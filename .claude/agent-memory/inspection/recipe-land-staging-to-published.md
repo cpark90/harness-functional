@@ -69,6 +69,92 @@ federate 8/8 PASS(per-recipe closure, union 금지) · materialize 그룹A 3섹�
   git 델타 정확히 `M catalog + ?? 3 dir`(각 .ttl 1개). CI push run 15 job(discover 1 + validate 14)
   전원 success. 유일 annotation=Node20 deprecation(비차단). 커밋은 파일 개별 add(`add -A` 금지).
 
+## Wave C 4 recipe land (2026-07-25) — 02/07/09/14 content
+- 절차 Wave A/B와 동일(순수 additive dir 추가, published만 push, catalog published in-place 재생성).
+- precondition 확인: 중앙 catalog 워킹트리 == origin/main(HEAD==origin/main a5b8786, `git diff HEAD -- catalog` 0줄).
+- 실측: published `eec0835..6574213`. federate 4/4 PASS(closure) 02=247·07=249·09=249·14=244
+  individuals. 로컬경로 0. catalog 21 central + 18 recipe, `--check` in-sync, `--print-matrix`=18 IRI,
+  staging와 byte-identical. git 델타 정확히 `M catalog + ?? 4 dir`(각 .ttl 1개, central symlink 없음).
+  CI push run 19 job(discover 1 + validate 18) 전원 success. 유일 annotation=Node20 deprecation(비차단).
+  커밋 파일 개별 add(`add -A` 금지), `commit -F`.
+
+## Wave D 4 recipe land (2026-07-25) — 43/48/51/55 business
+- 절차 Wave A/B/C와 동일(순수 additive dir 추가, published만 push, catalog published in-place 재생성).
+- precondition: 중앙 catalog 워킹트리 == origin/main(HEAD==origin/main a5b8786, `git diff HEAD/origin/main -- catalog` 0줄).
+- 주의: staging↔published `diff -rq`에 **lpranging 델타가 상시 낀다**(README.md·lpranging.ttl differ,
+  published에만 impl/scaffold/skills) — 이는 미land ref-refactor 번들이라 **Wave 스코프 밖**, 만지지 말 것.
+  Wave D 순수 델타는 `Only in staging: 43/48/51/55` 4 dir뿐.
+- 실측: published `6574213..7e47fc5`. federate 4/4 PASS(closure) 43=244·48=248·51=248·55=246.
+  로컬경로 0. catalog 21 central + 22 recipe, `--check` in-sync, `--print-matrix`=22 IRI, staging와
+  byte-identical. catalog diff 순수 additive(4 insertions 0 deletions, central 블록 불변).
+  git 델타 정확히 `M catalog + ?? 4 dir`(각 .ttl 1개, central symlink 커밋 전 `rm -f`).
+  CI push run 23 job(discover 1 + validate 22) 전원 success. 유일 annotation=Node20 deprecation(비차단).
+  커밋 파일 개별 add(`add -A` 금지), `commit -F`.
+
+## Wave E 3 recipe land (2026-07-25) — 56/60/62 education
+- 절차 Wave A~D와 동일(순수 additive dir 추가, published만 push, catalog published in-place 재생성).
+- precondition: 중앙 catalog 워킹트리 == origin/main(HEAD==origin/main a5b8786, `git diff HEAD -- catalog` 0줄).
+  session-start status 스냅샷은 `M catalog`로 stale 표시 — 실 diff로 clean 확인.
+- lpranging 델타(README·ttl differ, impl/scaffold/skills published-only)는 상시 out-of-scope 번들, 만지지 말 것.
+  Wave E 순수 델타 = `Only in staging: 56/60/62` 3 dir뿐.
+- 실측: published `7e47fc5..6bf6014`. federate 3/3 PASS(closure) 56=252·60=250·62=247 individuals.
+  로컬경로 0. catalog 21 central + 25 recipe, `--check` in-sync, `--print-matrix`=25 IRI, staging와
+  byte-identical. catalog diff 순수 additive(3 insertions 0 deletions, central 블록 불변).
+  git 델타 정확히 `M catalog + ?? 3 dir`(각 .ttl 1개, central symlink 커밋 전 `rm -f`).
+  CI push run 26 job(discover 1 + validate 25) 전원 success. 유일 annotation=Node20 deprecation(비차단).
+  커밋 파일 개별 add(`add -A` 금지), `commit -F`. (Wave F가 catalog를 28로 재생성하기 전 25-recipe 상태 먼저 land 완료.)
+
+## Wave F 3 recipe land (2026-07-25) — 69/70/72 legal
+- 절차 Wave A~E와 동일(순수 additive dir 추가, published만 push, catalog published in-place 재생성).
+- precondition: 중앙 catalog 워킹트리 == origin/main(HEAD==origin/main a5b8786, `git diff HEAD -- catalog` 0줄);
+  session-start status 스냅샷은 `M catalog`로 stale — 실 diff로 clean 확인.
+- lpranging 델타(README·ttl differ, impl/scaffold/skills published-only)는 상시 out-of-scope 번들, 만지지 말 것.
+  Wave F 순수 델타 = `Only in staging: 69/70/72` 3 dir뿐(각 .ttl 1개).
+- 실측: published `6bf6014..f04d9b7`. federate 3/3 PASS(closure) 69=246·70=245·72=247 individuals.
+  로컬경로 0. catalog 21 central + 28 recipe, `--check` in-sync, `--print-matrix`=28 IRI, staging와
+  byte-identical. catalog diff 순수 additive(3 insertions 0 deletions, central 블록 불변).
+  git 델타 정확히 `M catalog + ?? 3 dir`(각 .ttl 1개, central symlink 커밋 전 `rm -f`).
+  CI push run 29 job(discover 1 + validate 28) 전원 success. 유일 annotation=Node20 deprecation(비차단).
+  커밋 파일 개별 add(`add -A` 금지), `commit -F`. (Wave G가 catalog를 38로 재생성하기 전 28-recipe 상태 먼저 land 완료.)
+
+## Wave G1 5 recipe land (2026-07-25) — 73/74/75/81/82 lifestyle·comms
+- 절차 Wave A~F와 동일(순수 additive dir 추가, published만 push, catalog published in-place 재생성).
+- precondition: 중앙 catalog 워킹트리 == origin/main(이 라운드 HEAD==origin/main `267cb45`, `git diff HEAD -- catalog` 0줄).
+  이 라운드는 session-start status 스냅샷이 실제로 clean이었음(과거 stale `M catalog`와 달리).
+- lpranging 델타(README·ttl differ, impl/scaffold/skills published-only)는 상시 out-of-scope 번들, 만지지 말 것.
+  Wave G1 순수 델타 = `Only in staging: 73/74/75/81/82` 5 dir뿐(각 .ttl 1개).
+- ★`--print-matrix`는 plain JSON array(IRI 목록)다 — `.include` 키 아님. 카운트는 `jq 'length'`.
+- 실측: published `f04d9b7..0eae27f`. federate 5/5 PASS(closure) 73=249·74=248·75=247·81=248·82=249 individuals.
+  로컬경로 0. catalog 21 central + 33 recipe, `--check` in-sync, `--print-matrix`=33 IRI, staging와 byte-identical.
+  catalog diff 순수 additive(5 insertions 0 deletions, central 블록 불변). git 델타 정확히 `M catalog + ?? 5 dir`(각 .ttl 1개, central symlink 커밋 전 `rm -f`).
+  CI push run 30148932216 = 34 job(discover 1 + validate 33) 전원 success. 유일 annotation=Node20 deprecation(비차단).
+  커밋 파일 개별 add(`add -A` 금지), `commit -F`. (Wave G2 마지막 5 recipe가 catalog를 38로 재생성하기 전 33-recipe 상태 먼저 land 완료.)
+
+## Wave G2 5 recipe land (2026-07-25) — 87/90/95/96/100 comms/ops/spec (대표 35 완료)
+- 절차 Wave A~G1과 동일. remote=`0eae27f`(G1) → published `0eae27f..ccb2cbb`. federate 5/5 PASS
+  (closure) 87=248·90=248·95=251·96=250·100=250. 로컬경로(5 신규 dir) 0. catalog 21 central + 38 recipe,
+  `--check` in-sync, `--print-matrix`=38, staging와 byte-identical. git 델타 정확히 `M catalog + ?? 5 dir`
+  (각 .ttl 1개, README 없음). CI push run 30149830441 = 39 job(discover 1 + validate 38) 전원 success.
+  중앙 catalog 워킹트리==origin/main(`d4f4b1e`). central symlink 커밋 전 `rm -f`. 파일 개별 add.
+- **★잔존 발견(brief "전체 로컬경로 0" 미충족)**: `git grep -l /home/cpark origin/main`가 **파일럿 5 recipe
+  README 산문 6줄**을 잡는다(03:29·16:29·21:27·31:28+210·46:28). 값=`/home/cpark/git/harness-100/en/<name>/`
+  =revfactory 수확 원경로 provenance 주석. **staging도 동일**(land gap 아님, R2 스크럽이 TTL data값만
+  건드리고 README prose는 안 건드림). recipe TTL·신규 임포트엔 없음. README 가진 recipe는 7개뿐(파일럿5+
+  lpranging+techdoc; 후자 2는 canonical URL만). → orchestrator follow-up: 파일럿 README prefix sed 스크럽
+  (staging→developer). inspection은 recipe 파일 편집 경계 밖이라 보고만.
+
+## R2 잔여 마무리 — 파일럿 5 README 로컬경로 스크럽 (2026-07-25)
+- G2에서 발견한 파일럿 README 잔존(위 ★잔존) 해소. published-only, README **prose만**.
+- 치환은 regeneration이 아니라 **prefix sed**: `/home/cpark/git/harness-100/en/` →
+  `https://github.com/revfactory/harness-100/tree/main/en/`. recipe name은 경로에 이미 있어 prefix만.
+  기존 canonical URL 라인(각 README 하단 `revfactory/harness-100/tree/main/en/<name>`)은 무변경 —
+  sed가 /home/cpark 접두만 잡으므로 안전.
+- 6줄/5파일(03·16·21·46 각1, 31 두 곳: L28 blockquote + L210 dct:source 산문). `git diff --stat`
+  6 ins/6 del로 의도범위 정확. TTL·catalog·dir 구조 불변 → CI glob 매핑 불변.
+- 실측: published `ccb2cbb..a7ad725`. 파일 개별 add(`add -A` 금지), `commit -F`.
+  published-wide `git grep /home/cpark origin/main -- recipes/` = **0**(TTL·README 통틀어).
+  CI run 30149996529 = 39 job(discover 1 + validate 38) 전원 success.
+
 ## 검증 게이트(3축 backfill 라운드에서 통과)
 federate 8/8 PASS(per-recipe closure, union 금지) · materialize 그룹A 3섹션/lpranging 2섹션
 (TestScenario 조건부 early-return) 2회 결정성 · 중앙 `validate.py` PASS@223 무회귀.

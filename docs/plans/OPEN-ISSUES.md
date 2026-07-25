@@ -17,7 +17,7 @@
 
 | 항목 | 상태 | 남은 일 |
 |---|---|---|
-| `harness-100-augmentation.md` | **진행 중 — 대량 임포트 직전에서 사용자 결정 대기** | ✅0.5 인벤토리(`4575e11`) → ✅0.6 중앙 어휘 18개체(`27c6582`) → ✅0.7 recipe 3축(`f096036`) → ✅P0-b catalog/CI glob(`5084827`/`d9ebf0c`) → ✅importer(`9f22590`). **남은 것 = 대표 35 대량 임포트뿐**, 그 앞에 **D2 결정 + B21(importer 3축 확장)** 필요. 계획: `harness-100-scaleup-plan.md` |
+| `harness-100-augmentation.md` | **대량 임포트 완료** — 후속 D1 결정만 | ✅0.5~P0-b~importer → ✅**대량 임포트 Wave A~G 완료**: 신규 30 recipe(published `ccb2cbb`, catalog **38** = 대표35 + lpranging/techdoc/contract-demo, CI 39 job green). 전 wave 중앙 byte-identical @223·어휘발명 0·날조 0·로컬경로 0. draft maturity. **남은 것 = D1(중앙 도메인/fp 승격) 사용자 결정** + lpranging/README provenance 스크럽(진행 중). 계획: `harness-100-scaleup-plan.md` |
 | `harness-repo-survey.md` | **미착수** (승인+답변 완료) | ①전체 로드맵(c) ②**`ho:Hook` 신설** ③agent-rules-books는 온톨로지에만 ④role 원형: 온톨로지 전량 + 예제 10~20. 계획: `harness-repo-survey/mining-plan.md` Wave 0~4 |
 | `revfactory-harness-reflection.md` | **거의 완료 — 미반영 1건** | 전수 감사 완료(`verified/revfactory-completeness-audit.md`): delta A~E·G 전부 반영, 의도적 미반영 5류. **미반영 GAP = delta F(`cap-skill` Capability + `capabilityContract` 구조 Contract)** — `gr-well-formed-skill`의 강제측. 그래프가 `harnesses.ttl:229`에 "later wave"로 명시 지연. **F 저작 시 완결→refresh.** refresh HOLD |
 | `retrieve-nondeterministic-pack.md` | **land 완료** (`d1ac476`, CI green) | 파일 태그만 `open` 유지 — 사용자가 `approved`로 고치면 즉시 refresh 가능. 근거: `verified/retrieve-determinism-finalize.md`. negative control로 가드 실효 확인(8/8 FAIL) |

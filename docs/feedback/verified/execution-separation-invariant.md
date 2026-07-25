@@ -81,3 +81,39 @@ not execute; the work is carried out by separately-spawned execution agents (see
 개체 2 + 배선 5곳 + 정의 1곳. byte-identity 변경은 **의도된 기능 추가**(operating-rules 각 +1줄)이며,
 그 외 회귀 0을 게이트로 건다. 어휘 결정(신규 concept vs c-delegation 재사용)과 peer-mesh 긴장 해소
 문구만 developer/orchestrator 설계 판단으로 남는다.
+
+---
+## 적용 결과 (applied — inspection land, 2026-07-25)
+
+**중앙 커밋**: `fce72af` (`d4f4b1e..fce72af`, branch main, pushed to `cpark90/harness-ontology`).
+5 files changed, 67 insertions, 7 deletions.
+
+**저작 실측 (developer 산출, orchestrator 검증, inspection 독립 재검증)** — verification 시점 baseline이
+@205였으나 그 사이 중앙이 성장해 **실제 land는 223 → 225**:
+- 신규 개체 2: `id:gr-execution-separation` (Guardrail, `ho:tagged id:c-multiagent`, draft, tokenEstimate 50)
+  · `id:role-coordinator` (Role, `ho:roleGuardrail id:gr-execution-separation …`, `ho:tagged id:c-multiagent`,
+  draft, **roleTool 없음** = 비실행). 어휘 결정은 신규 concept 신설 대신 **기존 `c-multiagent` 재사용**으로 낙착.
+- 배선: `gr-execution-separation` → h-multiagent · h-peer-mesh · h-workspace-synthesis · h-harness-factory
+  (`ho:hasGuardrail`). `role-coordinator` → h-peer-mesh (`ho:hasRole`). `mode-agent-teams` 정의에 분리
+  불변식 문장 추가 (tokenEstimate 125 → 190).
+- TBox·shapes 무변경.
+
+**검증 게이트 (inspection 독립 실측)**:
+1. `validate.py` **PASS @225** (reachability·capabilities·assemblyOrder·SHACL 전부 green, 신규 role orphan 0).
+2. `check_determinism.py` **PASS** (4 request × 4 run byte-identical).
+3. **materialize byte-identity** (HEAD `d4f4b1e` worktree = before, working tree = after):
+   - 단일 에이전트 3 (h-coding/h-research/h-support) CLAUDE.md **완전 동일 (변경 0)**.
+   - multi-agent 3 (h-multiagent/h-workspace-synthesis/h-harness-factory) operating-rules에
+     **정확히 1줄** ("Separated plan and execution" bullet) 추가, 다른 줄 0.
+   - h-peer-mesh: operating-rules +1줄 + Coordinator agent role 1개 + mode-agent-teams 정의 갱신 (의도된 반영).
+4. **연합 D4 blast-radius** (신규 중앙 상태 대상 federate dry-run, published `cpark90/harness-recipes`
+   38 recipe 중 표본 3): 02-podcast-studio=249 · 21-code-reviewer=245 · 100-ip-portfolio=252 개체 모두
+   **PASS** — 저작 전 대비 **균일 +2** (ID 충돌 0, 회귀 0). 신규 guardrail은 recipe에 자동결합 안 되나
+   중앙 하네스 union 경유 도달성 유지. published recipe TTL 무변경이라 **recipe 재land 불필요**.
+5. **CI**: central push run `30150683824` (`validate-ontology`) — **completed / success** (green).
+
+**참고 — 커밋 범위**: `developer/MEMORY.md`는 동시 진행 중인 mass-import wave dispatch(Wave A–G2 인덱스
+8줄, 미커밋 `mass-import-wave-*.md` 참조)와 **얽혀 있어 이번 커밋에서 제외**했다. execution-sep 인덱스
+줄은 그 mass-import land가 MEMORY.md를 커밋할 때 함께 land된다(메모리 파일 자체
+`mode-independent-invariant-guardrail.md`는 이번 커밋에 포함). webui dispatch의 `tools/webui/*`·
+`tools/ontology_lib.py`는 브리프 지시대로 커밋 제외.

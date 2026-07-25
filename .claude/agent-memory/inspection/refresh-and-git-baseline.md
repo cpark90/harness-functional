@@ -18,8 +18,16 @@ approved + 적용 실증(validate PASS·산출물 존재)만으로는 **부족**
    목록이 어긋날 수 있다(예: 브리프는 `tools/ontology_lib.py`인데 실제는
    `ontology/shapes/harness-shapes.ttl`이 dirty). 내 5파일 외는 무조건 손대지 않는다.
 2. **공유 파일 `.claude/agent-memory/developer/MEMORY.md`** 는 여러 dispatch가 같이 고친다 →
-   커밋 전 `git diff <파일>`로 **추가된 줄이 인덱스 한 줄뿐인지** 확인. 다른 dispatch의
-   인덱스 줄이 섞여 있어도 함께 커밋 무해(메모 포인터일 뿐), 미완성 본문이면 보류.
+   커밋 전 `git diff <파일>`로 **추가된 줄이 인덱스 한 줄뿐인지** 확인. 판단 기준은 섞인
+   인덱스 줄이 **가리키는 파일이 내 커밋 셋(또는 이미 커밋됨)에 있느냐**다:
+   - 있으면 함께 커밋 무해(메모 포인터일 뿐).
+   - **없으면(=미커밋 out-of-scope 파일 참조) DEFER**: 그 인덱스 줄들은 그 파일을 land할
+     동시-dispatch가 MEMORY.md째로 커밋한다. 나는 **self-contained 토픽 메모리 파일만** 커밋하고
+     공유 MEMORY.md는 손대지 않는다(커밋된 토픽파일 + 미커밋 인덱스줄 = 무해; 반대인 dangling
+     인덱스가 나쁘다). 브리프가 MEMORY.md를 커밋 대상에 넣었더라도 이 경우엔 보고 후 defer.
+   - 실측 함정: 동시 dispatch가 MEMORY.md를 **압축 리라이트**(단순 append 아님)하면 아래 hunk
+     분할도 실용성 없음 → 그냥 defer가 깔끔. (2026-07-25 execution-sep land: mass-import Wave A~G2
+     8줄이 미커밋 wave 파일 참조 → MEMORY.md defer, 토픽파일만 커밋 fce72af.)
 3. `git add` 후 `git status --porcelain`으로 스테이지가 정확히 그 파일들인지 재확인 →
    커밋 → push → 다시 porcelain으로 **타 dispatch 작업분이 미커밋으로 온전한지** 보고.
 4. 문서만 커밋할 때 `validate.py` 실패는 차단 사유가 아니다(스테이지에 그래프 파일이 없으므로
