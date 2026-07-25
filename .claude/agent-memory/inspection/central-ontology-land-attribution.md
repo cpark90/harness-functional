@@ -51,3 +51,21 @@ main. (branch-first 일반규칙보다 이 repo 운영모델·orchestrator dispa
   커밋(문서 lane). ontology 미변경 커밋이라 CI validate는 직전 상태와 동일 PASS.
 - 실측: A `9ca09d5`(guardrail 5 files) + B `5c35528`(W2 records 2 files), 한 push `98326fd..5c35528`.
   CI run 30154399237 validate success 1m36s @232. 개별 add·`commit -F`·영어 메시지·Node20 annotation 비차단.
+
+## 새 TBox 클래스 + tools 동시 land = parity·conditional-section byte-id 패턴 (Wave 4 ho:Hook, 2026-07-25)
+- **★INSTANCE_CLASSES parity가 핵심 재검증축**: 신규 클래스가 owlrl로만 추론되는 부모(예 ho:Hook ⊑
+  BehavioralComponent) 아래 오면 `INSTANCE_CLASSES += HO.Hook` 등록을 빠뜨려도 `validate.py`는
+  **reason=True라 green**이지만 `instance_nodes(load_graph(reason=False))`가 카운트를 놓쳐 파리티가
+  조용히 깨진다. 재검증은 반드시 `instance_nodes(load_graph())==instance_nodes(load_graph(reason=False))==N`
+  둘 다 실측(이번 237==237). validate PASS만으론 이 결함 안 보임.
+- **conditional AssemblySection byte-identity signature**: 새 조건부 섹션(as-hooks, "emits nothing when
+  no hook")을 render order에 추가하면 — 그 부품을 안 가진 harness는 **CLAUDE.md byte-identical**(6종
+  h-multiagent 포함)이지만 **MANIFEST.json은 as-hooks 섹션을 나열 + tokenEstimate +26**(섹션 노드
+  자체 기여). 이 MANIFEST 델타는 lock individualCount 델타처럼 **정상·무해** — byte-identity는
+  CLAUDE.md 기준. host(h-harness-factory)만 `132a133,149`=+17줄 0삭제(Hooks 섹션 전량).
+- **federation blast-radius(D4)**: 중앙 TBox+abox +5(hook4+as-hooks1) → import하는 recipe union 균일
+  +5. 표본 federate 03·21 PASS(`HARNESS_CATALOG=catalog-v001.xml HARNESS_ROOT_ONTOLOGY=.../recipes/<r>
+  central/tools/validate.py`, staging `central` 심링크). retrieve/materialize 변경은 federate validate에
+  무관(그래프 정합성만) — 중앙 validate PASS로 커버.
+- 실측: `e9cd41c..f7214b6`, 11 files 294+/12-, 한 커밋. CI run 30155463542 validate success @237.
+  개별 add(`add -A` 금지)·`commit -F`·영어 메시지·Node20 annotation만(비차단).
