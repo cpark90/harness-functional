@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [core:gr-delegated-orchestration, core:gr-dispatch-execution, core:h-peer-mesh, core:mode-agent-teams, core:h-multiagent]
 kind: decision
 related: [docs/feedback/verified/execution-mode-axis-finalize.md, docs/feedback/webui-save-drops-triples.md]
@@ -82,3 +82,10 @@ orchestrator 역할에 묶여** 있다("the orchestrator", "dispatched by the or
 
 승인 시 `status: open` → `approved` + 위 3개 답. 그러면 orchestrator가 developer dispatch로 저작·배선하고,
 inspection이 federate·byte-identity 회귀를 검증한다. 온톨로지 저작은 inspection이 하지 않는다(역할 경계).
+
+## 사용자 피드백 (2026-07-25, 세션 내 직접 승인)
+1. **(A)** — 모드 독립 일반 guardrail 신설.
+2. **모든 multi-agent 하네스에 배선** (h-multiagent·h-peer-mesh·h-workspace-synthesis·h-harness-factory).
+3. **조율 전담 역할 추가.**
+
+→ 검증·적용 계획: `docs/feedback/verified/execution-separation-invariant.md`.
