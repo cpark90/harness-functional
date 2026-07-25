@@ -54,8 +54,15 @@
 - **D1 카테고리 도메인**(dom-business/legal umbrella 등) → **CLOSED: recipe-local 유지**. roadmap §2가 이미 "도메인은
   recipe-local, 기존 중앙 도메인만 재사용"으로 결정 — 사용자 fork 아님(doctrine).
 - **image-gen tool/capability**(07 단독 소비자) → **CLOSED: recipe-local 유지**. ONTOLOGYSTYLE §1c YAGNI(소비자 1 → 미승격).
-- **남은 것**: B17(원형↔인스턴스 specialization 술어, TBox — 세분화 축 직결) · delta F/B22(cap-skill + 첫 Contract 인스턴스,
-  revfactory 잔여) · harness-repo-survey Wave 0(approved, 커버리지 감사). → 이 라운드에서 계속.
+- **B17** 원형↔인스턴스 specialization 술어 → **저작 완료(미커밋)**: `ho:specializes` domain/range 일반화(근사동의어
+  신설 대신 기존 술어 재사용) + `SpecializesTypingShape`로 same-partition 강제(negative control 확인) +
+  `role-inspection-worker specializes role-inspection` 예시. 중앙 7 byte-identical(specializes 미emit). recipe 재바인딩은 후속.
+- **harness-repo-survey Wave 0** → **완료(미커밋 리포트 `verified/harness-repo-survey-wave0.md`)**. 결과: **확정 TBox gap은
+  `ho:Hook` 1건뿐**(나머지 3 gap 강등/defer), role 마이닝은 기존 importer 재사용, ④"전량"=중립화 archetype(raw 253 금지·동명41병합).
+  → **harness-repo-survey는 harness-100 규모 아님**. Wave 1 착수 선행: ①B17 land(완료) ②`wshobson/agents` 로컬 clone+NOTICE ③(강권고)retrieve tie-break.
+- **남은 것**: **delta F/B22**(cap-skill + 첫 Contract 인스턴스, revfactory 잔여 — 다음 central-abox dispatch) ·
+  **harness-repo-survey Wave 1~4**(W1 pattern/mode·W2 role 원형+예제10~20·W3 guardrail dedup·W4 `ho:Hook` TBox 세트).
+  Wave 1은 wshobson clone 필요(외부 repo setup — 사용자 확인 또는 fetch).
 - **B21. importer가 TestScenario/FailurePolicy를 추출하지 않는다** (inspection 발견, importer land 후속).
   `tools/import_corpus.py`는 skeleton·role·persona·instruction·상수만 기계 생성하고 `hasTestScenario`/
   `hasFailurePolicy`는 브리프 SHOULD 밖이라 미구현. 소스는 거의 전수 제공 → Phase 0.7이 8 recipe에 backfill로
