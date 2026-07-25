@@ -1,0 +1,12 @@
+harness-ontology
+Copyright 2026 cpark90
+
+This product includes neutral harness parts whose coordination topology was
+observed in and generalized from the orchestrators of wshobson/agents
+(https://github.com/wshobson/agents), Copyright (c) 2024 Seth Hobson,
+licensed under the MIT License.
+
+No source text is copied. Each derived node records its provenance via
+dct:source and dct:license. Currently: id:pat-blackboard (Blackboard
+coordination), a neutralized coordination pattern abstracted from the
+shared-state / durable-artifact handoff recurring across those orchestrators.

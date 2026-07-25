@@ -5,6 +5,7 @@
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
 @prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:   <http://purl.org/dc/terms/> .
 
 # Core data unit -- DesignPattern partition of the `core` domain. It also hosts
 # the ho:ExecutionMode individuals (the orthogonal runtime-topology axis), which
@@ -83,3 +84,7 @@ id:pat-supervisor a ho:DesignPattern ; skos:prefLabel "Supervisor" ; skos:altLab
 id:pat-hierarchical-delegation a ho:DesignPattern ; skos:prefLabel "Hierarchical delegation" ; skos:altLabel "two-level recursive delegation" ;
     skos:definition "A top coordinator delegates to sub-coordinators, each of which further delegates to its own workers -- delegation recurses one extra level rather than staying flat. Kept shallow by id:gr-depth-limit (at most two levels). Choose only when the task genuinely needs a layer of sub-coordination." ;
     ho:tagged id:c-pattern-taxonomy ; ho:maturity "draft" .
+id:pat-blackboard a ho:DesignPattern ; skos:prefLabel "Blackboard coordination" ; skos:altLabel "shared-artifact state handoff" ;
+    skos:definition "Agents coordinate INDIRECTLY through a shared, durable external artifact store -- files, a state record, a plan document -- that is the single source of truth, rather than through a central orchestrator's in-context dispatch (id:pat-orchestrator-workers) or direct peer messages (id:pat-peer-mesh): each step reads the prior steps' outputs from the store and writes its own back, so no step depends on conversation or context-window memory. Choose when the run must be stateless, resumable and checkpointable across steps or sessions -- work can halt and restart from the store -- or when several contributors must converge on one evolving artifact. Distinct from id:pat-pipeline, which fixes an ordered forward flow: blackboard constrains the coordination MEDIUM (a shared store held as source of truth), not the ordering, and steps may read and write the store outside a strict sequence." ;
+    ho:tagged id:c-pattern-taxonomy ; ho:tokenEstimate 200 ; ho:maturity "draft" ;
+    dct:source "https://github.com/wshobson/agents" ; dct:license "MIT" .
