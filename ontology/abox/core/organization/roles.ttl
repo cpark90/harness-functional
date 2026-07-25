@@ -186,6 +186,23 @@ id:role-tester a ho:Role ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable fixture-design knowledge at session end; touches no other role's memory." ;
     ho:salience 0.25 ; ho:maturity "draft" .
 
+#===================== Coordination-only peer role =====================
+# The dedicated coordinating peer of an agent team: it plans, sequences and
+# tracks the status of the team's work but performs NONE of the execution
+# itself, so a peer team keeps planning/status and doing in separate hands
+# (id:gr-execution-separation) instead of collapsing them into one agent.
+# Bound to id:h-peer-mesh via ho:hasRole -- that is where a peer team gains an
+# explicit coordinating peer while the actual work is carried out by separately
+# spawned execution agents. Its definition disambiguates it from the two
+# nearest planning roles so the three never collapse into near-synonyms.
+id:role-coordinator a ho:Role ;
+    skos:prefLabel "Coordinator agent" ; skos:altLabel "coordinating peer" , "team coordinator" ;
+    skos:definition "A coordination-only peer role in an agent team that plans, sequences and checks the status of the team's work but performs none of the execution itself -- the execution is carried out by execution agents spawned separately for it, so coordinating a peer team never collapses planning and doing into one agent. Choose it to give a peer team an explicit coordinating peer without letting that peer also do the work. Distinguished from id:role-orchestrator, which is the user-facing lead that decomposes a request and dispatches node-scoped briefs to workers (a central-dispatch lead, not a peer that runs alongside the team), and from id:role-planner, an ordinary dispatched worker whose deliverable is a plan document others then execute -- this role instead runs with the team throughout, coordinating and tracking status rather than producing a plan artifact." ;
+    ho:roleGuardrail id:gr-execution-separation, id:gr-least-privilege, id:gr-verify-proceed ;
+    ho:tagged id:c-multiagent ;
+    ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable coordination and status-tracking heuristics at session end; touches no other role's memory." ;
+    ho:maturity "draft" .
+
 ########################################################################
 # Operating agents — this repo's own five agents modelled as MAS nodes.
 #

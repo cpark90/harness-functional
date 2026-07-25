@@ -104,7 +104,8 @@ id:h-multiagent a ho:Harness ;
     ho:hasGuardrail id:gr-lang, id:gr-verify-proceed, id:gr-design-for-loss, id:gr-traceability,
         id:gr-grounding, id:gr-no-arbitrary-decision, id:gr-least-privilege, id:gr-report-over-prompt,
         id:gr-controlled-vocabulary, id:gr-root-cause, id:gr-simplicity, id:gr-bounded-context,
-        id:gr-dispatch-execution, id:gr-delegated-orchestration, id:gr-structural-coverage, id:gr-reuse-first ;
+        id:gr-dispatch-execution, id:gr-delegated-orchestration, id:gr-execution-separation,
+        id:gr-structural-coverage, id:gr-reuse-first ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-orchestrator, id:role-inspection, id:role-developer, id:role-research,
         id:role-inspection-worker, id:role-vnv, id:role-design ;
@@ -140,9 +141,9 @@ id:h-peer-mesh a ho:Harness ;
     ho:hasSystemPrompt id:sp-methodical ;
     ho:usesTool id:tool-editor ;
     ho:hasWorkflow id:wf-multiagent ;
-    ho:hasGuardrail id:gr-lang, id:gr-report-over-prompt, id:gr-least-privilege ;
+    ho:hasGuardrail id:gr-lang, id:gr-report-over-prompt, id:gr-least-privilege, id:gr-execution-separation ;
     ho:usesModel id:mc-opus ;
-    ho:hasRole id:role-developer, id:role-vnv, id:role-research, id:role-design ;
+    ho:hasRole id:role-developer, id:role-vnv, id:role-research, id:role-design, id:role-coordinator ;
     ho:hasChannel id:chan-peer ;
     ho:appliesPattern id:pat-peer-mesh ;
     ho:hasExecutionMode id:mode-agent-teams ;
@@ -182,7 +183,7 @@ id:h-workspace-synthesis a ho:Harness ;
     ho:hasWorkflow id:wf-multiagent ;
     ho:hasGuardrail id:gr-lang, id:gr-structured-output, id:gr-scale-modes, id:gr-graceful-fallback,
         id:gr-cross-validation, id:gr-declared-routes, id:gr-sequenced-artifacts,
-        id:gr-three-flow-acceptance ;
+        id:gr-three-flow-acceptance, id:gr-execution-separation ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-developer, id:role-research, id:role-inspection-worker,
         id:role-vnv, id:role-design, id:role-synthesizer,
@@ -238,7 +239,8 @@ id:h-harness-factory a ho:Harness ;
     ho:hasGuardrail id:gr-lang, id:gr-depth-limit, id:gr-no-nested-teams, id:gr-single-active-team,
         id:gr-bottleneck-avoidance, id:gr-flatten-hierarchy, id:gr-bounded-iteration,
         id:gr-integration-coherence, id:gr-discriminating-eval, id:gr-single-responsibility,
-        id:gr-generalize-not-overfit, id:gr-absolute-paths, id:gr-well-formed-skill, id:gr-opus-required ;
+        id:gr-generalize-not-overfit, id:gr-absolute-paths, id:gr-well-formed-skill, id:gr-opus-required,
+        id:gr-execution-separation ;
     ho:usesModel id:mc-opus ;
     ho:hasChannel id:chan-task-board ;
     ho:hasTestScenario id:scn-compose-smoke, id:scn-trigger-near-miss ;

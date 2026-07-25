@@ -69,6 +69,9 @@ id:gr-dispatch-execution a ho:Guardrail ; skos:prefLabel "Dispatch-based executi
 id:gr-delegated-orchestration a ho:Guardrail ; skos:prefLabel "Delegated-only orchestration" ; skos:altLabel "orchestrator does not work directly" ;
     ho:promptText "The user-facing orchestrator performs no substantive work directly -- no authoring, judgment or tool execution; it only plans and dispatches, and all such work is carried out through the worker agents." ;
     ho:tagged id:c-delegation ; ho:tokenEstimate 42 ; ho:maturity "reviewed" .
+id:gr-execution-separation a ho:Guardrail ; skos:prefLabel "Separated plan and execution" ; skos:altLabel "plan/status role does not execute" ;
+    ho:promptText "An agent that plans work or checks/verifies its status does not itself perform the execution; execution is always carried out by a distinct, separately-spawned execution agent -- in every coordination topology, orchestrator-workers and agent-teams alike." ;
+    ho:tagged id:c-multiagent ; ho:tokenEstimate 50 ; ho:maturity "draft" .
 id:gr-reuse-first a ho:Guardrail ; skos:prefLabel "Reuse-first composition" ; skos:altLabel "anti-orphan authoring" ;
     ho:promptText "Compose by REUSING existing typed parts first; author a new part only when none fits, and in the same change connect it (a broader parent / a tag / a provider) so it is never an orphan -- this is the anti-drift, anti-orphan discipline of composition." ;
     ho:tagged id:c-reuse-first ; ho:tokenEstimate 62 ; ho:maturity "reviewed" .
