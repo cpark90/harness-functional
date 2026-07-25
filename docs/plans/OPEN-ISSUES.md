@@ -65,9 +65,17 @@
   skill을 ship, 그 skill이 well-formed임을 자기 계약으로 검증). `verify_contract h-harness-factory` = **2/2 PASS exit 0**,
   tamper=**FAIL exit 1**(실teeth). 신규 클래스/술어 0, 226→230, 6 harness byte-identical. **revfactory-harness-reflection
   전부 적용 완료 → refresh 가능**. GAP: 부재-assertion grammar(부정 op 없음)·field-anchor(약한 substring)는 tools 확장 신호.
-- **남은 것**: **harness-repo-survey Wave 1~4**(W1 pattern/mode from wshobson 16 orch·W2 role 원형+예제10~20 via importer·
-  W3 guardrail dedup·W4 `ho:Hook` TBox+개체+AssemblySection+렌더러 세트). **wshobson/agents clone 완료**(`/home/cpark/git/wshobson-agents`,
-  MIT 763 md). B17 land·clone 완료 → **Wave 1 착수 가능**. NOTICE/dct:source 귀속 필수.
+- **harness-repo-survey 진행** (approved, 로드맵 전체):
+  - **W0** ✓ 커버리지 감사(`verified/harness-repo-survey-wave0.md`). 확정 TBox gap=`ho:Hook` 1건.
+  - **W1** ✓ land `925f7ba`: 신규 중립 패턴 **1개 `pat-blackboard`**(wshobson 15/16 기존 재사용), MIT 귀속+NOTICE.
+  - **W2** ✓ (미커밋, 저작 0): 252 외부 role → **전부 기존 7 중립 archetype에 collapse, 신규 0**. neutral-parts 라이브러리가
+    role 축에서 **이미 완결**임을 실증(catalog-화 없음). `operator/reliability` 후보 → **CLOSED: 미저작(doctrine — analyst+implementer
+    분해, 변별점 domain-특정 = 근사동의어 drift)**.
+  - **W3** guardrail dedup(toolkit+agent-rules-books, 온톨로지만) + W1이 넘긴 human-in-the-loop checkpoint guardrail. **다음.**
+  - **W4** `ho:Hook` TBox+개체+AssemblySection+materialize 렌더러 **세트**(GAP-4 전례). **W3 후.**
+- **★harness-repo-survey "예제 10~20" (사용자 확인 필요)**: 사용자④가 role 원형과 함께 든 "예제 10~20"은 harness-100처럼
+  **multi-agent 하네스를 recipe로 import**하는 것인데, 채택 소스(wshobson/VoltAgent)는 **role 라이브러리**라 임포트할 하네스가
+  없다(소스타입 불일치). → 예제는 **별도 하네스 코퍼스**(harness-100류)에서 와야 함. **어느 소스로 10~20 예제를 낼지 사용자 확인.**
 - **B21. importer가 TestScenario/FailurePolicy를 추출하지 않는다** (inspection 발견, importer land 후속).
   `tools/import_corpus.py`는 skeleton·role·persona·instruction·상수만 기계 생성하고 `hasTestScenario`/
   `hasFailurePolicy`는 브리프 SHOULD 밖이라 미구현. 소스는 거의 전수 제공 → Phase 0.7이 8 recipe에 backfill로
