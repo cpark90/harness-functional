@@ -45,7 +45,7 @@ ho:HarnessComponent a owl:Class ;
 ho:BehavioralComponent a owl:Class ;
     rdfs:subClassOf ho:HarnessComponent ;
     rdfs:label "Behavioral Component" ;
-    skos:definition "An intermediate grouping of the harness components that constitute an agent's behavioural policy (pi_i) — how it is framed to act and the rules and exemplars that bound that behaviour. Its leaves are ho:SystemPrompt, ho:PromptSection, ho:Guardrail, ho:Instruction and ho:Example. A taxonomy layer under ho:HarnessComponent with no direct instances; its leaves remain harness components by subsumption." .
+    skos:definition "An intermediate grouping of the harness components that constitute an agent's behavioural policy (pi_i) — how it is framed to act and the rules and exemplars that bound that behaviour. Its leaves are ho:SystemPrompt, ho:PromptSection, ho:Guardrail, ho:Hook, ho:Instruction and ho:Example. A taxonomy layer under ho:HarnessComponent with no direct instances; its leaves remain harness components by subsumption." .
 
 ho:ObservationalComponent a owl:Class ;
     rdfs:subClassOf ho:HarnessComponent ;
@@ -106,6 +106,11 @@ ho:Guardrail a owl:Class ;
     rdfs:subClassOf ho:BehavioralComponent ;
     rdfs:label "Guardrail" ;
     skos:definition "A behavioural policy an agent must follow: an imperative rule that disciplines how it acts (e.g. least-privilege, verify-then-proceed, cite-sources). Distinguished from ho:Constraint (a declarative non-functional requirement): a Guardrail governs behaviour, it is not an NFR." .
+
+ho:Hook a owl:Class ;
+    rdfs:subClassOf ho:BehavioralComponent ;
+    rdfs:label "Hook" ;
+    skos:definition "A lifecycle-triggered automation: a standing behavioural policy that runs a defined action (ho:hookAction) automatically WHEN a lifecycle event fires (ho:hookEvent) — e.g. load prior context at session start, scan/guard before a tool call, lint/test after a tool edit, remind or verify at turn stop. Placed under ho:BehavioralComponent as a sibling of ho:Guardrail because a Hook, like a Guardrail, is a standing rule that bounds and disciplines HOW the agent acts (pi_i) rather than a step in the deliberate task control flow: where a Guardrail states 'always follow rule R', a Hook states 'at lifecycle event E, run action A'. Distinguished from ho:Guardrail (an always-in-force imperative rule with no trigger event) and from ho:WorkflowStep (an ordered step the agent deliberately executes along its task DAG, carrying ho:stepOrder): a Hook is neither always-on nor part of the ordered flow — it is an event-driven side-behaviour fired reactively at a lifecycle boundary, outside the step ordering. EXTENSIBILITY: a new automation is one more ho:Hook individual, and a new lifecycle event is simply a new ho:hookEvent literal (the value space is left open, not a closed enum, because the recognised events are defined and versioned by the agent runtime and the build emitter renders any event value generically)." .
 
 ho:Workflow a owl:Class ;
     rdfs:subClassOf ho:ProcessComponent ;
@@ -297,6 +302,13 @@ ho:hasGuardrail a owl:ObjectProperty ;
     rdfs:subPropertyOf ho:hasComponent ;
     rdfs:range ho:Guardrail ;
     rdfs:label "has guardrail" .
+
+ho:hasHook a owl:ObjectProperty ;
+    rdfs:subPropertyOf ho:hasComponent ;
+    rdfs:domain ho:Harness ;
+    rdfs:range ho:Hook ;
+    rdfs:label "has hook" ;
+    skos:definition "Binds a lifecycle Hook (an event-triggered automation) to the harness (Harness→Hook). A sub-property of ho:hasComponent — the subject IS the Harness, mirroring ho:hasGuardrail — so a bound Hook is a reachable, orphan-free component covered by ho:ComponentConnectivityShape and counted like any other component. Optional: a harness that automates nothing at lifecycle boundaries declares none." .
 
 ho:hasWorkflow a owl:ObjectProperty ;
     rdfs:subPropertyOf ho:hasComponent ;
@@ -696,7 +708,7 @@ ho:sectionKind a owl:DatatypeProperty ;
     rdfs:domain ho:AssemblySection ;
     rdfs:range xsd:string ;
     rdfs:label "section kind" ;
-    skos:definition "Which document section this AssemblySection positions, from a closed set the build emitter recognises: the compositional sections \"overview\", \"persona\", \"operating-rules\", \"process\", \"model\", \"roles\", \"channels\", \"skills\" (WHAT the harness is made of) and the run-behaviour sections \"execution-mode\", \"data-flow\", \"error-handling\", \"test-scenarios\" (how an assembled harness runs and how it is judged). materialize.py maps each kind to the renderer that emits that section's body (e.g. \"persona\" renders hasSystemPrompt, \"process\" renders hasWorkflow + appliesPattern, \"execution-mode\" renders the appliesPattern picks tagged as execution modes, \"data-flow\" joins the steps' stepProduces to their stepConsumes, \"error-handling\" renders hasFailurePolicy and \"test-scenarios\" renders hasTestScenario); the conditional kinds (roles/channels/skills and all four run-behaviour kinds) emit nothing when the harness has no such parts. An unrecognised kind is a hard error — the assembly order names only sections the emitter can build." .
+    skos:definition "Which document section this AssemblySection positions, from a closed set the build emitter recognises: the compositional sections \"overview\", \"persona\", \"operating-rules\", \"process\", \"model\", \"roles\", \"channels\", \"skills\" (WHAT the harness is made of) and the run-behaviour sections \"execution-mode\", \"data-flow\", \"error-handling\", \"test-scenarios\", \"hooks\" (how an assembled harness runs and how it is judged). materialize.py maps each kind to the renderer that emits that section's body (e.g. \"persona\" renders hasSystemPrompt, \"process\" renders hasWorkflow + appliesPattern, \"execution-mode\" renders the appliesPattern picks tagged as execution modes, \"data-flow\" joins the steps' stepProduces to their stepConsumes, \"error-handling\" renders hasFailurePolicy, \"test-scenarios\" renders hasTestScenario and \"hooks\" renders hasHook grouped by hookEvent); the conditional kinds (roles/channels/skills and all five run-behaviour kinds) emit nothing when the harness has no such parts. An unrecognised kind is a hard error — the assembly order names only sections the emitter can build." .
 
 ho:roleMemoryPolicy a owl:DatatypeProperty ;
     rdfs:domain ho:Role ;
@@ -817,6 +829,19 @@ ho:recoveryStrategy a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "recovery strategy" ;
     skos:definition "The recovery/handling strategy paired with this FailurePolicy's condition (e.g. retry with backoff, escalate to the user, fall back to a degraded path) — the right column of the error-handling table." .
+
+# --- lifecycle-hook fields: Hook -> trigger event / action ----------
+ho:hookEvent a owl:DatatypeProperty ;
+    rdfs:domain ho:Hook ;
+    rdfs:range xsd:string ;
+    rdfs:label "hook event" ;
+    skos:definition "The lifecycle event that triggers this Hook — the moment in the agent runtime at which its action fires. The recognised events are those the agent runtime raises: e.g. \"session-start\" (session initialization), \"user-prompt-submit\" (a prompt is submitted), \"pre-tool-use\" (before a tool call runs), \"post-tool-use\" (after a tool call completes), \"stop\" (the agent finishes a turn), \"session-end\" and \"pre-compact\". The value space is deliberately OPEN (no closed sh:in): the set of lifecycle events is defined and versioned by the agent runtime, and the build emitter groups/renders any event value generically, so a new lifecycle event is a new literal here, not a schema change. Distinct from ho:hookAction (WHAT runs): this is WHEN it runs." .
+
+ho:hookAction a owl:DatatypeProperty ;
+    rdfs:domain ho:Hook ;
+    rdfs:range xsd:string ;
+    rdfs:label "hook action" ;
+    skos:definition "A neutral, technology-independent description of WHAT this Hook does when its ho:hookEvent fires (e.g. \"load prior session context and project state\", \"scan the pending change for leaked secrets and block on a match\", \"run the linter/tests against the edited file\", \"remind to run the project's checks before yielding\"). States the discipline the automation enforces, not a specific script or command. Distinct from ho:hookEvent (WHEN it runs): this is WHAT it runs." .
 
 # --- skill / agent metadata: Instruction / Role ---------------------
 ho:integrationMode a owl:DatatypeProperty ;

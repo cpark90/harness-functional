@@ -116,7 +116,7 @@ id:h-multiagent a ho:Harness ;
     ho:hasGlobalState id:global-state ;
     ho:hasAssemblySection id:as-overview, id:as-persona, id:as-operating-rules, id:as-process,
         id:as-model, id:as-roles, id:as-channels, id:as-skills, id:as-execution-mode,
-        id:as-data-flow, id:as-error-handling, id:as-test-scenarios ;
+        id:as-data-flow, id:as-error-handling, id:as-test-scenarios, id:as-hooks ;
     ho:appliesPattern id:pat-orchestrator-workers, id:pat-ontology-composition ;
     ho:hasExecutionMode id:mode-sub-agents ;
     ho:requiresCapability id:cap-orchestration, id:cap-traceability, id:cap-codeexec, id:cap-fileedit ;
@@ -233,6 +233,16 @@ id:h-workspace-synthesis a ho:Harness ;
 # (id:ct-well-formed-skill-*) roll up here. Those contracts judge the emitted
 # .claude/skills/well-formed-skill/SKILL.md -- which materialize DOES emit for the
 # bound instruction -- so verify_contract.py PASSES against this harness's tree.
+# It also hosts the LIFECYCLE-HOOK axis (id:hook-session-start / pre-tool-use /
+# post-tool-use / stop): a harness-authoring factory naturally runs lifecycle
+# automations -- load prior context at session start, guard/scan before a tool
+# call, validate (e.g. run the project checks) after an edit, and remind before
+# yielding -- so these neutral event-trigger archetypes are wired here. Like the
+# test-scenario / failure-policy axes above they live on this library carrier, not
+# on id:h-multiagent, so binding them leaves the base template's materialized
+# CLAUDE.md byte-identical; this harness gains one appended `## Hooks` section
+# (rendered by the conditional "hooks" assembly section in the central default
+# order). Every harness with no ho:hasHook still emits nothing for that section.
 id:h-harness-factory a ho:Harness ;
     skos:prefLabel "Harness-factory harness" ; skos:altLabel "harness-authoring methodology host" ;
     skos:definition "A neutral, domain-independent template that wires the harness-authoring methodology parts: the guardrails that bound multi-agent orchestration complexity and govern faithful authoring, verification and model selection, plus the shared task-board channel (id:chan-task-board) over which workers claim and report tasks. It is a meta-harness -- its subject is the methodology of composing, verifying and evolving harnesses themselves. Like id:h-workspace-synthesis it exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- the parts live here rather than on id:h-multiagent so binding them leaves that harness's materialized document byte-identical. It names no specific problem domain, tool or technology, derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -249,6 +259,7 @@ id:h-harness-factory a ho:Harness ;
     ho:usesModel id:mc-opus ;
     ho:hasInstruction id:ins-well-formed-skill ;
     ho:hasChannel id:chan-task-board ;
+    ho:hasHook id:hook-session-start, id:hook-pre-tool-use, id:hook-post-tool-use, id:hook-stop ;
     ho:hasTestScenario id:scn-compose-smoke, id:scn-trigger-near-miss ;
     ho:hasFailurePolicy id:fp-dispatch-timeout, id:fp-validation-fail ;
     ho:appliesPattern id:pat-orchestrator-workers ;

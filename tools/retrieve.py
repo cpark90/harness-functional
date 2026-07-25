@@ -55,7 +55,7 @@ DEPRECATED_RANK_FACTOR = 0.35
 
 PREDICATE_WEIGHT = {
     HO.hasComponent: 0.9, HO.componentOf: 0.9, HO.hasSystemPrompt: 0.9,
-    HO.usesTool: 0.9, HO.hasGuardrail: 0.9, HO.hasWorkflow: 0.9,
+    HO.usesTool: 0.9, HO.hasGuardrail: 0.9, HO.hasHook: 0.9, HO.hasWorkflow: 0.9,
     HO.usesModel: 0.85, HO.hasExample: 0.8, HO.hasInstruction: 0.85,
     HO.providesCapability: 0.85, HO.requiresCapability: 0.85,
     HO.targetsDomain: 0.8, HO.addressesTask: 0.8, HO.addressedBy: 0.8,

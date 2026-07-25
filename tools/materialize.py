@@ -718,6 +718,38 @@ def _render_test_scenarios(g: Graph, h: URIRef, out: list[str], ctx: dict) -> No
     out.append("")
 
 
+def _render_hooks(g: Graph, h: URIRef, out: list[str], ctx: dict) -> None:
+    """Hooks: the ho:hasHook lifecycle automations grouped by ho:hookEvent (WHEN
+    they fire) with each hook's action (WHAT it runs). Conditional — a harness that
+    binds no hook emits nothing, so this section is inert for every harness without
+    a ho:hasHook (including the base template)."""
+    hooks = list(g.objects(h, HO.hasHook))
+    if not hooks:
+        return
+    # Group by trigger event; sort events and, within each, hooks by IRI so the
+    # emitted section is deterministic regardless of graph iteration order.
+    by_event: dict = {}
+    for hook in hooks:
+        event = g.value(hook, HO.hookEvent)
+        by_event.setdefault(str(event) if event is not None else "", set()).add(hook)
+    out.append("## Hooks")
+    out.append("")
+    out.append("The lifecycle events this harness runs automation on — what fires "
+               "automatically at each session, tool-use or turn boundary (outside "
+               "the deliberate workflow steps).")
+    out.append("")
+    for event in sorted(by_event):
+        label = event if event else "(unspecified event)"
+        out.append(f"- **on `{label}`**")
+        for hook in _sorted(by_event[event]):
+            desc = g.value(hook, SKOS.definition)
+            tail = f" — {desc}" if desc else ""
+            out.append(f"    - {lib.label_of(g, hook)}{tail}")
+            for action in sorted(str(a) for a in g.objects(hook, HO.hookAction)):
+                out.append(f"        - runs: {action}")
+    out.append("")
+
+
 # Maps each ho:sectionKind to the renderer that emits that section. The KEYS are
 # the CLOSED set of kinds an assembly order may name — an order that references a
 # kind absent here is a hard error (resolve_assembly_order). This is the single
@@ -736,6 +768,7 @@ SECTION_RENDERERS = {
     "data-flow": _render_data_flow,
     "error-handling": _render_error_handling,
     "test-scenarios": _render_test_scenarios,
+    "hooks": _render_hooks,
 }
 
 

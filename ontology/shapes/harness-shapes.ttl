@@ -99,6 +99,7 @@ ho:EdgeTypingShape a sh:NodeShape ;
     sh:targetClass ho:Harness ;
     sh:property [ sh:path ho:usesTool ;    sh:class ho:Tool ] ;
     sh:property [ sh:path ho:hasGuardrail ; sh:class ho:Guardrail ] ;
+    sh:property [ sh:path ho:hasHook ; sh:class ho:Hook ] ;
     sh:property [ sh:path ho:appliesPattern ; sh:class ho:DesignPattern ] ;
     sh:property [ sh:path ho:hasExecutionMode ; sh:class ho:ExecutionMode ] ;
     sh:property [ sh:path ho:requiresCapability ; sh:class ho:Capability ] ;
@@ -154,8 +155,8 @@ ho:AssemblySectionShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:datatype xsd:string ;
-        sh:in ( "overview" "persona" "operating-rules" "process" "model" "roles" "channels" "skills" "execution-mode" "data-flow" "error-handling" "test-scenarios" ) ;
-        sh:message "AssemblySection must have exactly one ho:sectionKind from the emitter's closed set (overview/persona/operating-rules/process/model/roles/channels/skills/execution-mode/data-flow/error-handling/test-scenarios)." ] .
+        sh:in ( "overview" "persona" "operating-rules" "process" "model" "roles" "channels" "skills" "execution-mode" "data-flow" "error-handling" "test-scenarios" "hooks" ) ;
+        sh:message "AssemblySection must have exactly one ho:sectionKind from the emitter's closed set (overview/persona/operating-rules/process/model/roles/channels/skills/execution-mode/data-flow/error-handling/test-scenarios/hooks)." ] .
 
 #--- Memory: the 3-tier discrimination is enforced, not decorative ---
 # Every ho:Memory must be labelled and defined and must declare BOTH its
@@ -246,6 +247,35 @@ ho:FailurePolicyShape a sh:NodeShape ;
         sh:path ho:maturity ;
         sh:minCount 1 ;
         sh:message "FailurePolicy must have ho:maturity." ] .
+
+#--- Hook: a complete lifecycle trigger -> action pairing -----------
+# A Hook must be labelled and mature and carry BOTH its trigger event
+# (exactly one — a hook fires on a single lifecycle event) and the action
+# it runs, so a lifecycle automation is never half-specified. ho:hookEvent
+# is intentionally NOT constrained by sh:in: the lifecycle-event value space
+# is open (defined/versioned by the agent runtime; the emitter renders any
+# value generically), so a new event is a new literal, not a shapes edit.
+ho:HookShape a sh:NodeShape ;
+    sh:targetClass ho:Hook ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "Hook must have a skos:prefLabel." ] ;
+    sh:property [
+        sh:path ho:hookEvent ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Hook must have exactly one ho:hookEvent (the single lifecycle event that triggers it)." ] ;
+    sh:property [
+        sh:path ho:hookAction ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "Hook must have >=1 ho:hookAction (what it runs when triggered)." ] ;
+    sh:property [
+        sh:path ho:maturity ;
+        sh:minCount 1 ;
+        sh:message "Hook must have ho:maturity." ] .
 
 #--- Agent: a well-formed partially-observed distributed node --------
 # Every ho:Agent must be labelled and mature, name the Role it compiles

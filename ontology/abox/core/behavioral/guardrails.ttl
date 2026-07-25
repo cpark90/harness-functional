@@ -176,3 +176,64 @@ id:gr-human-checkpoint a ho:Guardrail ; skos:prefLabel "Human approval checkpoin
     ho:tagged id:c-escalation ; ho:tokenEstimate 88 ; ho:maturity "draft" ;
     dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" , "https://github.com/wshobson/agents" ;
     dct:license "Apache-2.0" , "MIT" .
+
+#===================== Lifecycle hooks =================================
+# Event-triggered automations (ho:Hook, a sibling leaf of ho:Guardrail under
+# ho:BehavioralComponent): standing behavioural policies that run an action WHEN
+# a lifecycle event fires, rather than always-in-force rules. Co-located in this
+# already-federated behavioural unit (not a new .ttl) so no new root import /
+# central catalog / recipe-catalog entry is needed -- the execution-mode
+# precedent (modes co-located in patterns.ttl): a new federation unit costs root
+# + central catalog + every recipe catalog, and the recipe catalogs live in a
+# separate clone outside this boundary.
+#
+# NEUTRALISATION: the 20 hook scripts of rohitg00/awesome-claude-code-toolkit
+# (Apache-2.0) collapse to their lifecycle-EVENT archetype -- the store holds a
+# neutral parts library, not a catalogue of 20 concrete scripts. The source event
+# axis is SessionStart(2)+SessionEnd(2)+PreCompact(1) [session/context lifecycle],
+# PreToolUse(7) [pre-action interception -- dominant], PostToolUse(9) [post-action
+# reaction -- dominant] and Stop(1)+UserPromptSubmit(1)+Notification(1) [turn
+# boundary]. The four archetypes below are the lifecycle SPINE -- session-open ->
+# pre-tool -> post-tool -> turn-stop -- covering the two dominant categories plus
+# the session and turn boundaries. The remaining event values (session-end,
+# pre-compact, user-prompt-submit, notification) are each addable as ONE more
+# ho:Hook individual with a new ho:hookEvent literal and no schema change -- the
+# axis's extensibility proof. No source text is copied; each records provenance
+# via dct:source / dct:license. Connectivity is by the h-harness-factory hasHook
+# binding (they are ho:HarnessComponents), mirroring how FailurePolicy/
+# TestScenario rows are reached by their binding rather than by a concept tag.
+id:hook-session-start a ho:Hook ;
+    skos:prefLabel "Session-start context hook" ; skos:altLabel "session-start hook" ;
+    skos:definition "A lifecycle hook that fires on the session-start event: at session initialization it loads the context an agent needs to resume work coherently -- prior session state, project configuration and outstanding todos -- so the agent begins already grounded rather than cold. The session-open position of the lifecycle-trigger axis." ;
+    ho:hookEvent "session-start" ;
+    ho:hookAction "Load prior session context and project state (recent history, configuration, pending work) at session initialization" ;
+    ho:tokenEstimate 74 ; ho:maturity "draft" ;
+    dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" ;
+    dct:license "Apache-2.0" .
+
+id:hook-pre-tool-use a ho:Hook ;
+    skos:prefLabel "Pre-tool-use guard hook" ; skos:altLabel "pre-tool-use hook" ;
+    skos:definition "A lifecycle hook that fires on the pre-tool-use event: before a tool action runs it inspects the pending action and may guard, scan or block it -- e.g. screening a write for leaked secrets, checking a command against allow/deny policy, or requiring confirmation for a consequential operation. The pre-action interception position of the lifecycle-trigger axis (the dominant category in the source corpus). Distinct from a Guardrail, which states the policy an agent must follow; this hook is the event-triggered automation that enforces such policy at the moment a tool is about to act." ;
+    ho:hookEvent "pre-tool-use" ;
+    ho:hookAction "Inspect the pending tool action before it runs and guard, scan or block it against policy (e.g. secret scan, allow/deny check, confirmation gate)" ;
+    ho:tokenEstimate 96 ; ho:maturity "draft" ;
+    dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" ;
+    dct:license "Apache-2.0" .
+
+id:hook-post-tool-use a ho:Hook ;
+    skos:prefLabel "Post-tool-use check hook" ; skos:altLabel "post-tool-use hook" ;
+    skos:definition "A lifecycle hook that fires on the post-tool-use event: after a tool action completes it reacts to the result -- e.g. linting or auto-fixing an edited file, running the affected tests, or type-checking the change -- so quality feedback is automatic rather than deferred. The post-action reaction position of the lifecycle-trigger axis (the dominant category in the source corpus)." ;
+    ho:hookEvent "post-tool-use" ;
+    ho:hookAction "React to a completed tool action by validating its result (e.g. lint or auto-fix the edited file, run the affected tests, type-check the change)" ;
+    ho:tokenEstimate 88 ; ho:maturity "draft" ;
+    dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" ;
+    dct:license "Apache-2.0" .
+
+id:hook-stop a ho:Hook ;
+    skos:prefLabel "Turn-stop reminder hook" ; skos:altLabel "stop hook" ;
+    skos:definition "A lifecycle hook that fires on the stop event: when the agent finishes a turn it runs a completion-time check before yielding -- e.g. reminding to run the project's tests or checks if code was modified, or persisting what should carry to the next turn. The turn-boundary position of the lifecycle-trigger axis." ;
+    ho:hookEvent "stop" ;
+    ho:hookAction "At turn completion, run a closing check before yielding (e.g. remind to run the project's tests/checks if code changed, persist carry-over state)" ;
+    ho:tokenEstimate 74 ; ho:maturity "draft" ;
+    dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" ;
+    dct:license "Apache-2.0" .

@@ -29,7 +29,7 @@
 # recognised by the emitter) or the build fails loudly (determinism, INV-2). A
 # harness MAY declare its own set to override the order (part-to-part assembly
 # made explicit). The conditional kinds (roles/channels/skills, plus the
-# run-behaviour sections 9..12 below) stay in the order but emit nothing when the
+# run-behaviour sections 9..13 below) stay in the order but emit nothing when the
 # harness has no such parts, exactly as before.
 id:as-overview a ho:AssemblySection ;
     skos:prefLabel "Assembly: overview section" ;
@@ -71,7 +71,7 @@ id:as-skills a ho:AssemblySection ;
     skos:definition "Positions the Skills section (rendered from hasInstruction) eighth, closing the compositional half of the document (the parts the harness is made of)." ;
     ho:sectionKind "skills" ; ho:assemblyOrder 8 ; ho:tokenEstimate 18 ; ho:maturity "draft" .
 
-#===================== RUN-BEHAVIOUR SECTIONS (9..12) ==================
+#===================== RUN-BEHAVIOUR SECTIONS (9..13) ==================
 # The second half of the default order: where sections 1-8 describe WHAT the
 # harness is made of, these describe how an assembled harness RUNS and how it is
 # judged -- the runtime execution mode, the error-handling table and the
@@ -104,5 +104,20 @@ id:as-error-handling a ho:AssemblySection ;
 
 id:as-test-scenarios a ho:AssemblySection ;
     skos:prefLabel "Assembly: test-scenarios section" ;
-    skos:definition "Positions the Test scenarios section (the behaviour-acceptance fixtures rendered from hasTestScenario) last, as the acceptance appendix the assembled harness is checked against once its whole specification has been read. A conditional section: emits nothing when the harness carries no test scenario." ;
+    skos:definition "Positions the Test scenarios section (the behaviour-acceptance fixtures rendered from hasTestScenario) after the compositional and run-behaviour sections, as the acceptance appendix the assembled harness is checked against once its whole specification has been read. A conditional section: emits nothing when the harness carries no test scenario." ;
     ho:sectionKind "test-scenarios" ; ho:assemblyOrder 12 ; ho:tokenEstimate 22 ; ho:maturity "draft" .
+
+# The lifecycle-trigger axis (Wave 4 / GAP-H): what the harness runs AUTOMATICALLY
+# at session/tool-use/turn boundaries, rendered from ho:hasHook grouped by
+# ho:hookEvent. Appended at order 13 (a pure append -- no existing section's order
+# moves) as the final run-behaviour appendix: after the acceptance fixtures it
+# lists the standing automations that fire outside the deliberate step flow.
+# CONDITIONAL exactly like the sections above: a harness with no ho:hasHook emits
+# nothing, so adding this to the central default order leaves every harness that
+# binds no hook (incl. the base template id:h-multiagent) byte-identical; only
+# id:h-harness-factory, which binds the four neutral hook archetypes, gains a
+# `## Hooks` section.
+id:as-hooks a ho:AssemblySection ;
+    skos:prefLabel "Assembly: hooks section" ;
+    skos:definition "Positions the Hooks section (the lifecycle-triggered automations rendered from ho:hasHook, grouped by ho:hookEvent) last, as the automation appendix: after the harness's composition, run-time topology and acceptance fixtures have been read, it states what fires automatically at session, tool-use and turn boundaries -- the event-driven side-behaviours that run outside the deliberate workflow step order. A conditional section: emits nothing when the harness declares no hook." ;
+    ho:sectionKind "hooks" ; ho:assemblyOrder 13 ; ho:tokenEstimate 26 ; ho:maturity "draft" .

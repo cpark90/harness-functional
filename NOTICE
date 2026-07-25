@@ -13,10 +13,21 @@ rohitg00/awesome-claude-code-toolkit
 (https://github.com/rohitg00/awesome-claude-code-toolkit), licensed under the
 Apache License 2.0.
 
+This product also includes four neutral lifecycle-hook archetypes whose
+event-triggered automation discipline was observed in and generalized from the
+hooks of rohitg00/awesome-claude-code-toolkit
+(https://github.com/rohitg00/awesome-claude-code-toolkit), licensed under the
+Apache License 2.0. The 20 concrete hook scripts are not reproduced; they are
+generalized to their lifecycle-event archetype (session-start, pre-tool-use,
+post-tool-use, stop).
+
 No source text is copied. Each derived node records its provenance via
 dct:source and dct:license. Currently: id:pat-blackboard (Blackboard
 coordination), a neutralized coordination pattern abstracted from the
 shared-state / durable-artifact handoff recurring across those orchestrators;
-and id:gr-human-checkpoint (Human approval checkpoint), a neutralized
+id:gr-human-checkpoint (Human approval checkpoint), a neutralized
 human-in-the-loop approval gate abstracted from the phase-checkpoint /
-progressive-disclosure discipline recurring across both sources above.
+progressive-disclosure discipline recurring across both sources above; and
+id:hook-session-start / id:hook-pre-tool-use / id:hook-post-tool-use /
+id:hook-stop (lifecycle hooks), neutralized event-trigger archetypes abstracted
+from the toolkit's SessionStart / PreToolUse / PostToolUse / Stop hooks.

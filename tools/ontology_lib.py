@@ -75,7 +75,7 @@ def link_predicates(g: Graph) -> set[URIRef]:
 # only add redundant lookups.
 INSTANCE_CLASSES = {
     HO.Harness, HO.HarnessComponent, HO.SystemPrompt, HO.Instruction,
-    HO.Tool, HO.Guardrail, HO.Workflow, HO.WorkflowStep, HO.PromptSection,
+    HO.Tool, HO.Guardrail, HO.Hook, HO.Workflow, HO.WorkflowStep, HO.PromptSection,
     HO.AssemblySection, HO.Deliverable, HO.ModelConfig, HO.Example,
     HO.Role, HO.Agent, HO.Memory, HO.Channel, HO.Candidate, HO.Contract,
     HO.TestScenario, HO.FailurePolicy,
