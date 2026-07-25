@@ -60,9 +60,14 @@
 - **harness-repo-survey Wave 0** → **완료(미커밋 리포트 `verified/harness-repo-survey-wave0.md`)**. 결과: **확정 TBox gap은
   `ho:Hook` 1건뿐**(나머지 3 gap 강등/defer), role 마이닝은 기존 importer 재사용, ④"전량"=중립화 archetype(raw 253 금지·동명41병합).
   → **harness-repo-survey는 harness-100 규모 아님**. Wave 1 착수 선행: ①B17 land(완료) ②`wshobson/agents` 로컬 clone+NOTICE ③(강권고)retrieve tie-break.
-- **남은 것**: **delta F/B22**(cap-skill + 첫 Contract 인스턴스, revfactory 잔여 — 다음 central-abox dispatch) ·
-  **harness-repo-survey Wave 1~4**(W1 pattern/mode·W2 role 원형+예제10~20·W3 guardrail dedup·W4 `ho:Hook` TBox 세트).
-  Wave 1은 wshobson clone 필요(외부 repo setup — 사용자 확인 또는 fetch).
+- **delta F / B22** → **저작 완료(미커밋)**: `cap-skill` Capability + 첫 `ho:Contract` 2개(`ct-well-formed-skill-*`,
+  structural) + provider Instruction `ins-well-formed-skill`, h-harness-factory 배선(dogfood: 방법론 host가 skill-authoring
+  skill을 ship, 그 skill이 well-formed임을 자기 계약으로 검증). `verify_contract h-harness-factory` = **2/2 PASS exit 0**,
+  tamper=**FAIL exit 1**(실teeth). 신규 클래스/술어 0, 226→230, 6 harness byte-identical. **revfactory-harness-reflection
+  전부 적용 완료 → refresh 가능**. GAP: 부재-assertion grammar(부정 op 없음)·field-anchor(약한 substring)는 tools 확장 신호.
+- **남은 것**: **harness-repo-survey Wave 1~4**(W1 pattern/mode from wshobson 16 orch·W2 role 원형+예제10~20 via importer·
+  W3 guardrail dedup·W4 `ho:Hook` TBox+개체+AssemblySection+렌더러 세트). **wshobson/agents clone 완료**(`/home/cpark/git/wshobson-agents`,
+  MIT 763 md). B17 land·clone 완료 → **Wave 1 착수 가능**. NOTICE/dct:source 귀속 필수.
 - **B21. importer가 TestScenario/FailurePolicy를 추출하지 않는다** (inspection 발견, importer land 후속).
   `tools/import_corpus.py`는 skeleton·role·persona·instruction·상수만 기계 생성하고 `hasTestScenario`/
   `hasFailurePolicy`는 브리프 SHOULD 밖이라 미구현. 소스는 거의 전수 제공 → Phase 0.7이 8 recipe에 backfill로
