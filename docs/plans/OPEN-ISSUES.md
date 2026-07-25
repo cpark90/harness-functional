@@ -17,8 +17,8 @@
 
 | 항목 | 상태 | 남은 일 |
 |---|---|---|
-| `harness-100-augmentation.md` | **대량 임포트 완료** — 후속 D1 결정만 | ✅0.5~P0-b~importer → ✅**대량 임포트 Wave A~G 완료**: 신규 30 recipe(published `ccb2cbb`, catalog **38** = 대표35 + lpranging/techdoc/contract-demo, CI 39 job green). 전 wave 중앙 byte-identical @223·어휘발명 0·날조 0·로컬경로 0. draft maturity. **남은 것 = D1(중앙 도메인/fp 승격) 사용자 결정** + lpranging/README provenance 스크럽(진행 중). 계획: `harness-100-scaleup-plan.md` |
-| `harness-repo-survey.md` | **미착수** (승인+답변 완료) | ①전체 로드맵(c) ②**`ho:Hook` 신설** ③agent-rules-books는 온톨로지에만 ④role 원형: 온톨로지 전량 + 예제 10~20. 계획: `harness-repo-survey/mining-plan.md` Wave 0~4 |
+| `harness-100-augmentation.md` | **REFRESHED (채널 제거, 2026-07-25)** — 핵심 요청 충족 | ✅0.5~P0-b~importer~**대표 35 임포트 완료**(published `ccb2cbb`, catalog **38**, CI 39 job green, 로컬경로 스크럽 `a7ad725`). approved + 적용결과 custody(`verified/`에 기록 후 제거, git 이력 보존). **잔여(별건 GAP, optional 후속) = D1 `fp-refer-to-expert` recipe 재바인딩** — 아래 배치 해소 로그 D1에서 추적. |
+| `harness-repo-survey.md` | **W0~W4 land 완료 — 예제 잔여 HOLD(유지)** | ①로드맵(c)·②`ho:Hook` 신설·③agent-rules-books·④role 원형 = **W0 `c7ae890`·W1 `925f7ba`·W2 `5c35528`(252→기존7, 신규0)·W3 `9ca09d5`·W4 `f7214b6`(ho:Hook)** 전부 적용. **잔여 = 결정4 "예제 10~20"만** — 소스타입 불일치(role 라이브러리엔 임포트할 하네스 없음, W2 커밋이 GAP 명시) → **사용자 확인 필요**. custody: `verified/harness-repo-survey.md`. |
 | `revfactory-harness-reflection.md` | **거의 완료 — 미반영 1건** | 전수 감사 완료(`verified/revfactory-completeness-audit.md`): delta A~E·G 전부 반영, 의도적 미반영 5류. **미반영 GAP = delta F(`cap-skill` Capability + `capabilityContract` 구조 Contract)** — `gr-well-formed-skill`의 강제측. 그래프가 `harnesses.ttl:229`에 "later wave"로 명시 지연. **F 저작 시 완결→refresh.** refresh HOLD |
 | `retrieve-nondeterministic-pack.md` | **land 완료** (`d1ac476`, CI green) | 파일 태그만 `open` 유지 — 사용자가 `approved`로 고치면 즉시 refresh 가능. 근거: `verified/retrieve-determinism-finalize.md`. negative control로 가드 실효 확인(8/8 FAIL) |
 
@@ -43,6 +43,12 @@
 
 ## 배치 해소 로그 (2026-07-25, goal 마무리 라운드)
 사용자 부재 중, 승인·doctrine이 명확한 열린 이슈를 정리(개별 "사용자 결정 대기"로 방치하던 것 실행).
+
+> **채널 refresh (inspection, 2026-07-25)**: approved + 적용결과 custody 확인 후 inbox 3항목 제거 —
+> `execution-separation-invariant`(land `fce72af`) · `webui-save-drops-triples`(land `19a8cc6`) ·
+> `harness-100-augmentation`(대표 35 임포트 완료, published `ccb2cbb`/`a7ad725`). 각 원문·verified 보고서는
+> git 이력에 보존(복원 가능). `harness-repo-survey`는 **HOLD 유지**(결정4 "예제 10~20"만 잔여, 사용자 확인
+> 필요) → inbox에 남김. refresh 후 inbox approved 잔여 = **1**(survey, 예제 잔여).
 - **execution-separation-invariant** (approved) → **land `fce72af`**: `gr-execution-separation`+`role-coordinator`,
   4 multi-agent 하네스 배선. 단일에이전트 byte-identical, multi-agent operating-rules +1줄(승인된 의도 변경).
 - **webui B13/B14/B15** (approved) → **land `19a8cc6`**: merge-not-replace 무손실(94노드 손실→0), link predicate **TBox 파생**

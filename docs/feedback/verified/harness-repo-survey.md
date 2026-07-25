@@ -90,3 +90,33 @@ targets: [ho:Hook, core:role-developer, core:h-multiagent, core:gr-bounded-conte
 ## 한계
 253이라는 수는 **파일명 기준**이다. 이름이 달라도 내용이 같은 원형(예: `test-automator` vs `qa-expert`)은
 파일을 열어야 병합 판단이 되므로, 실제 저작 수는 Wave 2 첫 단계에서 확정된다.
+
+---
+## 적용 결과 — Wave 0~4 완료 (custody transfer, inspection, 2026-07-25)
+
+결정 1~3의 실행(Wave 0~4)이 모두 land됐다. 이 항목은 **결정 4의 "예제 10~20"만 미해결이라 HOLD(유지)**
+하되, 적용된 W0~W4를 여기 durable하게 기록해 custody를 남긴다(refresh는 예제 잔여 해소 후).
+
+- **Wave 0 — 커버리지 감사** (`c7ae890`): 확정 TBox gap = **`ho:Hook`만**(다른 3후보는 부분표현/defer).
+  Wave 1~4 스코프 확정 + OPEN-ISSUES 갱신. 근거 메모리: `inspection/harness-repo-survey-wave0.md`.
+- **Wave 1 — `pat-blackboard` 중립 패턴 승격** (`925f7ba`).
+- **Wave 2 — role archetype 커버리지** (`5c35528`): 외부 role **252**(wshobson + VoltAgent, dedup)이
+  기존 **중립 role 원형 7종에 전부 collapse, 신규 0** — 중립 부품 라이브러리가 role 축에서 이미 완비됨을
+  실증. operator/reliability 후보는 doctrine으로 close(analyst+implementer로 분해, 구별자질이 도메인
+  특수 = 근사 동의어 drift). → 결정 4의 "온톨로지에 모두 반영"은 **mass import가 아니라 기존 원형
+  커버리지**로 낙착.
+- **Wave 3 — 중립 guardrail `gr-human-checkpoint`** (`9ca09d5`): 중앙 byte-identity + 2-source 귀속.
+  근거 메모리: `inspection/central-ontology-land-attribution.md`.
+- **Wave 4 — `ho:Hook` lifecycle-trigger 축** (`f7214b6`, GAP-H complete): TBox 클래스 + `hookEvent` +
+  `hasHook` + ABox hook 개체 + materialize 조건부 렌더러. INSTANCE_CLASSES parity, 기존 하네스 산출물
+  byte-identical(hook 없는 하네스 미출력). `validate.py` PASS.
+
+### HOLD 근거 — 결정 4 "예제 10~20"만 미해결 (사용자 확인 필요)
+결정 4의 recipe 예제 압축("예제는 10~20개")은 **소스타입 불일치**로 그대로 실행할 수 없다: 소스
+(VoltAgent/wshobson)는 **role 라이브러리이지 임포트 가능한 하네스가 아니다** — recipe 예제로 압축할
+"하네스"가 소스에 없다(W2 커밋 `5c35528`가 이 GAP을 "example-corpus GAP — role libraries are not
+importable harnesses"로 명시). role 원형 반영(온톨로지 축)은 W2로 완료됐으므로 사용자 결정 4의
+온톨로지 취지는 충족됐고, **예제 산출을 어떤 소스에서 뽑을지**(예: harness-100 코퍼스 재사용 vs
+role-library를 예제화하지 않음)는 사용자 확인이 필요하다. 이 잔여만 남겨 항목을 유지한다.
+
+**판정: 1·2·3 = 적용 완료(land). 4 = 예제-잔여로 HOLD(유지) — 사용자 확인 대기.**

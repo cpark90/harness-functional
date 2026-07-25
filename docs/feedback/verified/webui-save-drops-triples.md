@@ -45,3 +45,24 @@ targets: [tools/webui/ttl_writer.py, tools/webui/server.py, tools/ontology_lib.p
 ## 판정
 **apply** — 승인됨, 미적용 확정, 그래프 무영향(회귀축은 그래프가 아니라 왕복 무손실 스모크).
 B16 "레지스트리 표류" 불변식과 함께 계획하면 B13/B14가 근본 해소된다. orchestrator가 developer dispatch로 적용.
+
+---
+## 적용 결과 (applied — custody transfer, inspection, 2026-07-25)
+
+이 보고서는 판정 당시 "미적용"으로 기록됐으나 그 뒤 developer dispatch로 세 결함 모두 반영·land됐다.
+refresh(항목·보고서 제거) 전에 적용 결과를 여기 옮겨 git 이력에 custody를 남긴다.
+
+**중앙 커밋**: `19a8cc6` ("Fix web UI save data-loss (B13 merge-not-replace, B14 TBox-derived link
+predicates, B15 relpath mtime key)"). 5 files changed, 268 insertions, 77 deletions. **tools only —
+`ontology/` 무변경.**
+
+- **B13 (데이터 손실)**: `ttl_writer` 저장을 whitelist block overwrite → **MERGE**로. `ORDER`는 emit
+  순서만 고정하고, 편집기가 건드리지 않은 술어는 디스크에서 읽어 그대로 재emit → 저장이 목록 밖 술어를
+  조용히 버리지 않는다. no-touch 저장의 round-trip 트리플 diff = 0 (read-only 표본 재현).
+- **B14**: server link predicate를 하드코딩 상수 대신 **TBox ObjectProperty 집합**(`link_predicates(g)`,
+  `tools/ontology_lib.py:60`)에서 파생 — 신규 object property가 도구 코드 수정 없이 잡힌다(B16 표류 차단).
+- **B15**: mtime 충돌 키가 basename이 아니라 **파일 relpath**(`tools/webui/server.py:117`,
+  `tools/webui/ttl_writer.py:290`) — 그룹 디렉토리 재조직 후 basename 충돌 해소.
+
+**검증**: `validate.py` PASS @225 (그래프 무변경이라 자명), `check_determinism.py` PASS. 현행 트리에서
+`link_predicates`·relpath 키 반영 확인. **판정: 적용 완료 — refresh 대상.**

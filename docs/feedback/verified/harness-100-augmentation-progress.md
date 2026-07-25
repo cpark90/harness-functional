@@ -50,3 +50,28 @@ status-of-item: approved — APPLICATION IN PROGRESS, do NOT refresh
 ## 판정
 **apply — 진행 중.** Phase 0.5·0.6·0.7 적용 완료. **refresh(제거) 보류** — importer·대량 임포트
 완료 후 별도 사이클에서 재판정한다. 항목 `status: approved` 유지.
+
+---
+## 적용 결과 — 완료 (custody transfer, inspection, 2026-07-25)
+
+위에서 "보류" 근거였던 **남은 일(P0-b · importer · 대표 ~35 임포트)이 전부 완료**됐다. 핵심 요청
+("harness-100 코퍼스로 harness-recipes 대폭 증강")이 충족되어 항목을 refresh한다. 적용 결과를 여기
+옮겨 custody를 남긴다(원문·중간 Phase 기록은 git 이력 보존).
+
+- **P0-b — catalog/CI glob 생성**: 손 나열 → 재귀 `recipes/*/` glob 생성기 land. 이후 recipe **디렉토리**
+  추가만으로 catalog + CI matrix가 파생(drift guard). 근거 메모리: `inspection/recipe-catalog-glob-land.md`.
+- **importer — `tools/import_corpus.py`**: 코퍼스 → recipe TTL 임포터 land·독립 재검증(결정성 diff0 ·
+  코퍼스 md5 read-only · oracle 표본 id집합/augmentsRole/tokenEstimate 일치). 근거:
+  `inspection/importer-independent-verify.md`.
+- **대표 35 임포트 완료**: 파일럿 5 + **신규 30**(Wave A~G2). published `cpark90/harness-recipes`
+  `226592d..ccb2cbb`, catalog **21 central + 38 recipe**(대표35 + lpranging/techdoc/contract-demo),
+  CI push run 39 job(discover 1 + validate 38) 전원 success. 전 wave 중앙 `validate.py` byte-identical
+  @223, per-recipe federate 균일 델타(ID 충돌 0), 어휘 발명 0, 날조 0, draft maturity. 로컬경로 스크럽
+  `a7ad725`(published-wide `/home/cpark` grep = 0). 근거: `inspection/recipe-land-staging-to-published.md`
+  (Wave A~G2 + R2 실측).
+
+**잔여(별건 GAP — optional 후속, 이 항목의 핵심 요청 밖)**: D1 `fp-refer-to-expert` 중앙 승격 후
+**기존 recipe 재바인딩**(federation ripple). OPEN-ISSUES 배치 해소 로그 D1에 이미 추적 중 —
+refresh 대상 아님, 별도 사이클에서 처리.
+
+**판정: 핵심 요청 충족 — refresh(항목 + 이 보고서 제거).**
