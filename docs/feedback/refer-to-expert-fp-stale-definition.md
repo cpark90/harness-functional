@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [recipes:fp-gdpr-applicability-uncertain, recipes:fp-legal-indeterminacy, recipes:fp-regulatory-ambiguity, core:fp-refer-to-expert]
 kind: defect
 related: [docs/plans/OPEN-ISSUES.md]

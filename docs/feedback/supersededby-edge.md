@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [core:pat-agent-teams, core:pat-sub-agents, core:pat-hybrid, core:mode-agent-teams, core:mode-sub-agents, core:mode-hybrid]
 kind: decision
 related: [docs/plans/OPEN-ISSUES.md, docs/feedback/verified/execution-mode-axis-finalize.md]
@@ -42,8 +42,5 @@ tbox` → 0):
 - federate: 신규 property는 recipe union에도 있으나 recipe가 참조 안 하면 무영향(dry-run으로 확인).
 
 ## 결정 필요
-1. **A/B/C 중 무엇으로** (권고: **A**).
-2. **retrieve.py가 supersededBy를 소비**해 후계를 팩에 함께 실을지(권고: 예 — B9의 실효가 거기서 남).
-
-승인 시 `status: open` → `approved` + 답. TBox property·abox edge 저작은 developer dispatch,
-retrieve.py 확장도 developer. inspection은 조사·검증·git.
+1. C, 온톨로지 자체의 내용은 정돈된 형태로 존재해야지 추적성을 함께 보관하면 안됨.
+2. 실지 않음.
