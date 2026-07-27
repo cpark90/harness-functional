@@ -84,6 +84,8 @@ SHACL 연결성 shape + 전역 reachability BFS가 이를 강제한다. (설계 
   `python3 tools/retrieve.py "<request>"`가 준 pack에서 시작한다 (CLAUDE.md 골든룰 1).
 - **[권장]** `promptText`는 최소·자기완결로. 긴 프롬프트를 한 노드에 몰지 말고 재사용
   가능한 `Instruction`으로 쪼갠다 — 예산 admission이 노드 단위로 걸리기 때문.
+- **[권장]** 예외: 하네스의 **주제가 이 온톨로지(`ho:`) 자신**인 techdoc류에서는 지시문·
+  템플릿 본문에 `ho:` 용어를 그대로 써도 된다 — 산출물 자기완결 계약의 명시적 예외(그 용어 자체가 산출물의 주제어이므로).
 - **[권장]** `ho:salience`(0..1)로 중요도 prior를 준다 — 자주 template이 되는 base harness는
   높게, 특수 변형은 낮게. 소비자(retrieval 랭킹) 없는 값을 과하게 붙이지 않는다(YAGNI).
 

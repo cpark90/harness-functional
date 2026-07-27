@@ -104,6 +104,39 @@ def maturity_of(g: Graph, node) -> str | None:
     return vals[0] if vals else None
 
 
+# Secondary ranking key: more mature parts win a score tie. ho:salience was the
+# first candidate but covers only ~2% of the store (useless as a key), whereas
+# ho:maturity covers ~67%. A missing/unknown maturity sorts last (3) but is not
+# demoted in score — absence is not retirement (that is DEPRECATED_RANK_FACTOR).
+_MATURITY_RANK = {"stable": 0, "reviewed": 1, "draft": 2}
+
+
+def maturity_rank(g: Graph, node) -> int:
+    vals = maturity_values(g, node)
+    if not vals:
+        return 3
+    return min(_MATURITY_RANK.get(v, 3) for v in vals)
+
+
+# Inline ontology-internal IRI tokens (id:/core:<slug>) that appear INSIDE a
+# node's skos:definition / ho:promptText prose are authored as anti-drift
+# disambiguation, but a pack reader cannot follow a raw `id:` reference. Mirror
+# materialize.py's IriTokenResolver on retrieve's text-emission path: resolve
+# each token to the referent's prefLabel. This retrieve loads the central union,
+# where the `id:` prefix binds to the core namespace, so a slug expands under
+# ID_CORE; lib.label_of degrades to the bare slug for an unresolved token, so no
+# `id:` prefix ever survives. Structured pack fields already use lib.label_of.
+# Deterministic and idempotent (a resolved label carries no token).
+_ID_TOKEN_RE = re.compile(r"\b(?:id|core):([A-Za-z][A-Za-z0-9_-]*)")
+
+
+def _resolve_id_tokens(g: Graph, text):
+    if text is None:
+        return None
+    return _ID_TOKEN_RE.sub(
+        lambda m: lib.label_of(g, lib.ID_CORE[m.group(1)]), str(text))
+
+
 def lifecycle_factor(g: Graph, node) -> float:
     """Rank multiplier from the node's lifecycle status.
 
@@ -132,12 +165,14 @@ def lexical_score(g: Graph, node, terms: list[str]) -> float:
     return score * prior * lifecycle_factor(g, node)
 
 
-def _rank_key(item: tuple[object, float]):
-    """Total, process-independent ranking key for a (node, score) pair:
-    score descending, IRI ascending. Only the score is negated — a plain
-    `reverse=True` would reverse the IRI tie-breaker too."""
+def _rank_key(g: Graph, item: tuple[object, float]):
+    """Total, process-independent ranking key for a (node, score) pair: score
+    descending, then maturity rank (more mature wins a score tie), then IRI
+    ascending. Only the score is negated — a plain `reverse=True` would reverse
+    the tie-breakers too. The IRI stays the FINAL key so the order is still a
+    total, process-independent order (determinism)."""
     node, score = item
-    return (-score, str(node))
+    return (-score, maturity_rank(g, node), str(node))
 
 
 def select_seeds(g: Graph, terms: list[str]) -> list[tuple[object, float]]:
@@ -150,7 +185,7 @@ def select_seeds(g: Graph, terms: list[str]) -> list[tuple[object, float]]:
     # it the order of equally-scored seeds came from set iteration (URIRef hash
     # randomisation), and MAX_SEEDS then cut the tie group at an arbitrary
     # point — so the same request produced a different pack per process.
-    scored.sort(key=_rank_key)
+    scored.sort(key=lambda it: _rank_key(g, it))
     return scored[:MAX_SEEDS]
 
 
@@ -229,16 +264,15 @@ def project(g: Graph, request: str, budget: int) -> dict:
         "label": lib.label_of(g, n),
         "types": [t.split("#")[-1] for t in lib.most_specific_types(g, n)],
         "relevance": round(sc, 3),
-        "definition": (str(g.value(n, SKOS.definition))
-                       if g.value(n, SKOS.definition) else None),
+        "definition": _resolve_id_tokens(g, g.value(n, SKOS.definition)),
         # Lifecycle status as a STRUCTURED field: "deprecated" used to be
         # discoverable only as a `DEPRECATED:` phrase buried in the definition
         # prose, so a pack reader could bind a retired part unaware.
         "maturity": maturity_of(g, n),
-        "promptText": _truncate(g.value(n, HO.promptText)),
+        "promptText": _truncate(_resolve_id_tokens(g, g.value(n, HO.promptText))),
         "provides": [lib.label_of(g, c) for c in g.objects(n, HO.providesCapability)],
         "requires": [lib.label_of(g, c) for c in g.objects(n, HO.requiresCapability)],
-    } for n, sc in sorted(admitted, key=_rank_key)]
+    } for n, sc in sorted(admitted, key=lambda it: _rank_key(g, it))]
 
     # Graph iteration order is not reproducible across processes (OWL-RL
     # materialisation inserts inferred triples in set order), so the edge list
@@ -255,7 +289,7 @@ def project(g: Graph, request: str, budget: int) -> dict:
 
     candidates = [
         {"label": lib.label_of(g, n), "relevance": round(score_of[n], 3)}
-        for n in sorted(in_scope, key=lambda n: _rank_key((n, score_of[n])))
+        for n in sorted(in_scope, key=lambda n: _rank_key(g, (n, score_of[n])))
         if (n, HO.Harness) in _typed(g)
     ]
 

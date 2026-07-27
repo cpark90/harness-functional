@@ -185,6 +185,46 @@ def check_assembly_order(g: Graph):
     return ok, problems
 
 
+def check_capacity_fit(g: Graph):
+    """Every ho:Agent that declares a ho:cognitiveCapacity must have its realized
+    observation fit within it: the sum of ho:observedTokenVolume over the agent's
+    AreasOfObservation (reached by ho:agentObservation → ObservationSpace →
+    ho:hasAreaOfObservation) must be ≤ ho:cognitiveCapacity. This is the loss-free
+    capacity fit the ho:cognitiveCapacity / ho:observedTokenVolume definitions
+    describe; SHACL cannot sum, so this arithmetic invariant is enforced here.
+    Over capacity == context-rot (the role should be decomposed or its observation
+    narrowed) and is a HARD FAIL. Returns (ok, rows)."""
+    _print_header("Capacity fit (Σ observed volume ≤ cognitive capacity)")
+    ok = True
+    rows = []
+    for agent in sorted(g.subjects(RDF.type, HO.Agent),
+                        key=lambda n: lib.label_of(g, n)):
+        cap_val = g.value(agent, HO.cognitiveCapacity)
+        if cap_val is None:
+            continue
+        cap = int(cap_val)
+        total = 0
+        for space in g.objects(agent, HO.agentObservation):
+            for aoo in g.objects(space, HO.hasAreaOfObservation):
+                vol = g.value(aoo, HO.observedTokenVolume)
+                if vol is not None:
+                    total += int(vol)
+        slack = cap - total
+        rows.append({"agent": lib.label_of(g, agent), "capacity": cap,
+                     "volume": total, "slack": slack})
+        if total > cap:
+            ok = False
+            print(f"✗ {lib.label_of(g, agent)} over capacity: "
+                  f"Σvol {total} > cap {cap} (over by {-slack})")
+        else:
+            print(f"✓ {lib.label_of(g, agent)}: {total}/{cap} (slack {slack})")
+    if not rows:
+        print("✓ no agent declares a cognitive capacity to check")
+    elif ok:
+        print(f"✓ all {len(rows)} agent(s) fit within their cognitive capacity")
+    return ok, rows
+
+
 def check_duplicates(g: Graph):
     """Same class + same (case-folded) prefLabel == likely drift/dup.
     Advisory (does not fail the build). Returns a list of dup groups."""
@@ -221,8 +261,9 @@ def run_structured() -> dict:
         reach_ok, orphans = check_reachability(g)
         cap_ok, gaps = check_capability_satisfaction(g)
         assembly_ok, assembly_problems = check_assembly_order(g)
+        capacity_ok, capacity_rows = check_capacity_fit(g)
         dups = check_duplicates(g)
-    hard_ok = shacl_ok and reach_ok and cap_ok and assembly_ok
+    hard_ok = shacl_ok and reach_ok and cap_ok and assembly_ok and capacity_ok
     return {
         "pass": hard_ok,
         "triples": len(g),
@@ -230,6 +271,7 @@ def run_structured() -> dict:
         "reachability": {"ok": reach_ok, "orphans": orphans},
         "capabilities": {"ok": cap_ok, "gaps": gaps},
         "assemblyOrder": {"ok": assembly_ok, "problems": assembly_problems},
+        "capacityFit": {"ok": capacity_ok, "agents": capacity_rows},
         "duplicates": dups,
     }
 
@@ -262,6 +304,7 @@ def main(argv=None) -> int:
         "reachability": check_reachability(g)[0],
         "capabilities": check_capability_satisfaction(g)[0],
         "assemblyOrder": check_assembly_order(g)[0],
+        "capacityFit": check_capacity_fit(g)[0],
     }
     check_duplicates(g)  # advisory
 
