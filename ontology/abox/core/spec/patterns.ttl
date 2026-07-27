@@ -9,9 +9,9 @@
 
 # Core data unit -- DesignPattern partition of the `core` domain. It also hosts
 # the ho:ExecutionMode individuals (the orthogonal runtime-topology axis), which
-# are co-located here because they SUPERSEDE the execution-mode DesignPatterns
-# below and are read side by side with them. Imports the central TBox only;
-# cross-unit references resolve in the root union
+# are co-located here because runtime topology is a first-class Harness property
+# (ho:hasExecutionMode) read side by side with the architectural patterns.
+# Imports the central TBox only; cross-unit references resolve in the root union
 # (docs/federation-design.md D1, ONTOLOGYSTYLE 4).
 <https://harness-ontology.dev/data/core/patterns> a owl:Ontology ;
     owl:imports <https://harness-ontology.dev/schema> .
@@ -47,21 +47,6 @@ id:mode-sub-agents a ho:ExecutionMode ; skos:prefLabel "Sub-agent spawn mode" ; 
 id:mode-hybrid a ho:ExecutionMode ; skos:prefLabel "Hybrid phase-varying mode" ; skos:altLabel "phase-switching topology" ;
     skos:definition "The runtime coordination topology VARIES BY PHASE of the run -- for example a persistent peer team while exploring and lightweight sub-agents while executing -- so one harness switches execution mode as it moves between phases instead of fixing one topology for the whole run. Choose when the phases genuinely have different coordination needs; it costs the complexity of running two topologies, so choose a single mode whenever one fits the whole run." ;
     ho:tagged id:c-execution-mode ; ho:tokenEstimate 105 ; ho:maturity "draft" .
-
-#===================== Execution-mode patterns (DEPRECATED) ============
-# Superseded by the ho:ExecutionMode individuals above: carrying the runtime
-# topology on ho:appliesPattern conflated two orthogonal axes and could not be
-# queried directly. Kept (not deleted) because IDs are never reused; they stay
-# tagged c-execution-mode so they remain connected.
-id:pat-agent-teams a ho:DesignPattern ; skos:prefLabel "Agent-teams" ; skos:altLabel "peer agent teams" ;
-    skos:definition "A team of peer agents runs together and coordinates as a group -- creating the team, messaging one another by name and sharing a task list -- rather than each being spawned and reclaimed individually by a lead. A runtime execution mode; the coordination topology (which peers talk, over which channel) is chosen separately from the architectural work-flow pattern. DEPRECATED: superseded by id:mode-agent-teams (execution mode is now a first-class Harness property, ho:hasExecutionMode)." ;
-    ho:tagged id:c-execution-mode ; ho:maturity "deprecated" .
-id:pat-sub-agents a ho:DesignPattern ; skos:prefLabel "Sub-agents" ; skos:altLabel "lightweight subagent spawn" ;
-    skos:definition "A lead agent spawns lightweight, short-lived sub-agents for scoped subtasks and reclaims their results, rather than standing up a persistent peer team. A runtime execution mode: agents exist only for the span of their delegated task. DEPRECATED: superseded by id:mode-sub-agents (execution mode is now a first-class Harness property, ho:hasExecutionMode)." ;
-    ho:tagged id:c-execution-mode ; ho:maturity "deprecated" .
-id:pat-hybrid a ho:DesignPattern ; skos:prefLabel "Hybrid execution" ; skos:altLabel "phase-varying topology" ;
-    skos:definition "The runtime coordination topology varies by phase of the run -- for example a peer agent-team during exploration and lightweight sub-agents during execution -- so a single harness switches execution mode as it moves between phases rather than fixing one for the whole run. DEPRECATED: superseded by id:mode-hybrid (execution mode is now a first-class Harness property, ho:hasExecutionMode)." ;
-    ho:tagged id:c-execution-mode ; ho:maturity "deprecated" .
 
 #===================== Architectural coordination patterns =============
 # How work flows and is structured across agents (the data-flow architecture),

@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [tools/retrieve.py, tools/validate.py, ho:cognitiveCapacity, ho:observedTokenVolume]
 kind: decision
 related: [docs/plans/OPEN-ISSUES.md, docs/feedback/supersededby-edge.md, docs/feedback/refer-to-expert-fp-stale-definition.md]

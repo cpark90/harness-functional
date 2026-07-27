@@ -30,3 +30,11 @@ core:fp-refer-to-expert for <도메인 상황>: …" 형태로 교체. 각 recip
 ## 판정
 **apply** — 3 recipe 정의 텍스트 수정. 중앙·개체·edge 불변, 회귀 없음. developer(recipe 저작)가
 반영하면 inspection이 위 게이트로 검증한다.
+
+## 적용 결과 (applied 2026-07-28, orchestrator via developer dispatch)
+**적용됨.** 3 recipe local fp 정의의 `(no central archetype covers …)` 부정절만 `(domain-specialisation of core:fp-refer-to-expert for …)`로 교체. 도메인 특화 문구·`ho:specializes` edge·failureCondition·recoveryStrategy 유지. tokenEstimate +6씩(anti-rot).
+- `69-privacy-engineer` `fp-gdpr-applicability-uncertain` · `70-legal-research` `fp-legal-uncertainty` · `72-regulatory-filing` `fp-regulation-ambiguous`.
+- **게이트**: 스윕 게이트 = `ho:specializes core:fp-refer-to-expert` + "no central archetype covers" 공존 recipe **0**(rdflib block-level). 정당한 15개(edge 없음) 보존(phrase 18→15). 세 recipe closure PASS. materialize `diff -r` = MANIFEST tokenEstimate roll-up 외 byte-identical.
+- **계획 전제 정정(비차단)**: Error-handling 섹션은 `failureCondition`+`recoveryStrategy`만 방출하고 `skos:definition`은 **비방출** → stale phrase는 애초 CLAUDE.md에 없었음. 본 수정의 실익은 **그래프 진실성·retrieve 발견성**(재사용 가시화)이지 materialize 산출 변경이 아님. materialize delta는 의도된 tokenEstimate 집계뿐.
+- **신규 발견(범위 밖, 미적용)**: `75-tax-calculator.ttl:191` **주석**이 동종 stale 모순(specializes fp 위 "no central archetype covers"). 주석·비방출이라 저영향이나 동일 결함 — 별도 승인 시 후속 정정 대상.
+- inspection refresh 대기.

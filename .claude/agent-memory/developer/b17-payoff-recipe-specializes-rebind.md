@@ -59,9 +59,11 @@ professional archetype"). These are exactly D1's promotion sources.
 
 ## GAP (report to orchestrator, not fixed here)
 - 3 fp defs (69/70/72) still say "no central archetype covers ..." — written pre-D1, now STALE since
-  they specialize `fp-refer-to-expert`. NOT edited: fp definition/failureCondition ARE emitted in the
-  error-handling table → editing breaks byte-identity. Definition-text refresh is a separate,
-  materialize-affecting change (orchestrator decision).
+  they specialize `fp-refer-to-expert`. → RESOLVED in B23 (see b23-fp-stale-definition-refresh.md).
+  ★CORRECTION to earlier claim here: the error-handling table emits `ho:failureCondition` +
+  `ho:recoveryStrategy` ONLY — NOT `skos:definition`. So editing an fp's skos:definition is
+  materialize-BYTE-NEUTRAL (the stale phrase never reached CLAUDE.md); it only refreshes graph
+  data (retrieve discoverability/truth). Do not assume definition edits break byte-identity.
 - Conservative skips leave many local roles unlinked (design/research/synthesis-gate have no archetype
   among the 7). If "fuller subdivision" is wanted, candidates = new neutral archetypes for
   design/curation/gather — but that is TBox/central-abox growth (schema decision), not recipe edits.

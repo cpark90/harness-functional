@@ -162,7 +162,8 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 
 - **[지킴]** slug은 **의미가 드러나는 full word**. 자체 약어를 만들지 않는다(코드 식별자
   규칙과 동일). 관용 축약(`mc`=model config 등 접두사)만 표에 등록된 대로 쓴다.
-- **[지킴]** ID는 재사용하지 않는다. 폐기 노드는 삭제 대신 `ho:maturity "deprecated"`.
+- **[지킴]** ID는 재사용하지 않는다. 폐기(deprecate)는 그래프에 deprecated 노드로
+  남기지 않고 **제거한다** — 추적성은 git 이력·docs에 둔다(그래프는 현재 유효한 부품만).
 
 ---
 

@@ -44,3 +44,10 @@ git 이력·docs로).
 ## 판정
 **apply** — (C)를 위 삭제로 반영. 제거는 참조 0·orphan 0으로 안전. developer dispatch가 세 블록을
 지우면 inspection이 위 게이트로 검증한다.
+
+## 적용 결과 (applied 2026-07-28, orchestrator via developer dispatch)
+**적용됨.** `pat-agent-teams`·`pat-sub-agents`·`pat-hybrid` 세 DesignPattern 블록 삭제 + DEPRECATED 묘비 주석 제거.
+- **추가 정리(계획 외, 필수)**: (a) `patterns.ttl` 유닛 상단 `owl:Ontology` 헤더 주석이 삭제된 세 노드를 "SUPERSEDE … read side by side"로 지목하던 stale → "runtime topology is a first-class Harness property"로 갱신. (b) `ONTOLOGYSTYLE.md §2`가 **정반대 구정책**("폐기 노드는 삭제 대신 deprecated 표기")이던 것을 사용자 (C) 방침으로 replace(폐기=제거, 추적성은 git/docs). "ID 재사용 금지"는 유지.
+- **게이트(orchestrator 확인)**: `validate.py` PASS @232 (235→232, −3) · reachability 0 orphan · `c-execution-mode`는 mode-* 3개가 계속 tag(연결 유지) · `grep 'maturity "deprecated"'` = 0 · determinism PASS · 삭제 노드 참조 0 · h-multiagent materialize 클린(누출 0).
+- **비차단 후속(별도 결정)**: `retrieve.py`의 `DEPRECATED_RANK_FACTOR`·배지 코드 + TBox `maturity "deprecated"` enum이 이제 소비자 0으로 휴면 — 제거(더 정돈) vs 존치(미래 대비)는 미결.
+- inspection refresh 대기(게이트 재검증 후 항목·보고서 제거는 inspection 소관).
