@@ -46,3 +46,17 @@ targets: [tools/retrieve.py, tools/validate.py, ONTOLOGYSTYLE.md]
 **apply** — 4건 developer dispatch 저작. B18/B11/B12는 권고안 그대로, **B2는 salience 2% 실측으로
 maturity 2차 키로 정정**(더 실효적, 결정성 유지). 반영되면 inspection이 위 게이트(check_determinism·
 validate·팩 id: 0·negative control)로 검증한다. 중앙 그래프 개체는 불변(전부 tools/doc 변경).
+
+## 적용 결과 (applied 2026-07-28, `6cca0d9`) — inspection 독립 검증 완료
+developer(opus) dispatch로 4건 저작 → inspection이 developer 자기보고를 신뢰하지 않고 재실측:
+- **B18**: `retrieve.py`가 emit 정의 텍스트의 `id:` 토큰을 라벨 해소(materialize resolver 미러). 프로브
+  질의 `id:` 누수 **19→0**(2질의 확인), `check_determinism.py` **PASS**.
+- **B2**: 2차 키 = maturity 랭크(stable<reviewed<draft<none) → IRI 최종키. salience(5/252) 대신
+  maturity(170/252)로 정정 반영. determinism **PASS**(재현성 유지), 동점 내 maturity 비내림차순.
+- **B11**: `validate.py` 신규 hard 축 `Capacity fit` — 5 agent 전부 fit, **PASS @232**. inspection
+  독립 negative control: AoO volume 9999999 주입 시 `ok=False`+FAIL 라인 출력(강제 작동 확인).
+  **8 recipe federate PASS**(신규 축이 union에서도 통과).
+- **B12**: `ONTOLOGYSTYLE §1c`에 ho:-주제(techdoc) 하네스 예외 1줄.
+- **무회귀**: 그래프 개체 불변(232), 4 하네스 materialize **byte-identical**, 파일 경계 준수
+  (tools/retrieve·validate + ONTOLOGYSTYLE + dev memory만, ontology/shapes 0).
+⇒ A절 4건 **완결**. digest의 A(적용완료)·B(기해소)·C(B9/B23 적용·refresh됨) 전부 종결 → 항목 refresh.
