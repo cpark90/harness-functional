@@ -36,5 +36,9 @@ core:fp-refer-to-expert for <도메인 상황>: …" 형태로 교체. 각 recip
 - `69-privacy-engineer` `fp-gdpr-applicability-uncertain` · `70-legal-research` `fp-legal-uncertainty` · `72-regulatory-filing` `fp-regulation-ambiguous`.
 - **게이트**: 스윕 게이트 = `ho:specializes core:fp-refer-to-expert` + "no central archetype covers" 공존 recipe **0**(rdflib block-level). 정당한 15개(edge 없음) 보존(phrase 18→15). 세 recipe closure PASS. materialize `diff -r` = MANIFEST tokenEstimate roll-up 외 byte-identical.
 - **계획 전제 정정(비차단)**: Error-handling 섹션은 `failureCondition`+`recoveryStrategy`만 방출하고 `skos:definition`은 **비방출** → stale phrase는 애초 CLAUDE.md에 없었음. 본 수정의 실익은 **그래프 진실성·retrieve 발견성**(재사용 가시화)이지 materialize 산출 변경이 아님. materialize delta는 의도된 tokenEstimate 집계뿐.
-- **신규 발견(범위 밖, 미적용)**: `75-tax-calculator.ttl:191` **주석**이 동종 stale 모순(specializes fp 위 "no central archetype covers"). 주석·비방출이라 저영향이나 동일 결함 — 별도 승인 시 후속 정정 대상.
+- **범위 정정 + 75 반영 완료 (inspection, `9e78c67`)**: 진짜 모순 집합은 **3이 아니라 4**였다.
+  최초 스코프가 3으로 나온 것은 inspection의 공존 측정이 `grep -B4`(phrase **앞**만)라 `75-tax-calculator`처럼
+  specializes가 phrase **뒤** + **주석**에 있는 경우를 놓친 방향 버그 때문. block-level 양방향 재측정 =
+  **69/70/72/75** 4개. 루프가 정확히 그 4개를 수정(75는 주석의 stale 부정절 교체). inspection이 재검증:
+  잔여 공존 **0**, 4개 federate PASS(@232), 정당한 15개 비-specializes 보존. ⇒ B23 **완결**.
 - inspection refresh 대기.
