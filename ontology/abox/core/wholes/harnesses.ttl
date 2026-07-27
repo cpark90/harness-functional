@@ -107,8 +107,8 @@ id:h-multiagent a ho:Harness ;
         id:gr-dispatch-execution, id:gr-delegated-orchestration, id:gr-execution-separation,
         id:gr-structural-coverage, id:gr-reuse-first, id:gr-human-checkpoint ;
     ho:usesModel id:mc-opus ;
-    ho:hasRole id:role-orchestrator, id:role-inspection, id:role-developer, id:role-research,
-        id:role-inspection-worker, id:role-vnv, id:role-design ;
+    ho:hasRole id:role-orchestrator, id:role-inspection, id:role-implementer, id:role-research,
+        id:role-vnv, id:role-design, id:role-synthesizer ;
     ho:hasChannel id:chan-agent-user, id:chan-orchestrator-inspection, id:chan-dispatch ;
     ho:hasMemory id:mem-firmware, id:mem-cache, id:mem-longterm ;
     ho:hasAgent id:agent-orchestrator, id:agent-developer, id:agent-vnv, id:agent-inspection,
@@ -143,7 +143,7 @@ id:h-peer-mesh a ho:Harness ;
     ho:hasWorkflow id:wf-multiagent ;
     ho:hasGuardrail id:gr-lang, id:gr-report-over-prompt, id:gr-least-privilege, id:gr-execution-separation ;
     ho:usesModel id:mc-opus ;
-    ho:hasRole id:role-developer, id:role-vnv, id:role-research, id:role-design, id:role-coordinator ;
+    ho:hasRole id:role-implementer, id:role-vnv, id:role-research, id:role-design, id:role-coordinator ;
     ho:hasChannel id:chan-peer ;
     ho:appliesPattern id:pat-peer-mesh ;
     ho:hasExecutionMode id:mode-agent-teams ;
@@ -186,7 +186,7 @@ id:h-workspace-synthesis a ho:Harness ;
         id:gr-cross-validation, id:gr-declared-routes, id:gr-sequenced-artifacts,
         id:gr-three-flow-acceptance, id:gr-execution-separation ;
     ho:usesModel id:mc-opus ;
-    ho:hasRole id:role-developer, id:role-research, id:role-inspection-worker,
+    ho:hasRole id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer,
         id:role-analyst, id:role-author, id:role-implementer,
         id:role-planner, id:role-strategist, id:role-tester, id:role-curator ;
@@ -251,7 +251,7 @@ id:h-harness-factory a ho:Harness ;
     ho:hasSystemPrompt id:sp-methodical ;
     ho:usesTool id:tool-editor, id:tool-shell ;
     ho:hasWorkflow id:wf-multiagent, id:wf-harness-evolution, id:wf-verify-harness ;
-    ho:hasGuardrail id:gr-lang, id:gr-depth-limit, id:gr-no-nested-teams, id:gr-single-active-team,
+    ho:hasGuardrail id:gr-lang, id:gr-depth-limit, id:gr-single-active-team,
         id:gr-bottleneck-avoidance, id:gr-flatten-hierarchy, id:gr-bounded-iteration,
         id:gr-integration-coherence, id:gr-discriminating-eval, id:gr-single-responsibility,
         id:gr-generalize-not-overfit, id:gr-absolute-paths, id:gr-well-formed-skill, id:gr-opus-required,

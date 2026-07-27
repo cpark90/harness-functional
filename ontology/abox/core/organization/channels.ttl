@@ -46,8 +46,8 @@ id:chan-orchestrator-inspection a ho:Channel ;
 id:chan-dispatch a ho:Channel ;
     skos:prefLabel "Dispatch channel" ; skos:altLabel "orchestrator-worker dispatch" ;
     skos:definition "The orchestrator->worker conduit: the orchestrator plans a request into node-scoped briefs and dispatches each to a specialised worker agent (spawned as a subagent under least-privilege), then integrates the returned results. Workers act only when dispatched over this channel, not standalone. Distinct from the durable file channels because coordination here is the spawn/return of the subagent invocation itself." ;
-    ho:channelParticipant id:role-orchestrator, id:role-developer, id:role-research,
-        id:role-inspection-worker, id:role-vnv, id:role-design ;
+    ho:channelParticipant id:role-orchestrator, id:role-implementer, id:role-research,
+        id:role-vnv, id:role-design ;
     ho:tagged id:c-multiagent ;
     ho:involvesUser false ;
     ho:channelMedium "dispatch (subagent spawn)" ;
@@ -56,7 +56,7 @@ id:chan-dispatch a ho:Channel ;
 id:chan-workspace a ho:Channel ;
     skos:prefLabel "Workspace channel" ; skos:altLabel "shared workspace file hand-off" ;
     skos:definition "A shared file workspace over which worker roles hand off intermediate deliverables: each writes its output as a named artifact file in a common directory and downstream roles read it from there, so contributions accumulate as durable artifacts rather than transient messages. Distinct from central dispatch (id:chan-dispatch, coordination by spawn/return) and from a message mesh (id:chan-peer, coordination by direct messages): coordination here is by shared files, which lets a terminal convergence gate pick up every worker's deliverable from one place. The user is not an endpoint." ;
-    ho:channelParticipant id:role-developer, id:role-research, id:role-inspection-worker,
+    ho:channelParticipant id:role-implementer, id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer ;
     ho:tagged id:c-multiagent ;
     ho:involvesUser false ;
@@ -66,7 +66,7 @@ id:chan-workspace a ho:Channel ;
 id:chan-peer a ho:Channel ;
     skos:prefLabel "Peer channel" ; skos:altLabel "peer message mesh" ;
     skos:definition "The peer-to-peer coordination conduit of a peer-mesh harness: worker roles send work, requests, judgments and results DIRECTLY to one another over a message mesh, with no central-only orchestrator relaying every hand-off (contrast id:chan-dispatch, where the orchestrator spawns each worker and integrates every result). The channel that realises id:pat-peer-mesh. Coordination topology is a pluggable, extensible dimension: a harness selects peer-mesh by declaring ho:appliesPattern id:pat-peer-mesh together with this channel, exactly as an orchestrator-workers harness pairs id:pat-orchestrator-workers with id:chan-dispatch; a new topology is added as a new ho:DesignPattern + ho:Channel without disturbing either existing one. Peers here are worker roles only — no central dispatcher endpoint — and the user is not an endpoint." ;
-    ho:channelParticipant id:role-developer, id:role-vnv, id:role-research, id:role-design ;
+    ho:channelParticipant id:role-implementer, id:role-vnv, id:role-research, id:role-design ;
     ho:tagged id:c-multiagent ;
     ho:involvesUser false ;
     ho:channelMedium "peer message mesh" ;
@@ -75,7 +75,7 @@ id:chan-peer a ho:Channel ;
 id:chan-task-board a ho:Channel ;
     skos:prefLabel "Task-board channel" ; skos:altLabel "shared task list" ;
     skos:definition "A shared task list over which workers claim tasks and report progress with task-update entries, and off which the leader is automatically notified when a worker goes idle. The fourth hand-off medium after files (id:chan-workspace), direct messages (id:chan-peer) and spawn/return (id:chan-dispatch): coordination here is by a durable board of claimable task items with progress updates, distinct from those three. The worker roles and the orchestrator are the endpoints; the user is not." ;
-    ho:channelParticipant id:role-orchestrator, id:role-developer, id:role-research,
+    ho:channelParticipant id:role-orchestrator, id:role-implementer, id:role-research,
         id:role-vnv, id:role-design ;
     ho:tagged id:c-multiagent ;
     ho:involvesUser false ;

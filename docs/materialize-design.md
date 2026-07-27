@@ -202,7 +202,7 @@ orphan is created; the role merely records a least-privilege *subset*.
 
 **Emission.** For each `ho:hasRole`, materialize writes
 `.claude/agents/<slug>.md` where `<slug>` is the role IRI's last segment with a
-leading `role-` stripped (`id:role-developer` → `developer.md`). The file carries
+leading `role-` stripped (`id:role-implementer` → `implementer.md`). The file carries
 YAML frontmatter (`name`, `description`), the persona text, a `## Tools` and
 `## Guardrails` scope list (sorted by IRI), and a `## Memory policy` block. A
 `## Roles` summary is added to `CLAUDE.md`.

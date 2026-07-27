@@ -87,7 +87,7 @@ def _prompt_sections(g: Graph, sp: URIRef) -> list:
 
 def role_slug(role: URIRef) -> str:
     """Filename stem for a role's agent file: the IRI's last segment with a
-    leading 'role-' stripped (id:role-developer -> 'developer'), mirroring the
+    leading 'role-' stripped (id:role-implementer -> 'implementer'), mirroring the
     conventional .claude/agents/<name>.md naming."""
     tail = str(role).rsplit("/", 1)[-1].rsplit("#", 1)[-1]
     return tail[len("role-"):] if tail.startswith("role-") else tail

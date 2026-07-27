@@ -170,7 +170,7 @@ id:oa-developer-internal a ho:AreaOfObservation ;
     skos:prefLabel "Developer internal observation" ;
     skos:definition "The developer's introspection over its own constituent parts: its role and its task-scoped cache memory." ;
     ho:observationKind "internal" ;
-    ho:observesComponent id:role-developer ;
+    ho:observesComponent id:role-implementer ;
     ho:observesMemory id:mem-cache ;
     ho:unobserved "Any component of another agent." ;
     ho:observedTokenVolume 1500 ; ho:tokenEstimate 30 ; ho:maturity "draft" .

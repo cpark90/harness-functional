@@ -28,9 +28,56 @@
 # id:h-multiagent template via ho:hasRole (subPropertyOf hasComponent) and
 # scope only parts that harness already binds (usesTool / hasGuardrail), so
 # each stays a connected, orphan-free HarnessComponent.
+#
+# TAXONOMY -- the roles below fall into 4 groups, read on three axes:
+#   ORIGIN     A/B/C/D (see per-group headers),
+#   INTERACTION user-facing vs dispatch-invoked (per ho:userFacing above),
+#   CARRIER    which template binds the role via ho:hasRole.
+#   A. Roles of THIS repo's own harness (carrier id:h-multiagent, reviewed):
+#      orchestrator (user-facing), inspection (user-facing), research, vnv,
+#      design. These are neutral role NODES; this repo's operating agents (the
+#      ho:Agent nodes) INSTANTIATE them rather than existing as separate concrete
+#      twins -- e.g. this repo's node-authoring agent (id:agent-developer) now
+#      instantiates the group C id:role-implementer archetype (its former
+#      concrete authoring twin was merged into that archetype as a duplicate). Only
+#      orchestrator and inspection are operation-only to this repo; research /
+#      vnv / design are domain-neutral and are reused across carriers too.
+#   B. Terminal convergence gate     (carriers id:h-multiagent +
+#      id:h-workspace-synthesis, reviewed): synthesizer -- also PRODUCES the
+#      integrated result (provides id:cap-synthesis), broader than the judge-only
+#      vnv. Neutral archetype an operating harness reuses, dual-bound to BOTH
+#      carriers via ho:hasRole (like research / design / vnv, which likewise sit
+#      in a home group yet are also bound to id:h-workspace-synthesis), not a
+#      this-repo-only role.
+#   C. Neutral worker archetypes     (carrier id:h-workspace-synthesis, draft):
+#      analyst / author / implementer / planner / strategist / tester / curator,
+#      the reusable roster a team is staffed from and specialised per domain.
+#      id:role-implementer is the construction archetype instantiated by this
+#      repo's own node-authoring agent (id:agent-developer).
+#   D. Coordination-only peer        (carrier id:h-peer-mesh, draft):
+#      coordinator -- plans/sequences/tracks, performs none of the execution.
+#   DUAL ROLE: id:role-research and id:role-design sit in group A (this repo's
+#   own harness runs them) yet their definitions are domain-neutral, so they
+#   ALSO serve as the gather / design archetypes of group C and are already
+#   bound to id:h-workspace-synthesis via ho:hasRole (B24 anti-drift re-
+#   adjudication: reuse these two, do NOT mint role-gatherer or a separate
+#   design archetype). They stay physically in group A -- no separate node.
 ########################################################################
 
-#===================== ROLES ===========================================
+#===================== A. Roles of THIS repository's own harness =======
+# The five roles this repo's own multi-agent harness runs, bound to
+# id:h-multiagent via ho:hasRole. role-orchestrator and role-inspection are
+# user-facing (ho:userFacing true); the other three are dispatch-invoked.
+# role-inspection also directly performs investigation in its own session
+# (there is no separate dispatch-invoked inspection worker).
+# The construction (author/build) work of this harness is done by an operating
+# agent that instantiates the neutral id:role-implementer archetype of group C
+# (id:agent-developer -> id:role-implementer): there is no separate concrete
+# authoring role node -- the former concrete authoring role was merged into that
+# archetype to remove the concrete<->neutral duplicate.
+# NOTE: role-research and role-design are ALSO the neutral gather/design
+# archetypes of group C and are additionally bound to id:h-workspace-synthesis
+# (B24) -- kept here as group A, not duplicated as separate archetype nodes.
 
 id:role-orchestrator a ho:Role ;
     skos:prefLabel "Orchestrator agent" ;
@@ -43,23 +90,13 @@ id:role-orchestrator a ho:Role ;
 
 id:role-inspection a ho:Role ;
     skos:prefLabel "Inspection agent" ;
-    skos:definition "The user-facing role that handles user feedback and its ripple effects and owns the git lifecycle in its own session." ;
-    ho:roleTool id:tool-shell, id:tool-editor ;
+    skos:definition "The user-facing role that, in its own session, directly investigates the design graph and its changes, handles user feedback and its ripple effects, and owns the git lifecycle." ;
+    ho:roleTool id:tool-shell, id:tool-editor, id:tool-retriever ;
     ho:roleGuardrail id:gr-traceability, id:gr-report-over-prompt,
         id:gr-least-privilege, id:gr-verify-proceed ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Runs in its own session; reads and writes only its own role-scoped memory at session start/end and consumes the feedback channel by verified status, never by elapsed time." ;
     ho:userFacing true ; ho:maturity "reviewed" .
-
-id:role-developer a ho:Role ;
-    skos:prefLabel "Developer agent" ;
-    skos:definition "A work-performing role, dispatch-invoked only, that authors the ontology nodes (abox individuals) assigned in a brief, reusing the controlled vocabulary." ;
-    ho:roleTool id:tool-editor, id:tool-shell ;
-    ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
-        id:gr-reuse-first, id:gr-controlled-vocabulary ;
-    ho:tagged id:c-multiagent ;
-    ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable authoring knowledge at session end; touches no other role's memory." ;
-    ho:maturity "reviewed" .
 
 id:role-research a ho:Role ;
     skos:prefLabel "Research agent" ;
@@ -69,17 +106,6 @@ id:role-research a ho:Role ;
         id:gr-grounding, id:gr-bounded-context ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable findings at session end; touches no other role's memory." ;
-    ho:maturity "reviewed" .
-
-id:role-inspection-worker a ho:Role ;
-    skos:prefLabel "Inspection worker agent" ;
-    skos:definition "A work-performing role, dispatch-invoked only, that carries out inspection/investigation tasks and reports findings; distinct from the user-facing inspection role." ;
-    ho:roleTool id:tool-retriever, id:tool-shell ;
-    ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
-        id:gr-report-over-prompt, id:gr-verify-proceed ;
-    ho:specializes id:role-inspection ;
-    ho:tagged id:c-multiagent ;
-    ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable investigation notes at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
 id:role-vnv a ho:Role ;
@@ -101,6 +127,7 @@ id:role-design a ho:Role ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable design rationale at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
+#===================== B. Terminal convergence gate ====================
 # The final convergence gate of a multi-agent harness: a work-performing role
 # that both cross-checks every worker's deliverable AND compiles the reviewed
 # contributions into one coherent final result. Broader than id:role-vnv (which
@@ -118,7 +145,7 @@ id:role-synthesizer a ho:Role ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable synthesis/review heuristics at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
-#===================== Neutral worker archetypes =======================
+#===================== C. Neutral worker archetypes ====================
 # The recurring worker roles of a multi-agent team, generalised away from any
 # problem domain: a team is normally staffed by picking the archetypes its work
 # needs (analyse / write / build / plan / advise / test / curate) and specialising
@@ -126,6 +153,10 @@ id:role-synthesizer a ho:Role ;
 # roles above, which are this repository's own agents; each definition says how
 # it differs from the nearest existing role so the two never collapse into
 # near-synonyms. Hosted by id:h-workspace-synthesis, the central-library carrier.
+# The GATHER and DESIGN archetypes of this roster are NOT re-declared here: they
+# are covered by group A's id:role-research and id:role-design, whose domain-
+# neutral definitions double as those archetypes and which are already bound to
+# id:h-workspace-synthesis (see the DUAL ROLE note in the top header, B24).
 
 id:role-analyst a ho:Role ;
     skos:prefLabel "Analyst agent" ; skos:altLabel "evaluator" , "modeler-calculator" ;
@@ -135,7 +166,7 @@ id:role-analyst a ho:Role ;
         id:gr-grounding, id:gr-structured-output ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable diagnostic heuristics at session end; touches no other role's memory." ;
-    ho:maturity "draft" .
+    ho:maturity "reviewed" .
 
 id:role-author a ho:Role ;
     skos:prefLabel "Author agent" ; skos:altLabel "writer" , "document producer" ;
@@ -145,17 +176,17 @@ id:role-author a ho:Role ;
         id:gr-structured-output, id:gr-cite ;
     ho:tagged id:c-multiagent, id:c-structured-output ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable drafting conventions at session end; touches no other role's memory." ;
-    ho:maturity "draft" .
+    ho:maturity "reviewed" .
 
 id:role-implementer a ho:Role ;
     skos:prefLabel "Implementer agent" ; skos:altLabel "builder" , "data preparer" , "optimizer-tuner" ;
-    skos:definition "A work-performing role, dispatch-invoked only, that turns an agreed specification into the working artifact it describes -- code, a configuration, a prepared dataset, a tuned setup -- and reports what it actually produced against what was specified. Choose it for the construction step of any domain. Distinguished from id:role-developer, which is this repository's own concrete authoring agent (it writes ontology individuals from a dispatch brief); this role is the domain-independent archetype a harness binds for construction work of any kind, and the two are separate nodes rather than one broadened one." ;
-    ho:roleTool id:tool-editor ;
+    skos:definition "A work-performing role, dispatch-invoked only, that turns an agreed specification into the working artifact it describes -- code, a configuration, a prepared dataset, a tuned setup, an authored ontology individual -- and reports what it actually produced against what was specified. Choose it for the construction step of any domain: it is the domain-independent archetype a harness binds for construction work of any kind, and a concrete authoring agent (such as this repository's own node-authoring agent) is an instance of it." ;
+    ho:roleTool id:tool-editor, id:tool-shell ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-simplicity, id:gr-root-cause ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable construction knowledge at session end; touches no other role's memory." ;
-    ho:maturity "draft" .
+    ho:maturity "reviewed" .
 
 id:role-planner a ho:Role ;
     skos:prefLabel "Planner agent" ; skos:altLabel "scheduler" , "roadmap owner" ;
@@ -175,7 +206,7 @@ id:role-strategist a ho:Role ;
         id:gr-grounding, id:gr-no-arbitrary-decision ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable option-framing heuristics at session end; touches no other role's memory." ;
-    ho:maturity "draft" .
+    ho:maturity "reviewed" .
 
 id:role-tester a ho:Role ;
     skos:prefLabel "Tester agent" ; skos:altLabel "simulator" ;
@@ -205,7 +236,7 @@ id:role-curator a ho:Role ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable selection and organisation heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
 
-#===================== Coordination-only peer role =====================
+#===================== D. Coordination-only peer role ==================
 # The dedicated coordinating peer of an agent team: it plans, sequences and
 # tracks the status of the team's work but performs NONE of the execution
 # itself, so a peer team keeps planning/status and doing in separate hands
@@ -253,8 +284,8 @@ id:agent-orchestrator a ho:Agent ;
 
 id:agent-developer a ho:Agent ;
     skos:prefLabel "Developer agent (node)" ;
-    skos:definition "The authoring node the harness compiles from the developer role: it perceives its own dispatch brief and the assigned ontology nodes as a budget-capped retrieval pack (external area) plus its own role and cache (internal area), and its functions are file editing and code execution. It does NOT observe other nodes of the graph or other workers' internals." ;
-    ho:agentRole id:role-developer ;
+    skos:definition "The authoring node the harness compiles by instantiating the neutral implementer role archetype: it perceives its own dispatch brief and the assigned ontology nodes as a budget-capped retrieval pack (external area) plus its own role and cache (internal area), and its functions are file editing and code execution. It does NOT observe other nodes of the graph or other workers' internals." ;
+    ho:agentRole id:role-implementer ;
     ho:agentObservation id:os-developer ;
     ho:agentFunction id:cap-fileedit, id:cap-codeexec ;
     ho:cognitiveCapacity 150000 ;

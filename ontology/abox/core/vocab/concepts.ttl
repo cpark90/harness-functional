@@ -37,7 +37,7 @@ id:c-safety a ho:Concept ;
 id:c-autonomy a ho:Concept ;
     skos:prefLabel "Autonomy" ;
     skos:definition "The degree to which an agent acts without human intervention; tag harnesses whose design turns on how much independent initiative the agent is granted." ;
-    skos:related id:c-safety .
+    skos:topConceptOf id:scheme ; skos:related id:c-safety .
 id:c-communication a ho:Concept ;
     skos:prefLabel "Communication" ;
     skos:definition "How agents and users exchange information and status; tag components governing message form, channels and reporting discipline." ;

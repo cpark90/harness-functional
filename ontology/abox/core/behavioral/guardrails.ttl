@@ -36,8 +36,7 @@ id:gr-traceability a ho:Guardrail ; skos:prefLabel "Traceable single source of t
     ho:promptText "Single source of truth with full traceability: never delete a decision or record -- mark it deprecated with a reason and a replacement link, and only ever increment identifiers, never reuse them." ;
     ho:providesCapability id:cap-traceability ;
     ho:tagged id:c-traceability ; ho:tokenEstimate 42 ; ho:maturity "reviewed" .
-id:gr-grounding a ho:Guardrail ; skos:prefLabel "Ground every artifact" ;
-    skos:altLabel "assumption and limitation disclosure" , "flag unverified claims" ;
+id:gr-grounding a ho:Guardrail ; skos:prefLabel "Ground every artifact" ; skos:altLabel "link artifact to rationale" ;
     ho:promptText "Link every derived artifact to its grounding decision or rationale; do not restate another document, reference its single source. Describe an interface identically on both sides and let the requirement win on conflict." ;
     ho:tagged id:c-grounding ; ho:tokenEstimate 42 ; ho:maturity "reviewed" .
 id:gr-structural-coverage a ho:Guardrail ; skos:prefLabel "Structural coverage completeness" ; skos:altLabel "source-fidelity reflection" ;
@@ -88,12 +87,9 @@ id:gr-graceful-fallback a ho:Guardrail ; skos:prefLabel "Graceful fallback" ; sk
     ho:tagged id:c-graceful-fallback ; ho:tokenEstimate 48 ; ho:maturity "reviewed" .
 
 #===================== Complexity governance (orchestration limits) ====
-id:gr-depth-limit a ho:Guardrail ; skos:prefLabel "Delegation depth limit" ; skos:altLabel "at most two levels" ;
-    ho:promptText "Limit delegation to at most two levels deep: a coordinator may delegate to workers, but those workers do not spawn further sub-teams, keeping the call graph shallow and debuggable." ;
-    ho:tagged id:c-complexity-governance ; ho:tokenEstimate 42 ; ho:maturity "draft" .
-id:gr-no-nested-teams a ho:Guardrail ; skos:prefLabel "No nested teams" ;
-    ho:promptText "Do not nest agent teams inside agent teams: a team's workers are leaf agents, not themselves leaders of further teams." ;
-    ho:tagged id:c-complexity-governance ; ho:tokenEstimate 30 ; ho:maturity "draft" .
+id:gr-depth-limit a ho:Guardrail ; skos:prefLabel "Delegation depth limit" ; skos:altLabel "at most two levels" , "no nested teams" ;
+    ho:promptText "Limit delegation to at most two levels deep: a coordinator may delegate to workers, but those workers are leaf agents that do not spawn or lead further sub-teams, keeping the call graph shallow and debuggable." ;
+    ho:tagged id:c-complexity-governance ; ho:tokenEstimate 46 ; ho:maturity "draft" .
 id:gr-single-active-team a ho:Guardrail ; skos:prefLabel "Single active team" ;
     ho:promptText "Keep exactly one agent team active at a time rather than running multiple concurrent teams, so coordination state stays observable and contention is avoided." ;
     ho:tagged id:c-complexity-governance ; ho:tokenEstimate 38 ; ho:maturity "draft" .
@@ -101,8 +97,8 @@ id:gr-bottleneck-avoidance a ho:Guardrail ; skos:prefLabel "Avoid coordination b
     ho:promptText "Do not funnel every hand-off through a single coordinator when the work is parallelisable; distribute coordination so that one agent does not become a throughput bottleneck." ;
     ho:tagged id:c-complexity-governance ; ho:tokenEstimate 40 ; ho:maturity "draft" .
 id:gr-flatten-hierarchy a ho:Guardrail ; skos:prefLabel "Flatten the hierarchy" ;
-    ho:promptText "Prefer the flattest agent hierarchy that solves the task; add a coordination layer only when depth is genuinely required, not by default." ;
-    ho:tagged id:c-complexity-governance ; ho:tokenEstimate 34 ; ho:maturity "draft" .
+    ho:promptText "Prefer the flattest agent hierarchy that solves the task; add a coordination layer only when depth is genuinely required, not by default. This is a soft preference toward flatter structure, NOT the hard numeric cap on delegation depth -- that quantitative bound is id:gr-depth-limit." ;
+    ho:tagged id:c-complexity-governance ; ho:tokenEstimate 54 ; ho:maturity "draft" .
 id:gr-bounded-iteration a ho:Guardrail ; skos:prefLabel "Bounded iteration" ; skos:altLabel "retry cap" ;
     ho:promptText "Cap corrective iteration: a producer-reviewer or retry loop runs at most two to three rounds, then escalates or returns a clearly flagged partial rather than looping unbounded." ;
     ho:tagged id:c-complexity-governance ; ho:tokenEstimate 40 ; ho:maturity "draft" .

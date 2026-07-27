@@ -55,7 +55,7 @@ id:wfs-plan-dispatch a ho:WorkflowStep ;
 id:wfs-author-verify a ho:WorkflowStep ;
     skos:prefLabel "Author and verify" ;
     skos:definition "Dispatched workers author their assigned nodes and a verifier judges the result, each within its least-privilege scope; authoring and judgment stay separated. Choose as the productive middle step where the briefed work is actually produced and checked." ;
-    ho:stepByRole id:role-developer ;
+    ho:stepByRole id:role-implementer ;
     ho:stepUsesTool id:tool-editor ;
     ho:stepConsumes id:dlv-dispatch-brief ;
     ho:stepProduces id:dlv-verified-result ;

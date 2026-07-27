@@ -87,6 +87,21 @@ the second falsely trips "already". Guard on the ROLE's own block (subject → n
   (b) cite the execution (histogram, closure PASS count, diff-r result) — not the intent. A memo
   that asserts a result must be reproducible from evidence in the same note.
 
+## Follow-up — resection roles.ttl to EXPOSE the dual role (comment-only, 2026-07)
+- roles.ttl Role partition was one flat "ROLES" section hiding a 4-group taxonomy:
+  A=this-repo concrete agents (h-multiagent, reviewed: orchestrator/inspection user-facing +
+  developer/research/inspection-worker/vnv/design), B=synthesizer convergence gate (h-multiagent,
+  provides cap-synthesis), C=neutral archetypes (h-workspace-synthesis: analyst/author/implementer/
+  planner/strategist/tester/curator), D=coordinator (h-peer-mesh). Nodes ALREADY emit A->B->C->D order.
+- ★DUAL ROLE made explicit in comments only: role-research/role-design are group A yet domain-neutral,
+  so they double as C's gather/design archetypes and are ALREADY bound to h-workspace-synthesis hasRole
+  (harnesses.ttl L189-192 — verified). NO new node (anti-drift): note it, don't split.
+- Method = add 4-group overview to top header + A/B section headers (C/D already existed, reprefixed
+  A./B./C./D.). ★TRIPLE-INVARIANCE proof for comment-only edits: canonical-NT md5 over
+  sorted(g.serialize(format='nt').splitlines()) identical before/after (a43cd56…), triples 255->255,
+  and `git diff | grep '^[+-]' | grep -v '^[+-]\s*#'` empty. Stronger than 2-run materialize cmp,
+  cheaper. validate PASS.
+
 ## GAP (report, not fixed)
 - h-workspace-synthesis skos:definition still lists "(analyst, author, implementer, planner, strategist,
   tester)" without curator → minor prose/graph staleness. NOT edited: definition is emitted (overview/

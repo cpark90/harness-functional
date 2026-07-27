@@ -13,11 +13,16 @@
     owl:imports <https://harness-ontology.dev/schema> .
 
 #===================== Capabilities ====================================
-id:cap-codeexec a ho:Capability ; skos:prefLabel "Code execution" .
-id:cap-fileedit a ho:Capability ; skos:prefLabel "File editing" .
-id:cap-websearch a ho:Capability ; skos:prefLabel "Web search" .
-id:cap-retrieval a ho:Capability ; skos:prefLabel "Document retrieval" ; skos:altLabel "RAG" .
-id:cap-citation a ho:Capability ; skos:prefLabel "Source citation" .
+id:cap-codeexec a ho:Capability ; skos:prefLabel "Code execution" ;
+    skos:definition "Run code and shell commands in a controlled environment and return their output, so a component can compute, test and execute programs rather than only reason about them." .
+id:cap-fileedit a ho:Capability ; skos:prefLabel "File editing" ;
+    skos:definition "Create and modify files in the workspace -- reading, writing and applying precise edits -- so a component can author and change artifacts directly rather than only describe them." .
+id:cap-websearch a ho:Capability ; skos:prefLabel "Web search" ;
+    skos:definition "Query the public web for current information and return ranked results, so a component can retrieve facts that lie beyond the model's training data." .
+id:cap-retrieval a ho:Capability ; skos:prefLabel "Document retrieval" ; skos:altLabel "RAG" ;
+    skos:definition "Search a document corpus or knowledge store and return the passages most relevant to a query, so a component can ground its answers in retrieved source material." .
+id:cap-citation a ho:Capability ; skos:prefLabel "Source citation" ;
+    skos:definition "Attach a verifiable reference to the originating source for each factual claim, so downstream consumers can trace every assertion back to where it came from." .
 id:cap-orchestration a ho:Capability ; skos:prefLabel "Multi-agent orchestration" ;
     skos:definition "Decompose work into node-scoped briefs, dispatch them to specialised worker agents under least-privilege, and integrate the results." .
 id:cap-traceability a ho:Capability ; skos:prefLabel "Traceability" ;
