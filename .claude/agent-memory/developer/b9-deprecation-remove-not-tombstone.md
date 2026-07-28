@@ -20,9 +20,19 @@
 - 교훈: 정책 성문화 brief는 "추가"라 해도 **반대 방침이 이미 박혀있는지 grep**(deprecat/maturity)
   후, 있으면 add 아닌 **replace**.
 
-## 잔존 휴면 기계 (별도 결정, 안 건드림)
-deprecated 노드 0이 되어도 TBox `ho:maturity` enum의 "deprecated" 값·retrieve.py의
-DEPRECATED_RANK_FACTOR·배지 코드는 소비자 0으로 **휴면**하되 무해 잔존. 제거 여부는 별도 결정.
+## 휴면 기계 완전 은퇴 (housekeeping Task 1, 후속 결정)
+deprecated 노드 0을 구조적으로 강제하려 코드+주석을 **은퇴**. retrieve.py에서 제거:
+`DEPRECATED_RANK_FACTOR` 상수, `lifecycle_factor()` 함수+2 호출부(lexical_score의 `*factor`,
+traverse의 `factor` dict/`*factor[nbr]`), `⚠ DEPRECATED` 배지, docstring/주석.
+- ★안전근거=**현 노드 전부 factor 1.0**(deprecated 0). 제거=모든 점수 ×1.0 no-op 삭제 →
+  **byte-identical**(실측: JSON 팩 2질의 before/after diff 0). determinism PASS 유지.
+- **shapes엔 maturity `sh:in` enum 없음**(전부 `sh:minCount 1` presence-only, free-text). →
+  "deprecated"는 이미 유효하지 않은 값이 아님(어떤 문자열도 통과). 스키마 변경 불요 =
+  negative test(deprecated→FAIL) **불가/생략**. B9 machine-enforcement는 shapes로는 안 되고
+  코드/정책 문서 레벨에서만.
+- **잔존 doc-lag**: `tbox/harness.ttl` ho:maturity `skos:definition`이 여전히
+  "draft | reviewed | stable | deprecated" free-text 나열. TBox는 developer scope 밖 →
+  orchestrator 소관으로 보고(편집 금지).
 
 ## 검증 게이트
 grep 3 IRI 0건·`maturity "deprecated"` 0건 / validate 235→232(−3) PASS·0 orphan /
