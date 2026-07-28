@@ -34,8 +34,10 @@ id:wf-verify-harness a ho:Workflow ; skos:prefLabel "Harness verification loop" 
     ho:hasStep id:wfs-structure-check, id:wfs-trigger-validation, id:wfs-baseline-compare, id:wfs-dryrun ;
     ho:tagged id:c-agent-methodology, id:c-verify-proceed ; ho:tokenEstimate 128 ; ho:maturity "draft" .
 id:wf-compose-harness a ho:Workflow ; skos:prefLabel "Harness composition" ;
-    skos:definition "Assemble a new harness out of the ontology's reusable, typed parts: (1) retrieve a budget-capped context pack for the request; (2) take the top base-harness candidate as a template, or a DesignPattern when none fits; (3) bind every requiresCapability in scope to a component that providesCapability it, filling each capability gap by reusing an existing part or authoring a new one; (4) assemble the HarnessShape minimums -- one SystemPrompt, at least one Workflow, tools, guardrails and one ModelConfig; (5) write it back as new individuals carrying prefLabel, maturity draft, derivedFrom the template, tokenEstimate on every node with text, and existing Concept tags; (6) run validate.py for connectivity, typing and capability satisfaction; (7) pass the coverage-audit gate that maps every source element to a representation; then materialize -- the ODR EMIT axis renders the validated spec into artifacts. Choose when building a harness by selecting and wiring existing parts rather than authoring one from scratch." ;
-    ho:tagged id:c-composition ; ho:tokenEstimate 205 ; ho:maturity "reviewed" .
+    skos:definition "Assemble a new harness from the ontology's reusable, typed parts: retrieve a context pack, pick a base template, bind every required capability to a provider, satisfy the harness-shape minimums, write the parts back as connected individuals, validate, and pass the coverage-audit gate before materializing. Choose when building a harness by selecting and wiring existing parts rather than authoring one from scratch." ;
+    ho:hasStep id:wfs-retrieve-pack, id:wfs-select-template, id:wfs-bind-capabilities,
+        id:wfs-assemble-minimums, id:wfs-write-individuals, id:wfs-validate, id:wfs-coverage-audit ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 57 ; ho:maturity "reviewed" .
 
 #===================== Workflow steps ==================================
 # Ordered decomposition of id:wf-multiagent's control flow into part-to-part
@@ -133,6 +135,81 @@ id:wfs-dryrun a ho:WorkflowStep ;
     ho:stepDependsOn id:wfs-baseline-compare ;
     ho:stepOrder 4 ; ho:tokenEstimate 56 ; ho:maturity "draft" .
 
+# Ordered decomposition of id:wf-compose-harness's control flow into part-to-part
+# assembly: the seven-stage pipeline that composes a harness from reusable parts,
+# each step named for the role that performs it, the tool it uses and/or the
+# guardrail that bounds it (reusing EXISTING core parts by IRI) and joined by the
+# task-DAG Deliverables below. Same convention as id:wf-multiagent's steps; the
+# steps refine the workflow's prose summary and roll up to any binding harness via
+# the ho:hasComponent (hasComponent o hasStep) propertyChainAxiom.
+id:wfs-retrieve-pack a ho:WorkflowStep ;
+    skos:prefLabel "Retrieve a context pack" ;
+    skos:definition "Run the retrieval tool over the request to draw a budget-capped context pack of candidate parts, rather than loading the whole library. Choose as the entry step: it bounds what the rest of the composition may see, which is the context-rot defense." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepUsesTool id:tool-retriever ;
+    ho:stepProduces id:dlv-context-pack ;
+    ho:stepOrder 1 ; ho:tokenEstimate 41 ; ho:maturity "draft" .
+
+id:wfs-select-template a ho:WorkflowStep ;
+    skos:prefLabel "Select a base template" ;
+    skos:definition "Take the top base-harness candidate from the pack as the template to derive from, or a DesignPattern when none fits closely enough. Choose to start from an existing, proven skeleton instead of an empty one, so the new harness inherits a known-good shape." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepConsumes id:dlv-context-pack ;
+    ho:stepProduces id:dlv-base-template ;
+    ho:stepDependsOn id:wfs-retrieve-pack ;
+    ho:stepOrder 2 ; ho:tokenEstimate 42 ; ho:maturity "draft" .
+
+id:wfs-bind-capabilities a ho:WorkflowStep ;
+    skos:prefLabel "Bind required capabilities" ;
+    skos:definition "For every capability the harness requires in scope, bind a component that provides it, filling each gap by reusing an existing part before authoring a new one. Choose to make the harness buildable: an unbound requirement is a hole the shape gate later rejects." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepGuardedBy id:gr-reuse-first ;
+    ho:stepConsumes id:dlv-base-template ;
+    ho:stepProduces id:dlv-capability-bindings ;
+    ho:stepDependsOn id:wfs-select-template ;
+    ho:stepOrder 3 ; ho:tokenEstimate 42 ; ho:maturity "draft" .
+
+id:wfs-assemble-minimums a ho:WorkflowStep ;
+    skos:prefLabel "Assemble the shape minimums" ;
+    skos:definition "Wire the bound parts into the harness-shape minimums -- one system prompt, at least one workflow, tools, guardrails and one model config -- as a single coherent assembly. Choose to turn a loose set of chosen parts into a well-typed harness spec that satisfies the structural contract." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepGuardedBy id:gr-integration-coherence ;
+    ho:stepConsumes id:dlv-capability-bindings ;
+    ho:stepProduces id:dlv-harness-spec ;
+    ho:stepDependsOn id:wfs-bind-capabilities ;
+    ho:stepOrder 4 ; ho:tokenEstimate 46 ; ho:maturity "draft" .
+
+id:wfs-write-individuals a ho:WorkflowStep ;
+    skos:prefLabel "Write back new individuals" ;
+    skos:definition "Author the assembled parts back into the store as new typed individuals, each carrying a prefLabel, draft maturity, a derivedFrom link to the template, a token estimate on any text, and existing Concept tags. Choose to persist the composition using only the shared vocabulary, so nothing is orphaned or drifts into a near-synonym." ;
+    ho:stepByRole id:role-implementer ;
+    ho:stepUsesTool id:tool-editor ;
+    ho:stepGuardedBy id:gr-controlled-vocabulary ;
+    ho:stepConsumes id:dlv-harness-spec ;
+    ho:stepProduces id:dlv-authored-individuals ;
+    ho:stepDependsOn id:wfs-assemble-minimums ;
+    ho:stepOrder 5 ; ho:tokenEstimate 51 ; ho:maturity "draft" .
+
+id:wfs-validate a ho:WorkflowStep ;
+    skos:prefLabel "Validate the assembly" ;
+    skos:definition "Run the validation tool over the written individuals and require a full pass -- connectivity, typing and capability satisfaction -- before proceeding rather than assuming completion. Choose as the machine gate that admits the spec only once it checks out." ;
+    ho:stepByRole id:role-vnv ;
+    ho:stepUsesTool id:tool-shell ;
+    ho:stepGuardedBy id:gr-verify-proceed ;
+    ho:stepConsumes id:dlv-authored-individuals ;
+    ho:stepProduces id:dlv-validated-spec ;
+    ho:stepDependsOn id:wfs-write-individuals ;
+    ho:stepOrder 6 ; ho:tokenEstimate 39 ; ho:maturity "draft" .
+
+id:wfs-coverage-audit a ho:WorkflowStep ;
+    skos:prefLabel "Audit source coverage" ;
+    skos:definition "Enumerate every structural element of the source and confirm each maps to a representation or has an explicit, accepted reason to stay outside the model, treating an unmapped harness-structural element as a gap to fill. Choose as the closing fidelity gate: a green validator proves the graph is coherent, not that it faithfully reflects its source." ;
+    ho:stepByRole id:role-vnv ;
+    ho:stepGuardedBy id:gr-structural-coverage ;
+    ho:stepConsumes id:dlv-validated-spec ;
+    ho:stepDependsOn id:wfs-validate ;
+    ho:stepOrder 7 ; ho:tokenEstimate 53 ; ho:maturity "draft" .
+
 #===================== Deliverables (task-DAG data flow) ===============
 # The named artifacts that flow between id:wf-multiagent's steps — the OUTPUT
 # side of one step joined to the INPUT side of the next (GAP-1 of the harness-100
@@ -152,3 +229,38 @@ id:dlv-verified-result a ho:Deliverable ;
     skos:prefLabel "Verified result" ;
     skos:definition "The authored work together with the verifier's pass judgment, emitted once authoring and verification are complete: the artifact that is admitted into the shared output only after it checks out. Produced by the author-and-verify step and consumed by the integrate-and-gate step." ;
     ho:tagged id:c-multiagent ; ho:tokenEstimate 40 ; ho:maturity "reviewed" .
+
+# The named artifacts that flow between id:wf-compose-harness's seven steps —
+# each produced by one step and consumed by the next, so the composition
+# data-flow DAG is recoverable by joining producers to consumers. Domain-neutral
+# coordination artifacts; each rolls up to any binding harness via the
+# ho:hasComponent (hasComponent o hasStep o stepProduces) propertyChainAxiom.
+id:dlv-context-pack a ho:Deliverable ;
+    skos:prefLabel "Context pack" ;
+    skos:definition "The budget-capped set of candidate parts retrieved for a request -- the bounded working set the rest of a composition draws from instead of the whole library. Produced by the retrieve step and consumed by the template-selection step." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 36 ; ho:maturity "draft" .
+
+id:dlv-base-template a ho:Deliverable ;
+    skos:prefLabel "Base template" ;
+    skos:definition "The base-harness candidate or DesignPattern chosen as the skeleton the new harness derives from. Produced by the template-selection step and consumed by the capability-binding step." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 24 ; ho:maturity "draft" .
+
+id:dlv-capability-bindings a ho:Deliverable ;
+    skos:prefLabel "Capability bindings" ;
+    skos:definition "The mapping from each required capability in scope to the component chosen to provide it, with gaps resolved by reuse or new authoring. Produced by the capability-binding step and consumed by the assembly step." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 32 ; ho:maturity "draft" .
+
+id:dlv-harness-spec a ho:Deliverable ;
+    skos:prefLabel "Harness spec" ;
+    skos:definition "The assembled harness with its shape minimums satisfied and parts wired together -- a well-typed specification not yet written back to the store. Produced by the assembly step and consumed by the write-back step." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 32 ; ho:maturity "draft" .
+
+id:dlv-authored-individuals a ho:Deliverable ;
+    skos:prefLabel "Authored individuals" ;
+    skos:definition "The new typed individuals written back to the store for the harness, each tagged, estimated and connected to the graph. Produced by the write-back step and consumed by the validation step." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 30 ; ho:maturity "draft" .
+
+id:dlv-validated-spec a ho:Deliverable ;
+    skos:prefLabel "Validated spec" ;
+    skos:definition "The written harness spec after the validation gate has passed over it -- connected, well-typed and capability-satisfying. Produced by the validation step and consumed by the coverage-audit step." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 27 ; ho:maturity "draft" .

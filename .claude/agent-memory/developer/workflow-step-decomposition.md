@@ -37,3 +37,22 @@ Process loop: after the one-line workflow bullet, if it has steps render each ne
 **Step-less workflow renders EXACTLY as before** (no regression); step-ful adds nested detail
 (enhancement — Process content changes by design, NOT a determinism regression; two runs diff -r IDENTICAL).
 Do NOT touch fixed section ORDER (that's Stage c). Stage b = SystemPrompt sections (later).
+
+## Applied again: wf-compose-harness → 7 steps + full data-flow DAG (2026-07)
+Second workflow decomposed the same way. 7 steps retrieve-pack→select-template→bind-capabilities→
+assemble-minimums→write-individuals→validate→coverage-audit (stepOrder 1..7, all draft).
+- Roles by doctrine: retrieve/select/bind/assemble = `role-orchestrator` (planning/composition);
+  write-individuals = `role-implementer` + tool-editor + gr-controlled-vocabulary; validate =
+  `role-vnv` + tool-shell + gr-verify-proceed; coverage-audit = `role-vnv` + gr-structural-coverage.
+  bind→gr-reuse-first, assemble→gr-integration-coherence, retrieve→tool-retriever.
+- **Full linear data-flow**: 6 new neutral Deliverables (dlv-context-pack/base-template/capability-
+  bindings/harness-spec/authored-individuals/validated-spec), each produced by step N & consumed by
+  N+1 (terminal coverage-audit consumes, produces nothing — mirrors wfs-integrate-gate). Chain also
+  via stepDependsOn 1→7. Tagged c-composition (existing Concept).
+- **Shorten the workflow's own def** when promoting numbered (1)..(N) prose into steps — else the
+  detail is duplicated (blob line survives). wf-compose def 205→57 tokenEstimate; the 1019-char blob
+  line in h-multiagent's Process collapsed to summary + 7 nested steps.
+- tokenEstimate convention = ~word-count of prefLabel+definition (siblings track this, NOT char/4).
+- Enrichment lands on h-multiagent (only binder of wf-compose-harness) in BOTH `## Process` (nested
+  steps) and `## Data flow` (deliverable produced-by/consumed-by) — see task-dag note's STALE fix.
+  245 individuals after (+13); validate 6-axis PASS.

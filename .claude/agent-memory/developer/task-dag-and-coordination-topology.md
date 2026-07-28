@@ -9,6 +9,7 @@ harness-100 augmentation increment 1 (schema foundation). GAP-1 + coordination a
 - ontology_lib: add `HO.Deliverable` to INSTANCE_CLASSES + `HO.stepProduces/stepConsumes/stepDependsOn` to INSTANCE_LINK_PREDICATES (so retrieve graph-view shows the edges).
 - Demo: wired 2 neutral Deliverables (dlv-dispatch-brief, dlv-verified-result) across wf-multiagent's 3 steps + 2 dependsOn edges. tokenEstimate + tagged c-multiagent on each.
 - **materialize: `_render_process` renders stepByRole/stepUsesTool/stepGuardedBy only — NOT produces/consumes/dependsOn.** So DAG is MANIFEST-only (build_manifest.all_components rolls Deliverables in via inferred hasComponent → +2 components) and CLAUDE.md stays byte-identical. This is the desired "MANIFEST-only for DAG" outcome — no emitter change needed.
+- ★**STALE (corrected 2026-07):** materialize.py has SINCE gained a `## Data flow` section renderer that DOES emit each Deliverable with `- produced by: <step>` / `- consumed by: <step>`. So wiring new stepProduces/stepConsumes to a harness now ALSO enriches that harness's `## Data flow` section (NOT byte-identical for the binding harness). DAG is no longer MANIFEST-only. Byte-identity now only holds for harnesses that DON'T bind the workflow. Always re-baseline materialize before edits — don't trust this note's older byte-identity claim.
 
 ## Coordination topology = pluggable/extensible dimension (BOTH topologies)
 - Topology declared by pairing a `ho:DesignPattern` (topology) + matching `ho:Channel` (conduit), selected per-harness via `ho:appliesPattern` + `ho:hasChannel`.

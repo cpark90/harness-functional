@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [core:wf-compose-harness, core:h-multiagent]
 kind: proposal
 related: [docs/feedback/verified/execution-mode-axis-finalize.md]
@@ -39,9 +39,8 @@ Q3 세분화 감사(정의 길이 상위)에서 **`wf-compose-harness`가 유일
 - **어휘**: 신규 WorkflowStep 7개는 `ho:WorkflowStep`(기존 클래스) 재사용, orphan 아님(hasStep로 연결).
 
 ## 결정 필요 (사용자)
-1. **분해 진행 여부** (권고: **예** — repo 핵심 프로세스가 blob인 것은 세분화 목표와 정면 배치).
-2. **stepProduces/Consumes(data-flow)까지** 채울지, 아니면 step+order만(최소)으로 할지 (권고: data-flow 포함
-   — 이미 축이 있고 조립 흐름이 명확).
+1. 예
+2. **stepProduces/Consumes(data-flow)까지** 채워줘
 
 승인 시 `status: open` → `approved`. 저작은 developer dispatch(ontology/abox), inspection이 검증
 (validate·materialize Process enrichment가 의도대로인지·federate·byte-identity는 h-multiagent만 의도 변경).

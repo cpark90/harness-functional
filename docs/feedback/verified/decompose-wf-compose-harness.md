@@ -48,3 +48,19 @@ compose 흐름용 **신규 Deliverable 소수** 필요(중립 명명).
 ## 판정
 **apply** — 7 step + data-flow 분해. 회귀는 **h-multiagent Process enrichment 단 하나**(의도된 세분화)이고
 그 외 산출물 byte-identical·federate PASS가 게이트. developer가 저작하면 inspection이 이 게이트로 검증한다.
+
+## 적용 결과 (applied 2026-07-28) — inspection 독립 검증 완료
+developer(opus) dispatch 저작 → inspection 재실측(자기보고 불신):
+- **저작**: 7 WorkflowStep(`wfs-retrieve-pack`…`wfs-coverage-audit`, stepOrder 1..7, 기존 role/tool/guardrail
+  IRI만 재사용) + 6 신규 중립 Deliverable(context-pack→…→validated-spec 선형 DAG) + `wf-compose-harness`에
+  `hasStep` 배선 + 정의 축약(tokenEstimate 205→57). 경계: `workflows.ttl`만(TBox/shapes/타 abox 0).
+- `validate.py` **PASS @245**(232+13), 6축 green(reachability orphan 0·registryDrift 신규 클래스 0·
+  assemblyOrder·capacityFit 포함).
+- **materialize(의도된 enrichment)**: `h-multiagent` Process에서 1019자 blob 한 줄 **소거** → 요약 + **7
+  compose step 중첩**(wf-multiagent 동형, +41/−1). **다른 6 하네스 CLAUDE byte-identical**.
+  ★**apply-plan 정정(파급 확대)**: 계획은 "Process만"으로 예상했으나 실제는 **h-multiagent Data flow
+  섹션도 6 deliverable로 확장**된다(materialize에 Data flow 렌더러 존재 — h-multiagent가 이 워크플로의
+  유일 binder라 그 하네스에 국한). 둘 다 의도된 세분화이고 h-multiagent 단일 하네스에만 국한 = 회귀 아님.
+- **8 recipe federate PASS**(신규 step/deliverable가 recipe에 자동결합 안 됨).
+- 후속(비차단): step 7(coverage-audit)이 `role-vnv` — CLAUDE.md의 "coverage audit = vnv dispatch"와 일치.
+⇒ Q3 세분화 감사의 마지막 blob 해소. **완결**.
