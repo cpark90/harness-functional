@@ -39,3 +39,17 @@ targets: [tools/ontology_lib.py, tools/validate.py]
 **apply-with-changes** — (A)+(FAIL)을 **INSTANCE_CLASSES 단일 가드**로 반영(ORDER 가드는 B13 merge가
 obviate하므로 false invariant로 철회). 현재 드리프트 0이라 하드 FAIL 검사가 곧바로 green. developer가
 저작하면 inspection이 negative control + 무회귀로 검증한다.
+
+## 적용 결과 (applied 2026-07-28) — inspection 독립 검증 완료
+developer(opus) dispatch로 저작 → inspection 재실측(자기보고 불신):
+- `tools/validate.py`에 `check_registry_drift(g)` hard 축 추가. `validate.py` **PASS @232**, 신규 축
+  `✓ registryDrift`("all 28 instantiated in-scope class(es) are registered" + 잉여 3 warn).
+- **★설계 정당성 확인**: 검사가 내부에서 `lib.load_graph(reason=False)`로 **asserted** 타입 대조
+  (`validate.py:246`). reasoned를 넘겨도 안전 — owlrl이 Role 인스턴스를 중간 상위(OrganizationComponent/
+  HarnessComponent)로 타입하는 거짓양성을 회피. In-scope = `subClassOf*`(HarnessComponent|SpecConcept)
+  역방향 BFS + Harness, `expected = instantiated ∩ in_scope`, `missing → FAIL`(잉여는 warn).
+- **negative control(inspection 독립)**: reasoned g에 `INSTANCE_CLASSES - {ho:Role}` → `ok=False`,
+  `missing=['…#Role']` 출력. 복원 시 green. 디스크 무변경.
+- **무회귀**: 그래프·개체(232)·산출물 불변 — 4 하네스 materialize **byte-identical**, 8 recipe
+  federate **PASS**(신규 축이 union에도 적용, 현 드리프트 0이라 통과).
+- ORDER 가드는 계획대로 **미저작**(B13 merge가 obviate). ⇒ B16 **완결**.

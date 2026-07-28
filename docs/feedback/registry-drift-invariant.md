@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [tools/ontology_lib.py, tools/validate.py, tools/webui/ttl_writer.py]
 kind: decision
 related: [docs/plans/OPEN-ISSUES.md, .claude/agent-memory/inspection/webui-write-path-audit.md]
@@ -43,5 +43,5 @@ TBox/디스크가 **진실**인데 파이썬 **리터럴이 그 사본**이고, 
 2. **위반 시 FAIL vs warn** (권고: **FAIL** — 조용한 축소가 이 결함의 본질이므로 하드 게이트가 맞다.
    단 착수 시 현재 그래프가 통과하는지 먼저 실측; 드리프트가 이미 있으면 그 수정을 먼저).
 
-승인 시 `status: open` → `approved` + 답. 저작은 developer dispatch, inspection이 검증(negative control
-포함: 리터럴에서 한 항목을 빼면 FAIL 하는지). 근거: inspection memory `webui-write-path-audit.md §3`.
+1. A
+2. FAIL로

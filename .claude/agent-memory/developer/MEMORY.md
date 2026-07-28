@@ -1,95 +1,95 @@
 # developer 역할 메모리
 
-온톨로지 노드 저작 에이전트의 역할 특화 메모리 인덱스. 역할 정의=`.claude/agents/developer.md`.
-노드 함정·모델링 패턴·capability 배선을 파일로 추가하고 아래에 **한 줄로** 인덱스(상세는 토픽 파일에).
+역할 특화 메모리 인덱스. 역할 정의=`.claude/agents/developer.md`. 함정·모델링 패턴·capability 배선을 토픽 파일로 추가하고 아래에 **한 줄로** 인덱스.
 
-- 완결 brief 배정분만 구현: 온톨로지 노드(`ontology/abox/`) 또는 배정 소스(`tools/**`). TBox·shapes·brief 밖 경로 안만짐. 검증(vnv)·커밋(inspection) 안함. 스타일=`ONTOLOGYSTYLE.md`[지킴]. 도구는 rdflib 있는 `/usr/bin/python3`.
-- **반복 핵심**: (1) 중간노드(subject≠Harness) 도달성=hasComponent propertyChain(직접sub면 Harness mistype); Harness→X 직결만 직접 subPropertyOf. (2) 2클래스 공용술어=rdfs:domain 생략+definition 명시. (3) ⊑HarnessComponent=ComponentConnectivityShape→harness 배선/rollup 필수(tag 부족). (4) bound 노드 prefLabel/definition 수정=byte-id깨짐; emitter 안읽는 술어추가는 불변→2run cmp 증명. (5) recipe closure=HARNESS_ROOT_ONTOLOGY=recipe IRI로 로드. (6) 비-HC 신규 leaf·클래스=`lib.INSTANCE_CLASSES` 등록 필수(미등록=개체 증발).
+- 완결 brief 배정분만 구현: 노드(`ontology/abox/`) 또는 배정 소스(`tools/**`). TBox·shapes·brief 밖 안만짐. 검증(vnv)·커밋(inspection) 안함. 스타일=`ONTOLOGYSTYLE.md`[지킴]. 도구=`/usr/bin/python3`.
+- **반복 핵심**: (1) 중간노드(subject≠Harness) 도달성=hasComponent propertyChain(직접sub면 Harness mistype); Harness→X 직결만 직접 subPropertyOf. (2) 2클래스 공용술어=domain 생략+definition 명시. (3) ⊑HarnessComponent=ComponentConnectivityShape→harness 배선/rollup 필수. (4) bound 노드 prefLabel/definition 수정=byte-id깨짐; emitter 안읽는 술어추가는 불변→2run cmp. (5) recipe closure=HARNESS_ROOT_ONTOLOGY=recipe IRI. (6) 비-HC 신규 leaf·클래스=`lib.INSTANCE_CLASSES` 등록 필수(미등록=개체 증발).
 
-<!-- 학습 인덱스 (한 줄씩) -->
-- [retrieve-validate-four-axis-tweaks](retrieve-validate-four-axis-tweaks.md) — B18/B2/B11/B12 tools+doc 4건(중앙그래프 무변경). B18=materialize IriTokenResolver를 retrieve emit텍스트(nodes[].definition/promptText 단일지점)에만 미러, `id:`=core→`ID_CORE[slug]`+label_of, budget무영향(token_cost는 tokenEstimate만). B2=2차키 salience(2%)→maturity(67%), `_rank_key`에 g추가+3호출부, IRI최종키로 determinism유지, heap은 손대지마. B11=validate capacity-fit축(agentObservation→space→hasAreaOfObservation→observedTokenVolume ≤ cognitiveCapacity, 하드FAIL), negative control=인메모리 g.set. B12=ONTOLOGYSTYLE §1c ho:주제 techdoc 예외 1줄.
-- [b23-fp-stale-definition-refresh](b23-fp-stale-definition-refresh.md) — B23: 3 recipe-local fp의 stale 부정절 def("no central archetype covers"+specializes 공존=모순) 재작성→"domain-specialisation of core:fp-refer-to-expert for <X>". ★skos:definition은 materialize 미방출(Error표=failureCondition+recoveryStrategy만)→def편집=byte-neutral(pre-edit 산출 phrase count 0), 유일 delta=MANIFEST tokenEstimate roll-up(+6 bump). ★sweep게이트=block-level(rdflib로 specializing fp의 Literal만)—file-level grep은 75오탐(phrase가 comment). 15 non-specializes는 phrase 정당→보존. 75 comment 잔여모순=REPORT(scope밖). closure=`ln -s central`+HARNESS_ROOT_ONTOLOGY=recipe IRI(링크 없으면 575triples false-FAIL).
-- [b9-deprecation-remove-not-tombstone](b9-deprecation-remove-not-tombstone.md) — B9 사용자 결정(C): 폐기=그래프서 완전 삭제(추적성은 git·docs), tombstone 아님. inbound 참조 0(자기정의 제외 grep) 확인시 dangling無. ★숨은 tombstone: 삭제노드만 아니라 **다른 위치 헤더/주석**이 그 노드 지목하면 stale→갱신(유닛 owl:Ontology 헤더가 "SUPERSEDE ...below" 지목). ★ONTOLOGYSTYLE §2에 **정반대 기존정책**("삭제 대신 maturity deprecated") 박혀있어 add아닌 REPLACE(정책 성문화 brief는 반대방침 grep 선행). 잔존: maturity deprecated enum·retrieve DEPRECATED_RANK_FACTOR=소비자0 휴면(무해, 별도결정). 검증=grep0·validate232(−3)·c-execution-mode는 mode-*3 draft 계속tag연결·determinism·materialize누출0.
-- [abox-audit-apply-merge-polish](abox-audit-apply-merge-polish.md) — vnv abox-audit 반영: guardrail MERGE(삭제노드 prefLabel→survivor altLabel 승격=discoverability보존, 흡수는 재진술아닌 통합, co-bound harness면 remove-only, ★binding-file 편집은 "4파일" 경계 넘어도 MERGE지시+grep-0게이트가 필수) / altLabel 과확장=전삭아닌 on-axis 1개교체 / near-synonym 판별절="Contrast id:X, which <대문자 other축>: <this> <this축> rather than…"(def-only 패턴은 estimate불요) / label-only cap→def 1문장 backfill / floating-top concept=topConceptOf id:scheme 인라인 추가. 검증=grep0·validate235·determinism.
-- [role-merge-concrete-twin-into-neutral-archetype](role-merge-concrete-twin-into-neutral-archetype.md) — concrete role(role-developer)를 중립 archetype twin(role-implementer)에 병합=archetype 생존·concrete 삭제(specializes 엣지無, 순수 기능 duplicate)+operating Agent 노드(agent-developer) agentRole rebind(id/prefLabel 유지, prose만). ★cross-ref=REPLACE(survivor가 concrete와 같은 dispatch/workspace/peer context 점유)+이미있으면 dup가드 REMOVE — specializes-child 병합과 반대 디폴트. survivor는 실행tool(tool-shell)만 흡수(governance guardrail 복사금지=harness레벨 이미 reachable, 중립 archetype 오염방지). def de-conflate("Distinguished from" 절 제거). 삭제 IRI를 주석에도 남기지마(grep-0/댕글링 오독). indiv −1. 검증=grep0·validate·retrieve edge. ★FOLLOW-UP: hasAgent인데 hasRole엔 없으면 층 불일치→hasRole에 IRI 추가(additive, dual-bind 가능=research/design/vnv/synth). grep-0 caveat: docs/verify|plans|feedback 이력·recipe-local twin은 삭제노드 정당참조→live illustration(materialize.py/-design.md)만 actionable, 배정파일만 고침.
-- [role-merge-specializes-child-into-parent](role-merge-specializes-child-into-parent.md) — specializes 자식 role을 부모로 병합(un-specialize): 자식노드 삭제(specializes 엣지 자동소멸)+부모가 def/roleTool로 흡수(부모 nature 유지·자식 guardrail 복사금지 특히 gr-dispatch-execution)+cross-ref 4곳은 REPLACE아닌 REMOVE(부모 반사삽입 금지, 각 site 의미확인: user-facing inspection≠dispatch/workspace participant)+prose 헤더 열거 정합. 검증=grep 0건·validate PASS·retrieve smoke.
-- [b24-role-curator-archetype-plus-axis-linking](b24-role-curator-archetype-plus-axis-linking.md) — B24: 4축 재판정=research/design/synthesis 이미 role-research/-design/-synthesizer로 커버(신설금지), curation만 genuinely-missing→`role-curator` 1개 신설(central 완료·validate238). ★recipe half는 이전 phantom(HEAD d4cfd82=0/0/0/0), **2026-07-25 실제 저작**: harness-recipes 25파일 +36 specializes(research7/design16/synth11/curator2, DELIVERABLE기준). 검증=abs-path catalog(central/→abspath)+HARNESS_ROOT_ONTOLOGY=recipe IRI로 25 closure PASS·SpecializesTyping0·strip-test diff-r byte-id·curator 03/14 resolve. ★스크립트: same-file 2역할 동일target시 file-wide guard 오탐→block-scoped guard. cap-synthesis ABSENT+"Designs"⇒design. media-monitor=cap있어도 def불일치 SKIP. LESSON: "landed"는 hash/re-run 근거必(phantom claim 금지).
-- [b17-payoff-recipe-specializes-rebind](b17-payoff-recipe-specializes-rebind.md) — recipe-local Role/FP→중앙 archetype `ho:specializes` 링크(82edges=75role→7archetype+7fp→fp-refer-to-expert, 35파일). ★매핑=DELIVERABLE기준(analyst=진단/author=문서/implementer=코드·데이터·튜닝/tester=픽스처/planner=일정/strategist=옵션+추천). coordinator=clean매치0(-coordinator/-manager 다 산출물PRODUCE→조율전용 위반). SKIP=research(role-research=concrete)·synthesis-gate·2-archetype긴장. 앵커=prefLabel줄(종결`.`은 def 리터럴). same-partition=둘다 HarnessComponent→PASS. byte-id=stripped copy diff-r=0(materialize 0참조). GAP: 69/70/72 fp def "no central archetype" STALE.
-- [harness-repo-survey-wave4-hooks-axis](harness-repo-survey-wave4-hooks-axis.md) — `ho:Hook` 신설(lifecycle 트리거). ★⊑BehavioralComponent(hook=standing rule이지 ProcessComponent 아님). hookEvent OPEN(no sh:in)/hookAction=FailurePolicy쌍 미러. hasHook=직접sub. ★INSTANCE_CLASSES+=HO.Hook 필수(미등록시 reason=False 파리티깨짐). catalog회피=guardrails.ttl 코로케. host=h-harness-factory.
-- [harness-repo-survey-wave3-guardrails](harness-repo-survey-wave3-guardrails.md) — 신규1=`gr-human-checkpoint`(HITL 게이트). distinct: vs no-arbitrary-decision=REACTIVE / vs verify-proceed=machine ACK ↔ checkpoint=PROACTIVE milestone+human sign-off. byte-id: 7하네스 emit→정확히 1변경(h-multiagent +1 bullet).
-- [harness-repo-survey-wave2-role-archetypes](harness-repo-survey-wave2-role-archetypes.md) — role 커버리지(252→기존7 archetype, 신규0). 접미(-pro/-developer/-expert)=domain특화→implementer 노드금지. rejected=operator/SRE(diagnose+remediate 분해→새type아님).
-- [harness-repo-survey-wave1-coordination](harness-repo-survey-wave1-coordination.md) — 신규1=`pat-blackboard`(공유 durable store=SoT 간접조율, peer-mesh 3번째 leg). taxonomy 도달성=tagged. byte-id=materialize appliesPattern만.
-- [b17-specializes-generalize-cross-class](b17-specializes-generalize-cross-class.md) — `ho:specializes` domain/range=Harness→Role 일반화. 근사동의어 대신 domain/range 제거+`SpecializesTypingShape`(sh:or 2-branch Harness/HarnessComponent partition, cross-partition만 강제). byte-id=materialize 0참조. →b17-payoff에서 recipe 재바인딩 실행.
-- [d1-fp-refer-to-expert-promote](d1-fp-refer-to-expert-promote.md) — 6번째 중앙 fp `fp-refer-to-expert`(범위/권한초과→bounded analysis+전문가위임). 배선=carrier h-workspace-synthesis hasFailurePolicy(tag 무효). def "Distinguished from" 2개. carrier만 +1행. →b17-payoff에서 recipe dup 재바인딩.
-- [mode-independent-invariant-guardrail](mode-independent-invariant-guardrail.md) — 모드독립 불변식 guardrail(`gr-execution-separation`), c-multiagent 태그. hasGuardrail 배선=operating-rules +1 bullet. role-coordinator=roleGuardrail⊄harness.hasGuardrail(자기 agent.md만 렌더).
-- [mass-import-wave-g1-lifestyle-comms](mass-import-wave-g1-lifestyle-comms.md) — G1(73/74/75/81/82). 75-tax=EDITOR-ONLY. 81+82 MANGLED. QA-gate: 순수→COLLAPSE synthesizer / HYBRID→cap-synthesis / producer→none. materialize=CATALOG+ROOT_ONTOLOGY 둘다.
-- [mass-import-wave-g2-comms-ops](mass-import-wave-g2-comms-ops.md) — G2(87/90/95/96/100) FINAL. QA-gate: HYBRID(87/90=produce+cross-verify)→cap-synthesis / ORCHESTRATOR cross-validate(95/96/100)→NO. 96=EDITOR-ONLY. fp refer-to-expert=LOCAL→D1.
-- [mass-import-wave-f-legal](mass-import-wave-f-legal.md) — F(69/70/72). 70=REUSE dom-research. QA-gate: 72 verifier=HYBRID→cap-synthesis; 69/70 producing→NO. augmentsRole="Extended Skills"표→BIND. degraded def=```md fence→frontmatter desc.
-- [mass-import-wave-e-education](mass-import-wave-e-education.md) — E(56/60/62). 62=REUSE dom-coding. cap-synthesis=전용 synthesis role때만. editor-only.
-- [mass-import-wave-d-business](mass-import-wave-d-business.md) — D(43/48/51/55). editor-only. QA-gate 3collapse/1keep(55 producing→LOCAL+cap-synthesis). augmentsRole `## Target Agents`→LOCAL BIND.
-- [mass-import-wave-c-content](mass-import-wave-c-content.md) — C(02/07/09/14). QA discriminator=OWN work: 순수gate→collapse / hybrid→LOCAL+cap-synthesis. 14 MANGLED. GAP: image-gen.
-- [mass-import-wave-b-data-ml](mass-import-wave-b-data-ml.md) — B(32/33/35). least-privilege=DELIVERABLE: 계산→shell+cap-codeexec / 코드→editor. "discrepancy"=conflict-contradiction.
-- [mass-import-wave-a-dev-infra](mass-import-wave-a-dev-infra.md) — A(17/18/28). least-privilege=skill out-of-scope. QA-gate 순수→synthesizer / hybrid→LOCAL. 28 mangled=미표현+사유주석.
-- [corpus-importer-mechanical-vs-judgment](corpus-importer-mechanical-vs-judgment.md) — `import_corpus.py`. 판단성 flag=domain·model·guardrail·tool·cap·QA-gate. 상수=wf-multiagent/mode-agent-teams. B21 3축 IRI재사용. mangled→MISSING.
-- [gen-recipe-catalog-ci-from-glob](gen-recipe-catalog-ci-from-glob.md) — recipe catalog+CI matrix를 glob에서 생성. XML 주석 `--` 금지(ParseError→silent fallback), --check={name→uri} dict 비교.
-- [recipe-runbehaviour-coverage-backfill](recipe-runbehaviour-coverage-backfill.md) — 3축(execMode/TestScenario/FailurePolicy). error표=fp-* IRI재사용. hasExecutionMode ⊄hasComponent·hasTest/FailurePolicy ⊑→auto reachable.
-- [central-vocab-gap-altlabel-absorption](central-vocab-gap-altlabel-absorption.md) — altLabel은 retrieve만 읽고 materialize 안읽음→bound노드에 붙여도 산출불변. byte-id는 individualCount 제외. salience 기본0.4.
-- [tool-side-registries-and-path-globs](tool-side-registries-and-path-globs.md) — 도구 화이트리스트 근절(B13/B14): webui ORDER=merge(`_existing_preds` 보존), `link_predicates(g)` TBox파생, mtime키 relpath. INSTANCE_CLASSES만 잔존.
-- [retrieve-pack-quality-budget-lifecycle](retrieve-pack-quality-budget-lifecycle.md) — 팩 결함: tokenEstimate 과부하→`ho:observedTokenVolume` 분리, traverse `break`→`continue`, maturity→`lifecycle_factor` 0.35.
-- [corpus-attribute-inventory-method](corpus-attribute-inventory-method.md) — 외부 코퍼스 전수분석: 중간json 절약, 판정=definition/promptText, GAP 3분류, coverage%는 우주 3개 분리.
-- [retrieve-projection-determinism](retrieve-projection-determinism.md) — read projection 재현성: 총순서 키 `(-score,str(node))`, 가드=`check_determinism.py`(시드 흔들어 md5 동일).
-- [execution-mode-first-class-axis](execution-mode-first-class-axis.md) — 실행 topology를 tag→1급(`ho:ExecutionMode`+`hasExecutionMode`). 값 개체열거(sh:in 금지), ★채널≠spawn topology(직교).
-- [assembly-sections-run-behaviour-renderers](assembly-sections-run-behaviour-renderers.md) — run-behaviour 섹션+렌더러. ★byte-id는 리팩터 보호용이지 데이터 드러내기 막는 근거 아님, 렌더러 조건부 early-return.
-- [verification-unit-relocation](verification-unit-relocation.md) — `core/verification/` 신설=순수 relocation(라인슬라이스 byte-fidelity). ★dedicated catalog 미갱신은 부분 closure로 FAIL.
-- [revfactory-p1-lifecycle-verify-abox](revfactory-p1-lifecycle-verify-abox.md) — 메타파트는 전용 host(`h-harness-factory`) 배선(h-multiagent면 byte-id깨짐). ★brief "land됨" 불신—TBox grep 후 저작.
-- [abox-da4-groupdir-reorg-recipe-sync](abox-da4-groupdir-reorg-recipe-sync.md) — REORG-2 recipe catalog 그룹경로 동기화. ★공유 catalog에 전 recipe uri 있어야 per-recipe closure 검증 가능.
-- [abox-da4-groupdir-reorg](abox-da4-groupdir-reorg.md) — REORG-1 중앙 ABox→그룹 디렉토리 이동+split. IRI 위치독립→catalog uri경로만 갱신.
-- [da4-intermediate-superclass-taxonomy](da4-intermediate-superclass-taxonomy.md) — flat→중간계층 TBox 재부모화: owlrl transitivity로 leaf 타입 유지→무영향, 중간클래스 INSTANCE_CLASSES 불요.
-- [da2-definition-disambiguation](da2-definition-disambiguation.md) — `skos:definition`만 편집=구조 무변경. de-conflate=자기지칭 제거+"Distinguished from ho:X". ★인용 prop grep 확인.
-- [da1-observation-tripartite-split](da1-observation-tripartite-split.md) — `ObservationArea`→3클래스(Space=CAN/Interest=intent/Observation=realized). 도달성=3-link chain.
-- [mas-wave3b-infospace-abox](mas-wave3b-infospace-abox.md) — 정보공간 투영사슬 ABox. orphan회피=WEAK-CONNECTIVITY(투영술어 INSTANCE_LINK 등록, 방향무관)→host 불요.
-- [mas-wave3a-infospace-tbox](mas-wave3a-infospace-tbox.md) — 비-HC 클래스(EnvironmentSpace·GlobalState)+투영속성 4개는 ⊑hasComponent 금지(비-HC면 mistype).
-- [mas-wave2-agent-observationarea-abox](mas-wave2-agent-observationarea-abox.md) — agent/observation ABox: capability SOFT 재사용, anti-orphan은 chain→harness엔 `hasAgent`만.
-- [mas-wave1-agent-observationarea-tbox](mas-wave1-agent-observationarea-tbox.md) — `ho:Agent`·ObservationArea TBox. 중간노드 orphan방지=hasComponent propertyChain, 크기=tokenEstimate 재사용.
-- [revfactory-wave-b1-coordination-governance](revfactory-wave-b1-coordination-governance.md) — coordination/governance 대량저작. ★Channel/Guardrail은 tag만으론 orphan→전용 host 배선 필수.
-- [revfactory-tbox-wave-a](revfactory-tbox-wave-a.md) — 방법론 TBox(TestScenario/FailurePolicy⊑HC+직접sub 2+refinement edge 2). 공용 datatype domain 생략.
-- [agent-memory-tier-model](agent-memory-tier-model.md) — firmware/cache/long-term 3-tier=`ho:Memory`⊑HC+`hasMemory` 직접sub, 4 discriminator(closed sh:in).
-- [materialize-canonical-url-clone-resolution](materialize-canonical-url-clone-resolution.md) — canonical harness-100 URL을 로컬 clone(`HARNESS_100_CLONE`)으로 `_map_corpus_url` 매핑. URL→clone==구abspath라 byte-id, 부재는 stub.
-- [importer-artifacttemplate-canonical-url](importer-artifacttemplate-canonical-url.md) — importer `artifactTemplate` 로컬경로 노출 결함: `UPSTREAM_BASE`+`corpus_relpath()`로 canonical URL emit. ref 표현만 변경.
-- [recipe-ml-experiment-newdomain-pilot](recipe-ml-experiment-newdomain-pilot.md) — 신규도메인 recipe: 로컬 Concept tree=topConceptOf. ★persona artifactTemplate 부재=materialize HARD-FAIL(skill은 .ref stub).
-- [recipe-fullstack-webapp-toolscope-variation](recipe-fullstack-webapp-toolscope-variation.md) — worker+gate 하이브리드는 synthesizer 부적합→LOCAL. RULE: 순수 gate만 synthesizer. Tool-scope 변이=roleTool slice.
-- [recipe-authoring-code-reviewer-pilot](recipe-authoring-code-reviewer-pilot.md) — recipe 기본형: worker persona=INLINE promptText+full body artifactTemplate, QA gate 중앙 role 바인딩.
-- [central-library-growth-host-harness](central-library-growth-host-harness.md) — 재발 중립파트 promote-once. h-multiagent 말고 전용 host harness 신설, capability는 Role 경유.
-- [task-dag-and-coordination-topology](task-dag-and-coordination-topology.md) — `ho:Deliverable`+step DAG(도달성 3-link chain, DAG는 MANIFEST-only). topology=Pattern+Channel 쌍+host.
-- [assembly-order-graph-driven](assembly-order-graph-driven.md) — CLAUDE 섹션순서를 그래프로(`ho:AssemblySection`+assemblyOrder+closed sectionKind). Harness→X 직결→직접 subPropertyOf.
+<!-- 학습 인덱스 (한 줄씩, 상세는 토픽 파일) -->
+- [b16-registry-drift-instance-classes-guard](b16-registry-drift-instance-classes-guard.md) — validate 하드FAIL축 `check_registry_drift`: instantiated+⊑HC|SpecConcept(또는 Harness)인데 INSTANCE_CLASSES 미등록=FAIL. ★ASSERTED타입(reason=False)로 측정(reason 켜면 중간superclass 오탐). extras=warn. neg-control=인메모리 `-={HO.Role}`. ORDER가드 철회.
+- [retrieve-validate-four-axis-tweaks](retrieve-validate-four-axis-tweaks.md) — B18 IriTokenResolver 미러(budget무영향)/B2 2차키=maturity/B11 capacity-fit축(ΣobservedVol≤capacity 하드FAIL)/B12 ONTOLOGYSTYLE 1줄. 중앙그래프 무변경.
+- [b23-fp-stale-definition-refresh](b23-fp-stale-definition-refresh.md) — recipe fp stale 부정절 def 재작성. ★definition은 materialize 미방출→def편집 byte-neutral(delta=MANIFEST roll-up). sweep=block-level(file grep 오탐).
+- [b9-deprecation-remove-not-tombstone](b9-deprecation-remove-not-tombstone.md) — 폐기=완전삭제(tombstone아님). ★다른위치 헤더/주석도 stale→갱신. ONTOLOGYSTYLE §2 정반대정책=REPLACE.
+- [abox-audit-apply-merge-polish](abox-audit-apply-merge-polish.md) — guardrail MERGE(삭제 prefLabel→survivor altLabel 승격). near-synonym "Contrast id:X, which…". binding-file도 MERGE+grep-0.
+- [role-merge-concrete-twin-into-neutral-archetype](role-merge-concrete-twin-into-neutral-archetype.md) — concrete role→중립 archetype 병합+Agent agentRole rebind. cross-ref=REPLACE. survivor는 실행tool만 흡수(governance 복사금지). ★hasAgent⊄hasRole시 IRI 추가.
+- [role-merge-specializes-child-into-parent](role-merge-specializes-child-into-parent.md) — specializes 자식role→부모 병합(자식삭제, def/roleTool 흡수, guardrail 복사금지). cross-ref=REMOVE(반사삽입 금지).
+- [b24-role-curator-archetype-plus-axis-linking](b24-role-curator-archetype-plus-axis-linking.md) — curation만 신설=`role-curator`. recipe +36 specializes(DELIVERABLE기준). ★"landed"는 hash/re-run 근거必.
+- [b17-payoff-recipe-specializes-rebind](b17-payoff-recipe-specializes-rebind.md) — recipe-local Role/FP→중앙 archetype `ho:specializes`(82edges, DELIVERABLE매핑). 앵커=prefLabel줄. byte-id=0참조.
+- [harness-repo-survey-wave4-hooks-axis](harness-repo-survey-wave4-hooks-axis.md) — `ho:Hook`⊑BehavioralComponent(standing rule). hookEvent OPEN/hookAction=FailurePolicy. ★INSTANCE_CLASSES+=Hook 필수.
+- [harness-repo-survey-wave3-guardrails](harness-repo-survey-wave3-guardrails.md) — `gr-human-checkpoint`(PROACTIVE milestone+sign-off vs REACTIVE/machine-ACK). byte-id=h-multiagent +1 bullet.
+- [harness-repo-survey-wave2-role-archetypes](harness-repo-survey-wave2-role-archetypes.md) — role 커버리지: 접미(-pro/-developer/-expert)=domain특화→implementer 노드금지. operator/SRE rejected.
+- [harness-repo-survey-wave1-coordination](harness-repo-survey-wave1-coordination.md) — `pat-blackboard`(공유 durable store=간접조율). 도달성=tagged. byte-id=appliesPattern만.
+- [b17-specializes-generalize-cross-class](b17-specializes-generalize-cross-class.md) — `ho:specializes` domain/range 제거(Harness→Role 일반화)+`SpecializesTypingShape`(cross-partition만 강제).
+- [d1-fp-refer-to-expert-promote](d1-fp-refer-to-expert-promote.md) — 중앙 fp `fp-refer-to-expert`. 배선=carrier hasFailurePolicy(tag 무효). carrier만 +1행.
+- [mode-independent-invariant-guardrail](mode-independent-invariant-guardrail.md) — `gr-execution-separation`(모드독립 불변식). hasGuardrail 배선. roleGuardrail⊄harness.hasGuardrail.
+- [mass-import-wave-g1-lifestyle-comms](mass-import-wave-g1-lifestyle-comms.md) — G1(73/74/75/81/82). QA-gate 순수→synthesizer/HYBRID→cap-synthesis/producer→none.
+- [mass-import-wave-g2-comms-ops](mass-import-wave-g2-comms-ops.md) — G2(87/90/95/96/100). HYBRID→cap-synthesis/ORCHESTRATOR cross-validate→NO. fp=LOCAL→D1.
+- [mass-import-wave-f-legal](mass-import-wave-f-legal.md) — F(69/70/72). 70=REUSE dom-research. verifier HYBRID→cap-synthesis. augmentsRole 표→BIND.
+- [mass-import-wave-e-education](mass-import-wave-e-education.md) — E(56/60/62). 62=REUSE dom-coding. cap-synthesis=전용 synthesis role때만.
+- [mass-import-wave-d-business](mass-import-wave-d-business.md) — D(43/48/51/55). 3collapse/1keep(55 producing→LOCAL). augmentsRole→LOCAL BIND.
+- [mass-import-wave-c-content](mass-import-wave-c-content.md) — C(02/07/09/14). QA=OWN work(순수→collapse/hybrid→LOCAL). GAP: image-gen.
+- [mass-import-wave-b-data-ml](mass-import-wave-b-data-ml.md) — B(32/33/35). least-privilege=DELIVERABLE(계산→shell/코드→editor).
+- [mass-import-wave-a-dev-infra](mass-import-wave-a-dev-infra.md) — A(17/18/28). QA-gate 순수→synthesizer/hybrid→LOCAL. mangled=미표현+사유주석.
+- [corpus-importer-mechanical-vs-judgment](corpus-importer-mechanical-vs-judgment.md) — `import_corpus.py` 판단성flag=domain·model·guardrail·tool·cap·QA-gate. mangled→MISSING.
+- [gen-recipe-catalog-ci-from-glob](gen-recipe-catalog-ci-from-glob.md) — recipe catalog+CI matrix를 glob 생성. XML 주석 `--` 금지(silent fallback).
+- [recipe-runbehaviour-coverage-backfill](recipe-runbehaviour-coverage-backfill.md) — 3축(execMode/TestScenario/FailurePolicy). error표=fp-* IRI재사용. hasTest/FailurePolicy⊑→auto reachable.
+- [central-vocab-gap-altlabel-absorption](central-vocab-gap-altlabel-absorption.md) — altLabel은 retrieve만 읽고 materialize 안읽음→bound노드에 붙여도 산출불변. salience 기본0.4.
+- [tool-side-registries-and-path-globs](tool-side-registries-and-path-globs.md) — 도구 화이트리스트 근절(B13/B14): ORDER=merge보존, `link_predicates(g)` TBox파생. INSTANCE_CLASSES만 잔존.
+- [retrieve-pack-quality-budget-lifecycle](retrieve-pack-quality-budget-lifecycle.md) — tokenEstimate 과부하→`observedTokenVolume` 분리, traverse break→continue, maturity→lifecycle_factor.
+- [corpus-attribute-inventory-method](corpus-attribute-inventory-method.md) — 외부코퍼스 전수분석: 판정=definition/promptText, GAP 3분류, coverage% 우주 3개 분리.
+- [retrieve-projection-determinism](retrieve-projection-determinism.md) — read projection 재현성: 총순서 키 `(-score,str(node))`, 가드=`check_determinism.py`(md5 동일).
+- [execution-mode-first-class-axis](execution-mode-first-class-axis.md) — 실행 topology tag→1급(`ho:ExecutionMode`+hasExecutionMode). 값 개체열거(sh:in 금지). ★채널≠spawn topology.
+- [assembly-sections-run-behaviour-renderers](assembly-sections-run-behaviour-renderers.md) — run-behaviour 섹션+렌더러. ★byte-id는 데이터 드러내기 막는 근거 아님, 조건부 early-return.
+- [verification-unit-relocation](verification-unit-relocation.md) — `core/verification/` 신설=순수 relocation(byte-fidelity). ★dedicated catalog 미갱신=부분 closure FAIL.
+- [revfactory-p1-lifecycle-verify-abox](revfactory-p1-lifecycle-verify-abox.md) — 메타파트=전용 host(`h-harness-factory`). ★brief "land됨" 불신—TBox grep 후 저작.
+- [abox-da4-groupdir-reorg-recipe-sync](abox-da4-groupdir-reorg-recipe-sync.md) — REORG-2 recipe catalog 그룹경로 동기화. 공유 catalog에 전 recipe uri 필요.
+- [abox-da4-groupdir-reorg](abox-da4-groupdir-reorg.md) — REORG-1 중앙 ABox→그룹 디렉토리 split. IRI 위치독립→catalog uri경로만 갱신.
+- [da4-intermediate-superclass-taxonomy](da4-intermediate-superclass-taxonomy.md) — flat→중간계층 재부모화: owlrl transitivity로 leaf 타입 유지. 중간클래스 INSTANCE_CLASSES 불요.
+- [da2-definition-disambiguation](da2-definition-disambiguation.md) — `skos:definition`만 편집=구조 무변경. de-conflate="Distinguished from ho:X". 인용 prop grep.
+- [da1-observation-tripartite-split](da1-observation-tripartite-split.md) — `ObservationArea`→3클래스(Space/Interest/Observation). 도달성=3-link chain.
+- [mas-wave3b-infospace-abox](mas-wave3b-infospace-abox.md) — 정보공간 투영사슬 ABox. orphan회피=WEAK-CONNECTIVITY(투영술어 INSTANCE_LINK 등록, 방향무관).
+- [mas-wave3a-infospace-tbox](mas-wave3a-infospace-tbox.md) — 비-HC 클래스(Env/GlobalState)+투영속성은 ⊑hasComponent 금지(비-HC면 mistype).
+- [mas-wave2-agent-observationarea-abox](mas-wave2-agent-observationarea-abox.md) — agent/observation ABox: capability SOFT 재사용, anti-orphan=chain→harness엔 hasAgent만.
+- [mas-wave1-agent-observationarea-tbox](mas-wave1-agent-observationarea-tbox.md) — `ho:Agent`·ObservationArea TBox. 중간노드 orphan방지=hasComponent propertyChain.
+- [revfactory-wave-b1-coordination-governance](revfactory-wave-b1-coordination-governance.md) — coordination/governance 대량저작. ★Channel/Guardrail은 tag만으론 orphan→전용 host.
+- [revfactory-tbox-wave-a](revfactory-tbox-wave-a.md) — 방법론 TBox(TestScenario/FailurePolicy⊑HC+직접sub+refinement edge). 공용 datatype domain 생략.
+- [agent-memory-tier-model](agent-memory-tier-model.md) — 3-tier `ho:Memory`⊑HC+hasMemory 직접sub, 4 discriminator(closed sh:in).
+- [materialize-canonical-url-clone-resolution](materialize-canonical-url-clone-resolution.md) — harness-100 URL→로컬 clone(`HARNESS_100_CLONE`) `_map_corpus_url`. URL→clone==구abspath라 byte-id.
+- [importer-artifacttemplate-canonical-url](importer-artifacttemplate-canonical-url.md) — importer artifactTemplate 로컬경로 노출→`UPSTREAM_BASE`+corpus_relpath() canonical URL emit.
+- [recipe-ml-experiment-newdomain-pilot](recipe-ml-experiment-newdomain-pilot.md) — 신규도메인 recipe: 로컬 Concept tree=topConceptOf. ★persona artifactTemplate 부재=materialize HARD-FAIL.
+- [recipe-fullstack-webapp-toolscope-variation](recipe-fullstack-webapp-toolscope-variation.md) — worker+gate 하이브리드→LOCAL(순수 gate만 synthesizer). Tool-scope 변이=roleTool slice.
+- [recipe-authoring-code-reviewer-pilot](recipe-authoring-code-reviewer-pilot.md) — recipe 기본형: worker persona=INLINE promptText+full body template, QA gate 중앙 role 바인딩.
+- [central-library-growth-host-harness](central-library-growth-host-harness.md) — 재발 중립파트 promote-once. 전용 host(h-multiagent말고), capability는 Role 경유.
+- [task-dag-and-coordination-topology](task-dag-and-coordination-topology.md) — `ho:Deliverable`+step DAG(도달성 3-link chain, DAG=MANIFEST-only). topology=Pattern+Channel+host.
+- [assembly-order-graph-driven](assembly-order-graph-driven.md) — CLAUDE 섹션순서=그래프(`ho:AssemblySection`+assemblyOrder+closed sectionKind). Harness→X 직결→직접 subPropertyOf.
 - [systemprompt-section-decomposition](systemprompt-section-decomposition.md) — SystemPrompt→`ho:PromptSection`(hasSection+sectionOrder, 2-link chain, blob 병존).
-- [workflow-step-decomposition](workflow-step-decomposition.md) — Workflow→`ho:WorkflowStep`(hasStep+stepOrder+stepUsesTool/ByRole/GuardedBy, materialize 중첩 emit).
+- [workflow-step-decomposition](workflow-step-decomposition.md) — Workflow→`ho:WorkflowStep`(hasStep+stepOrder+stepUsesTool/ByRole/GuardedBy).
 - [recipe-product-manager-pilot](recipe-product-manager-pilot.md) — least-privilege tool세트(HarnessShape 요구안하는 cap 빼도 PASS). NEW 도메인+LOCAL Task.
-- [recipe-newsletter-engine-content-domain](recipe-newsletter-engine-content-domain.md) — QA gate 2종(convergence=중앙 synthesizer / producing=LOCAL). ★tool scope가 harness capability set 결정.
-- [recipe-references-not-stored-artifacts](recipe-references-not-stored-artifacts.md) — recipe=parts+methodology+references+README, build 문서 저장금지. materialize FETCH 대칭.
+- [recipe-newsletter-engine-content-domain](recipe-newsletter-engine-content-domain.md) — QA gate 2종(convergence→synthesizer/producing→LOCAL). tool scope가 harness capability set 결정.
+- [recipe-references-not-stored-artifacts](recipe-references-not-stored-artifacts.md) — recipe=parts+methodology+references+README, build 문서 저장금지. FETCH 대칭.
 - [odr-contract-verify](odr-contract-verify.md) — capability에 `ho:Contract`+contractKind/Check(3-link chain), `verify_contract.py` dual.
-- [revfactory-f-cap-skill-first-contract](revfactory-f-cap-skill-first-contract.md) — 첫 중앙 ho:Contract(B22). ★contractCheck를 실제 emit경로(`.claude/skills/<name>/SKILL.md`)로 겨눠 거짓계약 회피. 노드당 1개→assertion 2개면 Contract 2개. file-contains=substring.
+- [revfactory-f-cap-skill-first-contract](revfactory-f-cap-skill-first-contract.md) — 첫 중앙 ho:Contract. ★contractCheck를 실제 emit경로로 겨눔. 노드당 1개→assertion 2개면 Contract 2개.
 - [materialize-atomic-emit-closed-policy](materialize-atomic-emit-closed-policy.md) — materialize 하드닝: atomic emit+closed policy set(미인식 값 raise).
-- [instruction-skill-emitter](instruction-skill-emitter.md) — Claude SKILL=`ho:Instruction`⊑HC(스키마 무수정), recipe LOCAL, emitter=`## Skills`+MANIFEST.
-- [materialize-channel-emitter](materialize-channel-emitter.md) — `ho:Channel` EMIT: channel_record() helper+if-channels 가드, 중앙 산출 불변.
-- [methodology-as-nodes](methodology-as-nodes.md) — 산문절차→Workflow+DesignPattern+Guardrail+Concept×N(broader) 분해, 전부 host 배선.
-- [glossary-term-layer](glossary-term-layer.md) — 거버넌스 원칙=독립 `skos:Concept`(ho:Term 발명금지). topConceptOf는 연결 아님→top은 자식 broader로.
+- [instruction-skill-emitter](instruction-skill-emitter.md) — Claude SKILL=`ho:Instruction`⊑HC(스키마 불변), recipe LOCAL, emitter=`## Skills`+MANIFEST
+- [materialize-channel-emitter](materialize-channel-emitter.md) — `ho:Channel` EMIT: channel_record() helper+if-channels 가드, 중앙 산출불변.
+- [methodology-as-nodes](methodology-as-nodes.md) — 산문절차→Workflow+DesignPattern+Guardrail+Concept×N(broader), 전부 host 배선.
+- [glossary-term-layer](glossary-term-layer.md) — 거버넌스 원칙=독립 `skos:Concept`(ho:Term 발명금지). top=자식 broader.
 - [recipe-inherits-shared-parts-by-iri](recipe-inherits-shared-parts-by-iri.md) — `derivedFrom`=lineage뿐, 충실반영은 명시 edge. 공유 중립파트 로컬저작 금지, core: IRI REUSE.
-- [robust-recipe-import-closure](robust-recipe-import-closure.md) — recipe는 중앙 root 하나만 owl:imports→새 core 자동전파. catalog=root+전 core.
-- [coverage-gap-prevention](coverage-gap-prevention.md) — coverage 갭방지+CLAUDE step7 audit gate. 어휘없는 소스요소=schema EXTEND 신호(silent skip 금지).
+- [robust-recipe-import-closure](robust-recipe-import-closure.md) — recipe는 중앙 root만 owl:imports→새 core 자동전파. catalog=root+전 core.
+- [coverage-gap-prevention](coverage-gap-prevention.md) — coverage 갭방지+CLAUDE step7 audit gate. 어휘없는 소스요소=schema EXTEND 신호(silent skip금지).
 - [channel-coordination-core-unit](channel-coordination-core-unit.md) — 채널=`ho:Channel`⊑HC 개체+새 core unit(catalog+root 3점 배선).
 - [role-taxonomy-new-core-unit](role-taxonomy-new-core-unit.md) — 역할=`ho:Role` 개체+새 core unit. 새 유닛은 catalog·root 둘다 등록(로더 parity).
-- [role-characteristics-optional-userfacing](role-characteristics-optional-userfacing.md) — role 특성은 기존파트 REUSE, optional bool present-only, roleTool 새 tool은 harness usesTool에도.
-- [faithful-source-reflection](faithful-source-reflection.md) — FAITHFUL 반영: 합성데모 제거, 후보 단일이면 implementationRef collapse, role은 실파일과 1:1.
-- [odr-bind-lock-candidates](odr-bind-lock-candidates.md) — `ho:Candidate`+selectionPolicy+lock(sha256). implementationCandidate는 property chain rollup(직접sub면 Tool mistype).
-- [materialize-roles-impl-scaffold](materialize-roles-impl-scaffold.md) — materialize 증분2: Role emit(.claude/agents), implementationRef byte-copy(→.ref stub), scaffold mirror.
-- [materialize-build-projection](materialize-build-projection.md) — `materialize.py`=retrieve의 DUAL(validate 후 build, 결정성, artifactTemplate 치환·부재시 graph fallback).
-- [neutral-parts-decomposition](neutral-parts-decomposition.md) — 온톨로지=domain-INDEPENDENT PART 라이브러리: 거버넌스 문서→중립파트 분해, 도메인 명사 제거.
-- [model-external-harness](model-external-harness.md) — 외부하네스 abox 대응표(role→Workflow+pattern, tool→Tool+cap, 규칙→Guardrail, requires↔provides 짝, ho:tagged 필수).
-- [webui-svelte-frontend](webui-svelte-frontend.md) — tools/webui Svelte+Vite(outDir=../static, 멀티스테이지 Dockerfile, /api/*).
-- [split-core-per-type-units](split-core-per-type-units.md) — core seed.ttl→타입별 다중문서 byte-identical 이동+root union.
-- [recipe-repo-composition](recipe-repo-composition.md) — recipe repo=assembly spec(core owl:imports+IRI, 도메인만 LOCAL), 검증 env override.
-- [guardrail-item-datatype-property](guardrail-item-datatype-property.md) — 규칙세부=별도노드 아닌 datatype property 1개+ABox 다중 리터럴(sh:closed 없으면 shapes 무수정).
-- [federation-owl-imports-catalog](federation-owl-imports-catalog.md) — GitHub 연합: glob→`owl:imports`+catalog 로더(glob fallback·env override), IRI `.../id/<domain>/<slug>`.
-- [emitted-text-iri-token-projection](emitted-text-iri-token-projection.md) — definition의 id:/ho: 인용은 산출문서엔 dangling⇒그래프 무변경+emit서 리터럴만 해소한 복사본 렌더.
-- [ontologystyle-naming-table-audit](ontologystyle-naming-table-audit.md) — §2 접두사표 감사: 근거는 선언 grep(허구 3건), 0-인스턴스 클래스는 recipe IRI 예시로 유지.
+- [role-characteristics-optional-userfacing](role-characteristics-optional-userfacing.md) — role 특성=기존파트 REUSE, optional bool present-only, roleTool 새 tool은 harness usesTool에도.
+- [faithful-source-reflection](faithful-source-reflection.md) — FAITHFUL 반영: 합성데모 제거, 후보 단일이면 implementationRef collapse, role은 실파일 1:1.
+- [odr-bind-lock-candidates](odr-bind-lock-candidates.md) — `ho:Candidate`+selectionPolicy+lock(sha256). implementationCandidate=property chain rollup(직접sub면 Tool mistype).
+- [materialize-roles-impl-scaffold](materialize-roles-impl-scaffold.md) — materialize 증분2: Role emit(.claude/agents), implementationRef byte-copy(→.ref stub), scaffold.
+- [materialize-build-projection](materialize-build-projection.md) — `materialize.py`=retrieve의 DUAL(validate 후 build, 결정성, template 치환·부재시 graph fallback).
+- [neutral-parts-decomposition](neutral-parts-decomposition.md) — 온톨로지=domain-INDEPENDENT PART 라이브러리: 거버넌스 문서→중립파트 분해, 도메인명사 제거.
+- [model-external-harness](model-external-harness.md) — 외부하네스 abox 대응표(role→Workflow+pattern, tool→Tool+cap, 규칙→Guardrail, requires↔provides, tagged 필수).
+- [webui-svelte-frontend](webui-svelte-frontend.md) — tools/webui Svelte+Vite(outDir=../static, 멀티스테이지 Dockerfile).
+- [split-core-per-type-units](split-core-per-type-units.md) — core seed.ttl→타입별 다중문서 byte-id 이동+root union.
+- [recipe-repo-composition](recipe-repo-composition.md) — recipe repo=assembly spec(core owl:imports+IRI, 도메인만 LOCAL), env override.
+- [guardrail-item-datatype-property](guardrail-item-datatype-property.md) — 규칙세부=별도노드 아닌 datatype property 1개+ABox 다중 리터럴(sh:closed 없으면 shapes 불변).
+- [federation-owl-imports-catalog](federation-owl-imports-catalog.md) — GitHub 연합: glob→`owl:imports`+catalog 로더(fallback·env override), IRI `.../id/<domain>/<slug>`.
+- [emitted-text-iri-token-projection](emitted-text-iri-token-projection.md) — definition의 id:/ho: 인용은 산출문서엔 dangling⇒그래프 무변경+emit서 리터럴 해소 복사본 렌더.
+- [ontologystyle-naming-table-audit](ontologystyle-naming-table-audit.md) — §2 접두사표 감사: 근거=선언 grep, 0-인스턴스 클래스는 recipe IRI 예시로 유지.

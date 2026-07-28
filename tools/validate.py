@@ -25,7 +25,7 @@ import os
 import sys
 from collections import defaultdict, deque
 
-from rdflib import Graph, RDF
+from rdflib import Graph, RDF, RDFS, URIRef
 from rdflib.namespace import SKOS
 
 import ontology_lib as lib
@@ -225,6 +225,65 @@ def check_capacity_fit(g: Graph):
     return ok, rows
 
 
+def check_registry_drift(g: Graph):
+    """The literal ontology_lib.INSTANCE_CLASSES registry must list every ho:
+    class that is actually instantiated in the abox AND lives in the harness
+    subtree — rdfs:subClassOf* ho:HarnessComponent or ho:SpecConcept, or is
+    ho:Harness itself. Such a class MISSING from the registry silently vanishes
+    from lib.instance_nodes: its individuals drop out of the count, the
+    reachability walk and every retrieve pack (the recurring B3 defect). Neither
+    reasoning nor SHACL catches it because the registry is Python, not graph, so
+    this axis guards it explicitly.
+
+    The in-scope class set is a reverse rdfs:subClassOf* BFS from the two subtree
+    roots over ASSERTED TBox edges; "instantiated" is likewise measured against
+    ASSERTED rdf:type (an unreasoned reload) so inferred intermediate
+    superclasses — which carry no direct instances — are never spuriously
+    required. Extras (registered but not instantiated, e.g.
+    ho:Candidate/ho:Example/ho:HarnessComponent) are harmless and only warned. A
+    missing in-scope class is a HARD FAIL naming the class. Returns (ok, info)."""
+    _print_header("Registry drift (INSTANCE_CLASSES vs instantiated classes)")
+    raw = lib.load_graph(reason=False)
+
+    # In-scope classes: reverse rdfs:subClassOf* closure of the two subtree roots
+    # over asserted TBox edges, plus ho:Harness itself.
+    children: dict = defaultdict(set)
+    for sub, sup in raw.subject_objects(RDFS.subClassOf):
+        if isinstance(sub, URIRef):
+            children[sup].add(sub)
+    in_scope: set = {HO.Harness}
+    q = deque([HO.HarnessComponent, HO.SpecConcept])
+    while q:
+        c = q.popleft()
+        if c in in_scope:
+            continue
+        in_scope.add(c)
+        q.extend(children[c])
+
+    # ho: classes carrying ≥1 ASSERTED abox instance.
+    instantiated = {t for _s, t in raw.subject_objects(RDF.type)
+                    if isinstance(t, URIRef) and str(t).startswith(str(HO))}
+
+    expected = instantiated & in_scope
+    missing = sorted(expected - lib.INSTANCE_CLASSES, key=str)
+    extra = sorted((lib.INSTANCE_CLASSES & in_scope) - instantiated, key=str)
+
+    ok = not missing
+    if missing:
+        names = ", ".join(m.split("#")[-1] for m in missing)
+        print(f"✗ {len(missing)} instantiated in-scope class(es) missing from "
+              f"INSTANCE_CLASSES (individuals would vanish): {names}")
+    else:
+        print(f"✓ all {len(expected)} instantiated in-scope class(es) are "
+              f"registered in INSTANCE_CLASSES")
+    if extra:
+        names = ", ".join(e.split("#")[-1] for e in extra)
+        print(f"⚠ {len(extra)} registered but not instantiated (harmless): "
+              f"{names}")
+    return ok, {"missing": [str(m) for m in missing],
+                "extra": [str(e) for e in extra]}
+
+
 def check_duplicates(g: Graph):
     """Same class + same (case-folded) prefLabel == likely drift/dup.
     Advisory (does not fail the build). Returns a list of dup groups."""
@@ -262,8 +321,10 @@ def run_structured() -> dict:
         cap_ok, gaps = check_capability_satisfaction(g)
         assembly_ok, assembly_problems = check_assembly_order(g)
         capacity_ok, capacity_rows = check_capacity_fit(g)
+        registry_ok, registry_info = check_registry_drift(g)
         dups = check_duplicates(g)
-    hard_ok = shacl_ok and reach_ok and cap_ok and assembly_ok and capacity_ok
+    hard_ok = (shacl_ok and reach_ok and cap_ok and assembly_ok
+               and capacity_ok and registry_ok)
     return {
         "pass": hard_ok,
         "triples": len(g),
@@ -272,6 +333,7 @@ def run_structured() -> dict:
         "capabilities": {"ok": cap_ok, "gaps": gaps},
         "assemblyOrder": {"ok": assembly_ok, "problems": assembly_problems},
         "capacityFit": {"ok": capacity_ok, "agents": capacity_rows},
+        "registryDrift": {"ok": registry_ok, **registry_info},
         "duplicates": dups,
     }
 
@@ -305,6 +367,7 @@ def main(argv=None) -> int:
         "capabilities": check_capability_satisfaction(g)[0],
         "assemblyOrder": check_assembly_order(g)[0],
         "capacityFit": check_capacity_fit(g)[0],
+        "registryDrift": check_registry_drift(g)[0],
     }
     check_duplicates(g)  # advisory
 
