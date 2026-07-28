@@ -23,3 +23,7 @@ jobs:
       - name: Check projection determinism (same request => same context pack)
         # Deliberately does NOT pin PYTHONHASHSEED — pinning hides the bug.
         run: python3 tools/check_determinism.py
+      - name: Lint authoring uniformity (ONTOLOGYSTYLE §1c/§1d/§2 — beyond graph integrity)
+        # validate.py checks graph integrity; this guards the *authoring* axis it
+        # can't see — tokenEstimate coverage, prefix table, Hangul/English policy.
+        run: python3 tools/lint_uniformity.py

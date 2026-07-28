@@ -897,4 +897,4 @@ ho:salience a owl:DatatypeProperty ;
 ho:maturity a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "maturity" ;
-    skos:definition "Lifecycle status: draft | reviewed | stable | deprecated." .
+    skos:definition "Lifecycle status: draft | reviewed | stable." .

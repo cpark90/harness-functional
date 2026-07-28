@@ -4,9 +4,7 @@
 This is the context-rot defense. The ontology is NEVER handed to an agent
 whole. Given a request we:
 
-  1. select entry points   — lexically rank individuals against the request,
-                             handicapping parts retired by ho:maturity
-                             "deprecated" so a successor outranks them
+  1. select entry points   — lexically rank individuals against the request
   2. bounded traversal     — priority BFS along typed edges, decaying by
                              hop distance and predicate weight, capped by a
                              TOKEN BUDGET so the pack cannot grow without limit
@@ -41,17 +39,6 @@ HOP_DECAY = 0.75
 DEFAULT_BUDGET = 900          # token budget for the projected pack
 MAX_SEEDS = 8
 MIN_NODE_TOKENS = 5
-
-# Rank multiplier for a node marked ho:maturity "deprecated" — a HANDICAP, not
-# a filter: a retired part must show roughly three times the lexical evidence
-# of a live alternative to be ranked above it, so it lands below the successor
-# that superseded it while STAYING retrievable. It is deliberately not excluded
-# from the pack: the migration fact ("this was replaced by X") lives on the
-# retired node, and hiding it invites re-inventing the same near-synonym — the
-# drift this repo exists to prevent. Set it much lower and a query *about* the
-# retired part stops returning it (measured); much higher and the retired part
-# can still outrank its own successor.
-DEPRECATED_RANK_FACTOR = 0.35
 
 PREDICATE_WEIGHT = {
     HO.hasComponent: 0.9, HO.componentOf: 0.9, HO.hasSystemPrompt: 0.9,
@@ -107,7 +94,7 @@ def maturity_of(g: Graph, node) -> str | None:
 # Secondary ranking key: more mature parts win a score tie. ho:salience was the
 # first candidate but covers only ~2% of the store (useless as a key), whereas
 # ho:maturity covers ~67%. A missing/unknown maturity sorts last (3) but is not
-# demoted in score — absence is not retirement (that is DEPRECATED_RANK_FACTOR).
+# demoted in score — a node that never declared a maturity is not retired.
 _MATURITY_RANK = {"stable": 0, "reviewed": 1, "draft": 2}
 
 
@@ -137,20 +124,6 @@ def _resolve_id_tokens(g: Graph, text):
         lambda m: lib.label_of(g, lib.ID_CORE[m.group(1)]), str(text))
 
 
-def lifecycle_factor(g: Graph, node) -> float:
-    """Rank multiplier from the node's lifecycle status.
-
-    Only ho:maturity "deprecated" is demoted (DEPRECATED_RANK_FACTOR); every
-    other value AND the absence of the property are neutral (1.0) — a node
-    that never declared a maturity is not retired, and treating it as such
-    would silently demote most of the store. The demotion is applied wherever
-    a node's score is established (seed selection and hop propagation), so a
-    retired part cannot be lifted back above its successor by a neighbour.
-    """
-    return (DEPRECATED_RANK_FACTOR
-            if "deprecated" in maturity_values(g, node) else 1.0)
-
-
 def lexical_score(g: Graph, node, terms: list[str]) -> float:
     fields = node_text_fields(g, node)
     score = 0.0
@@ -162,7 +135,7 @@ def lexical_score(g: Graph, node, terms: list[str]) -> float:
         score += best
     salience = g.value(node, HO.salience)
     prior = 0.5 + (float(salience) if salience is not None else 0.4)
-    return score * prior * lifecycle_factor(g, node)
+    return score * prior
 
 
 def _rank_key(g: Graph, item: tuple[object, float]):
@@ -212,7 +185,6 @@ def traverse(g: Graph, seeds, budget: int):
     best = {n: s for n, s in seeds}
     heap = [(-s, str(n), n) for n, s in seeds]
     heapq.heapify(heap)
-    factor = {}
 
     admitted, used, done = [], 0, set()
     while heap:
@@ -237,9 +209,7 @@ def traverse(g: Graph, seeds, budget: int):
         for nbr, _p, w in adj[node]:
             if nbr in done:
                 continue
-            if nbr not in factor:
-                factor[nbr] = lifecycle_factor(g, nbr)
-            cand = score * HOP_DECAY * w * factor[nbr]
+            cand = score * HOP_DECAY * w
             if cand > best.get(nbr, 0.0):
                 best[nbr] = cand
                 heapq.heappush(heap, (-cand, str(nbr), nbr))
@@ -265,9 +235,8 @@ def project(g: Graph, request: str, budget: int) -> dict:
         "types": [t.split("#")[-1] for t in lib.most_specific_types(g, n)],
         "relevance": round(sc, 3),
         "definition": _resolve_id_tokens(g, g.value(n, SKOS.definition)),
-        # Lifecycle status as a STRUCTURED field: "deprecated" used to be
-        # discoverable only as a `DEPRECATED:` phrase buried in the definition
-        # prose, so a pack reader could bind a retired part unaware.
+        # Lifecycle status (draft | reviewed | stable) as a STRUCTURED field,
+        # so a pack reader can weigh a part's maturity without parsing prose.
         "maturity": maturity_of(g, n),
         "promptText": _truncate(_resolve_id_tokens(g, g.value(n, HO.promptText))),
         "provides": [lib.label_of(g, c) for c in g.objects(n, HO.providesCapability)],
@@ -360,10 +329,7 @@ def render_markdown(pack: dict) -> str:
             if n["requires"]:
                 extra.append("requires: " + ", ".join(n["requires"]))
             tail = (" — " + " · ".join(extra)) if extra else ""
-            # Retired parts are ranked down, not hidden — mark them so a reader
-            # of the pack cannot mistake one for a part to build on.
-            badge = " ⚠ DEPRECATED" if n.get("maturity") == "deprecated" else ""
-            out.append(f"- **{n['label']}**{badge} (rel {n['relevance']}){tail}")
+            out.append(f"- **{n['label']}** (rel {n['relevance']}){tail}")
         out.append("")
 
     # Structure view: hide inferred inverses and the generic hasComponent
