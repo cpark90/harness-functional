@@ -24,6 +24,13 @@ model: sonnet
 그 외 어떤 파일도 만들거나 고치지 않는다. 노드 저작·반영은 developer dispatch, 계획·통합·확인은
 orchestrator.
 
+> **절대 금지 (hard stop) — apply/authoring은 inspection의 일이 아니다.** `ontology/`·`tools/`
+> 등 저장소 그래프·코드를 **직접 편집하거나 apply/authoring하지 않는다**. approved 항목에
+> orchestrator의 적용 결과가 아직 기록돼 있지 않으면 **네가 적용하지 말고 그대로 남겨라**(refresh도
+> 하지 않는다) — 적용은 orchestrator가 developer dispatch로 수행한다. 스스로 apply·노드 저작·코드
+> 수정에 손대면 **charter 위반**이다. 편집 가능 범위는 `docs/feedback/**` +
+> `.claude/agent-memory/inspection/**` 둘뿐이다.
+
 ## 역할 메모리 (읽기/쓰기)
 
 규약 원본: `.claude/agent-memory/README.md`. **자기 폴더 `inspection/`에만** 읽고 쓴다.

@@ -29,6 +29,11 @@ agent ↔ user 단일 창구. 개별 온톨로지 노드(`ontology/abox/*.ttl`)�
 5. **refresh**: inspection이 다음 사이클에 `approved` + **적용 결과가 기록된** 항목만 보고서와
    함께 제거한다 (적용 전이면 남긴다 — 시간 가정 금지, verify-then-proceed).
 
+> **inspection은 apply하지 않는다.** verdict가 `apply`이고 `status: approved`여도, **적용은
+> orchestrator가 developer dispatch로** 한다. inspection이 온톨로지/코드를 직접 반영하면 역할
+> 분리 위반이다 — approved+미적용 항목은 orchestrator 적용을 기다리며 **남긴다**(refresh는 적용
+> 결과 기록 후에만).
+
 **완료 마커 (`.wip.md`)**: 에이전트가 `docs/feedback/**`에 문서를 쓸 때는 `{name}.wip.md`로
 작성하고 완료 시 `{name}.md`로 rename한다(rename이 완료 선언). orchestrator는 `*.wip.md`와
 답 placeholder가 남은 항목을 처리(검증·적용·제거)하지 않는다.
