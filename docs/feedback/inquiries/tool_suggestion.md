@@ -404,3 +404,5 @@ A의 5번째 평면 정의뿐이며 나머지는 도구 층이다.
 수행했으므로 저작·판정 중첩** — 채널 문서(파일 경계 내)라 가능했지만, orchestrator는 소비
 시 `[v0.2]` 지점을 재확인하고 closed 처리할 것. 남은 후속: Phase 1 브리프(orchestrator) +
 TBox 술어 3종(승인 계획 ①, developer dispatch).
+**추기**: Phase 1 브리프 초안을 사용자 지시로 inspection이 작성 —
+`inquiries/tool_suggestion-phase1-brief.md` (dispatch-ready; 채택은 orchestrator).
