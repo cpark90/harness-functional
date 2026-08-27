@@ -74,6 +74,9 @@ graph_baseline: 245 individuals, validate.py PASS, lint_uniformity.py PASS
 retrieve 선별(3)은 목적 2, webui/tiptap(4)은 두 목적의 UI 표면. **순서 권고**: TBox 술어(1) →
 린터/게이트(2) → retrieve 선별(3, determinism 게이트 유지) → webui lane(4, 별도 wave).
 
+**①의 브리프 초안 확보 (2026-08-27)**: `docs/feedback/inquiries/tbox-annotation-predicates-brief.md`
+(TBox 술어 3종 — alternativeOf/overlapsWith/Anchor n-ary + chain axiom·registry·SHACL 공유-anchor
+불변식·§2/§3 동반 명세; 채택은 orchestrator).
 **④의 구체화 설계 확보 (2026-08-27)**: `docs/feedback/inquiries/tool_suggestion.md` v0.2
 (지식 평면 분리형 편집기 — inspection 검토 A–E 반영: 지식 그래프 5번째 평면·IRI 앵커·링크
 어휘 ho: 재사용·cap+영역당 1선별을 Phase 4에 강제·Phase 0=기존 lane 형식화). ④ 착수 시 이
