@@ -12,6 +12,10 @@ whole. Given a request we:
                              the edges among them, base-harness candidates,
                              and capability gaps to fill)
 
+ONE TELLING PER REGION: of the nodes linked as alternatives (`ho:alternativeOf`)
+— the same knowledge told different ways — admission takes one and drops the
+rest, so a set of alternatives costs the budget of a single description.
+
 Output is small and relevant by construction, so a large ontology does not
 translate into a large, rotting context window.
 
@@ -178,20 +182,90 @@ def token_cost(g: Graph, node) -> int:
     return max(base, MIN_NODE_TOKENS)
 
 
+# ho:alternativeOf links nodes that describe the SAME knowledge region in
+# DIFFERENT ways (a terse rule and a worked rationale, a novice and an expert
+# framing). The store keeps every telling on purpose; the pack must not, or one
+# region buys the token budget N times and the reader pays to read one thing N
+# ways — the noise this projection exists to block. So admission keeps one
+# member per cluster and suppresses the rest.
+#
+# NOT ho:overlapsWith: overlapping scopes merely intersect, so each node says
+# something the other does not and dropping one LOSES content. Overlapping
+# nodes are not substitutes and stay both-admissible (budget permitting);
+# only full alternatives are de-duplicated here.
+def alternative_clusters(g: Graph) -> dict:
+    """Map each node touched by ho:alternativeOf to its cluster key — the
+    UNDIRECTED connected component of alternativeOf edges that it belongs to.
+
+    Undirected in code on purpose. ho:alternativeOf is an owl:SymmetricProperty,
+    but leaning on OWL RL (prp-symp) to have materialised the reverse edge would
+    make this rule silently one-directional on any raw, unreasoned graph — the
+    same trap that reasoning-dependent audits keep falling into. Reading both
+    directions costs nothing and holds either way.
+
+    The key is the lexicographically smallest IRI in the component, and the
+    components are walked in sorted IRI order, so the result is a function of
+    the graph's CONTENT alone — no set-iteration order leaks in (determinism
+    gate). Nodes with no declared alternative are absent from the map.
+    """
+    adj = defaultdict(set)
+    for s, o in g.subject_objects(HO.alternativeOf):
+        if s == o:
+            continue                       # a node is not its own alternative
+        adj[s].add(o)
+        adj[o].add(s)
+
+    cluster: dict = {}
+    for start in sorted(adj, key=str):
+        if start in cluster:
+            continue
+        component, queue = set(), [start]
+        while queue:
+            node = queue.pop()
+            if node in component:
+                continue
+            component.add(node)
+            queue.extend(sorted(adj[node], key=str))
+        key = min(str(n) for n in component)
+        for node in component:
+            cluster[node] = key
+    return cluster
+
+
 def traverse(g: Graph, seeds, budget: int):
     """Priority BFS. Returns ordered list of (node, relevance) admitted
     within the token budget."""
     adj = build_adjacency(g)
+    clusters = alternative_clusters(g)
     best = {n: s for n, s in seeds}
     heap = [(-s, str(n), n) for n, s in seeds]
     heapq.heapify(heap)
 
-    admitted, used, done = [], 0, set()
+    admitted, used, done, taken_regions = [], 0, set(), set()
     while heap:
         neg, _key, node = heapq.heappop(heap)
         if node in done:
             continue
         score = -neg
+        region = clusters.get(node)
+        if region is not None and region in taken_regions:
+            # Another telling of a region already in the pack. Suppress it
+            # BEFORE token_cost is charged: a dropped alternative must not
+            # spend a single token of the budget. Seeds and traversal hits go
+            # through this same pop, so the rule applies to both.
+            #
+            # The WINNER is simply whoever got here first under the existing
+            # admission order (the heap's total (-relevance, IRI) key, fed by
+            # _rank_key's seed order) — no new comparison key is introduced,
+            # so determinism rests on the order that already guaranteed it.
+            # Pops are non-increasing in relevance, so first-here is also the
+            # most relevant telling of the region.
+            #
+            # Unlike the budget skip below, this exclusion is PERMANENT (the
+            # winner never leaves the pack), so the node is marked done: it can
+            # never be admitted later and should not be re-queued or re-popped.
+            done.add(node)
+            continue
         cost = token_cost(g, node)
         if used + cost > budget and admitted:
             # This node does not fit in what is left of the budget: SKIP it and
@@ -206,6 +280,8 @@ def traverse(g: Graph, seeds, budget: int):
         done.add(node)
         admitted.append((node, score))
         used += cost
+        if region is not None:
+            taken_regions.add(region)
         for nbr, _p, w in adj[node]:
             if nbr in done:
                 continue

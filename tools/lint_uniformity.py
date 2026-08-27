@@ -51,6 +51,21 @@ Checks (each cites its ONTOLOGYSTYLE basis):
      that carry their body as promptText instead (e.g. Guardrail) are naturally
      exempt because no shape requires a definition of them.
 
+  6. Annotation text cap (§1c) — one node's descriptive text (ho:promptText +
+     skos:definition, ALL values summed) must stay within the §1c cap of 260
+     tokens, measured as total-chars // 4: the same estimator ho:tokenEstimate
+     is authored with, so §1c speaks ONE token unit and the linter needs no
+     external tokenizer (deterministic, dependency-free). §1c's authoring target
+     band is 130–260 tokens (the empirical retrieval-precision sweet spot of
+     100–200 words); the floor is advisory, so only the CEILING is mechanically
+     enforced here. Scope is ABox INDIVIDUALS ONLY (INSTANCE_CLASSES membership,
+     per §1c): TBox schema documentation is deliberately excluded — machine-facing
+     axiom prose such as the ho:hasComponent chain-axiom comment (~890 tokens)
+     is never projected as a retrieval unit, so covering it would be an instant
+     false positive. Exceeding the cap means the node is saying more than one
+     thing: split it (WorkflowStep/PromptSection-style) instead of letting a
+     blob grow past the point where projection stays budget-accurate.
+
 Checks 4/5 overlap what SHACL already enforces and so normally report clean;
 they are included so the uniformity contract is stated and reported in ONE place
 and would catch a regression if the shapes were ever weakened. Checks 1/2/3 are
@@ -105,7 +120,8 @@ TOKENESTIMATE_UNCONDITIONAL_CLASSES = (
 # --- §2: naming-table prefixes, class -> required slug prefix -----------------
 PREFIX_MAP = {
     HO.Domain: "dom-", HO.Task: "task-", HO.Capability: "cap-",
-    HO.Contract: "ct-", HO.Concept: "c-", HO.DesignPattern: "pat-",
+    HO.Contract: "ct-", HO.Concept: "c-", HO.Anchor: "anchor-",
+    HO.DesignPattern: "pat-",
     HO.ExecutionMode: "mode-", HO.Constraint: "con-", HO.ModelConfig: "mc-",
     HO.Tool: "tool-", HO.Candidate: "cand-", HO.Workflow: "wf-",
     HO.WorkflowStep: "wfs-", HO.Deliverable: "dlv-", HO.Guardrail: "gr-",
@@ -121,6 +137,18 @@ SINGLETON_NAMES = {
     HO.EnvironmentSpace: "env-space",
     HO.GlobalState: "global-state",
 }
+
+# --- §1c: per-node annotation text cap ----------------------------------------
+# §1c caps ONE node's descriptive text at TEXT_CAP_TOKENS, counted over
+# ho:promptText + skos:definition (all values summed) with the chars//4 estimator
+# that ho:tokenEstimate itself is authored with — one token unit inside §1c, and
+# no external tokenizer (determinism, and the tools only require rdflib here).
+# The cap comes from the retrieval-precision evidence behind §1c: 100–200 words
+# ≈ 130–260 BPE tokens is the sweet spot, so 130–260 is the authoring TARGET BAND
+# and 260 the hard ceiling. The floor is advisory (§1c) and is NOT enforced —
+# short nodes are legitimate — so only the ceiling is checked.
+TEXT_CAP_TOKENS = 260
+TEXT_CAP_PREDICATES = (HO.promptText, SKOS.definition)
 
 # Hangul codepoint blocks (syllables, jamo, compatibility jamo, extended).
 _HANGUL = re.compile(
@@ -300,6 +328,43 @@ def check_definition(g: Graph, shapes: Graph):
     return violations
 
 
+def _text_tokens(g: Graph, node: URIRef) -> int:
+    """§1c metric — the node's descriptive text size in tokens: the summed
+    character length of every ho:promptText / skos:definition value, divided by 4
+    (the same chars//4 estimator ho:tokenEstimate is authored with)."""
+    chars = sum(len(str(o))
+                for pred in TEXT_CAP_PREDICATES
+                for o in g.objects(node, pred))
+    return chars // 4
+
+
+def check_text_cap(g: Graph):
+    """§1c — a single node's ho:promptText + skos:definition must stay within the
+    260-token cap (chars//4). Scope is ABox individuals only; TBox schema
+    documentation is out of scope (machine-facing axiom prose is never projected
+    as a retrieval unit). Only the ceiling is enforced — §1c's 130-token floor is
+    advisory. Returns list of violation dicts."""
+    _print_header(f"Annotation text cap (§1c) — ≤ {TEXT_CAP_TOKENS} tokens/node")
+    violations = []
+    for n in sorted(lib.instance_nodes(g), key=str):
+        tokens = _text_tokens(g, n)
+        if tokens > TEXT_CAP_TOKENS:
+            violations.append({"node": str(n),
+                               "reason": f"ho:promptText+skos:definition = "
+                                         f"{tokens} tokens (chars/4) > cap "
+                                         f"{TEXT_CAP_TOKENS} (§1c) — split the "
+                                         f"node (single responsibility, §1)"})
+    if not violations:
+        print(f"✓ every abox node's promptText+definition is within "
+              f"{TEXT_CAP_TOKENS} tokens (target band 130–{TEXT_CAP_TOKENS})")
+    else:
+        print(f"✗ {len(violations)} node(s) over the {TEXT_CAP_TOKENS}-token "
+              f"text cap (§1c):")
+        for v in violations:
+            print(f"    - <{v['node']}>  {v['reason']}")
+    return violations
+
+
 def main(argv=None) -> int:
     print("Loading ontology and applying OWL RL reasoning...")
     try:
@@ -318,6 +383,7 @@ def main(argv=None) -> int:
         "language (§1d)": check_language(g),
         "maturity coverage": check_maturity(g, shapes),
         "definition (§1d)": check_definition(g, shapes),
+        "text cap (§1c)": check_text_cap(g),
     }
 
     _print_header("Summary")

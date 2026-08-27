@@ -1,5 +1,6 @@
 @prefix ho:    <https://harness-ontology.dev/schema#> .
 @prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
@@ -16,6 +17,16 @@
 #   * every edge points at the correct type (no vocabulary drift)
 #   * every harness is complete enough to be composable
 ########################################################################
+
+# SPARQL-constraint prefix declarations. A sh:select body resolves prefixes
+# from sh:prefixes (the SHACL mechanism), NOT from this file's Turtle @prefix
+# block, so the `ho:` used inside the query below is declared here. This is a
+# validation-only document: the loader never folds shapes into the data graph,
+# so declaring an owl:Ontology header here adds nothing to the union.
+<https://harness-ontology.dev/shapes> a owl:Ontology ;
+    sh:declare [
+        sh:prefix "ho" ;
+        sh:namespace "https://harness-ontology.dev/schema#"^^xsd:anyURI ] .
 
 #--- A harness must be intentful and complete -------------------------
 ho:HarnessShape a sh:NodeShape ;
@@ -159,12 +170,15 @@ ho:AssemblySectionShape a sh:NodeShape ;
         sh:message "AssemblySection must have exactly one ho:sectionKind from the emitter's closed set (overview/persona/operating-rules/process/model/roles/channels/skills/execution-mode/data-flow/error-handling/test-scenarios/hooks)." ] .
 
 #--- Memory: the 3-tier discrimination is enforced, not decorative ---
-# Every ho:Memory must be labelled and defined and must declare BOTH its
-# read-timing (when it is read relative to execution) and its persistence
-# (whether it survives a spawn) from their closed value sets, plus a maturity.
-# readScope and activationCondition stay optional (only long-term needs a
-# trigger). This makes the firmware/cache/long-term distinction a required,
-# well-typed property of any memory tier rather than free-text prose.
+# Every ho:Memory must be labelled and defined and must declare all three
+# discriminators from their closed value sets — its read-timing (when it is
+# read relative to execution), its write-timing (how newly produced knowledge
+# is routed into it at production time) and its persistence (whether it
+# survives a spawn) — plus a maturity. readScope and activationCondition stay
+# optional (only long-term needs a trigger). This makes the
+# firmware/cache/long-term distinction a required, well-typed property of any
+# memory tier rather than free-text prose, on the write side as on the read
+# side.
 ho:MemoryShape a sh:NodeShape ;
     sh:targetClass ho:Memory ;
     sh:property [
@@ -182,6 +196,13 @@ ho:MemoryShape a sh:NodeShape ;
         sh:datatype xsd:string ;
         sh:in ( "every-execution" "task-continuous" "conditional" ) ;
         sh:message "Memory must have exactly one ho:memoryReadTiming from the closed set (every-execution/task-continuous/conditional)." ] ;
+    sh:property [
+        sh:path ho:memoryWriteTiming ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "immediate-apply" "deliberate-store" "authored" ) ;
+        sh:message "Memory must have exactly one ho:memoryWriteTiming from the closed set (immediate-apply/deliberate-store/authored)." ] ;
     sh:property [
         sh:path ho:memoryPersistence ;
         sh:minCount 1 ;
@@ -420,3 +441,61 @@ ho:GlobalStateShape a sh:NodeShape ;
         sh:path ho:maturity ;
         sh:minCount 1 ;
         sh:message "GlobalState must have ho:maturity." ] .
+
+#--- Anchor: a well-formed weighted annotation (n-ary) --------------
+# An ho:Anchor reifies "this node describes THAT region with THIS confidence",
+# so both halves are mandatory and single-valued: exactly one ho:anchorTarget
+# Concept (a weight against two regions at once is not interpretable — a node
+# describing two regions carries two Anchors) and exactly one ho:anchorConfidence
+# inside 0..1 (an unweighted anchor is just ho:tagged, and an out-of-range weight
+# would silently break the projection layer's per-region ranking, so it FAILS
+# here rather than degrading later). skos:prefLabel is restated for message
+# locality — ho:ComponentConnectivityShape already requires it, since an Anchor
+# is a ho:HarnessComponent reached through the hasComponent o hasAnchor chain.
+ho:AnchorShape a sh:NodeShape ;
+    sh:targetClass ho:Anchor ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "Anchor must have a skos:prefLabel." ] ;
+    sh:property [
+        sh:path ho:anchorTarget ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class ho:Concept ;
+        sh:message "Anchor must point at exactly one ho:Concept via ho:anchorTarget (the single region it weights)." ] ;
+    sh:property [
+        sh:path ho:anchorConfidence ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "Anchor must have exactly one ho:anchorConfidence, a decimal within 0..1 (an unweighted anchor is just ho:tagged)." ] .
+
+#--- alternativeOf: alternatives must describe the SAME region -------
+# ho:alternativeOf is what makes two overlapping descriptions legitimate instead
+# of drift, but ONLY under the rule its definition states: alternatives re-tell
+# the SAME knowledge region. This shape gives that rule teeth rather than leaving
+# it a prose promise — two nodes linked by ho:alternativeOf must share at least
+# one ho:tagged Concept, so "alternative" cannot be used to excuse two nodes that
+# are simply about different things. A SPARQL constraint because SHACL Core has
+# no way to compare one node's value set against another's. The property is
+# symmetric, so the reasoner materialises both directions and each violating pair
+# is reported from both ends.
+ho:AlternativeOfSharedAnchorShape a sh:NodeShape ;
+    sh:targetSubjectsOf ho:alternativeOf ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "ho:alternativeOf must link descriptions of the SAME region: this node and {?other} share no ho:tagged Concept (tag both with the shared region, or the pair is drift, not an alternative)." ;
+        sh:prefixes <https://harness-ontology.dev/shapes> ;
+        sh:select """
+            SELECT $this ?other
+            WHERE {
+                $this ho:alternativeOf ?other .
+                FILTER NOT EXISTS {
+                    $this ho:tagged ?region .
+                    ?other ho:tagged ?region .
+                }
+            }
+            """ ] .

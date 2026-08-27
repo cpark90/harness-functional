@@ -83,6 +83,7 @@ INSTANCE_CLASSES = {
     HO.EnvironmentSpace, HO.GlobalState,
     HO.ObservationSpace, HO.AreaOfInterest, HO.AreaOfObservation,
     HO.DesignPattern, HO.ExecutionMode, HO.Constraint, HO.Concept,
+    HO.Anchor,
 }
 
 

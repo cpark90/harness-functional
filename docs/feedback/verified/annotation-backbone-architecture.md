@@ -103,4 +103,51 @@ orchestrator가 developer dispatch로 수행; 각 단계 후 vnv 게이트(valid
 inspection 파급 재검증. 적용 결과는 아래 기록란에 채운다.
 
 ## 적용 결과 (orchestrator 기록란 — 적용 후 채움)
-(미기록 — 적용 전)
+
+**적용 완료 2026-08-28** — 단계 ①·②·③ + 부속, workflow `wf_bba119db-082`(developer 5 +
+vnv 3, opus). ④ webui lane은 계획대로 별도 wave로 남김(설계 원본 tool_suggestion.md v0.2).
+
+- **사용자 결정 반영 (2026-08-27 세션)**: cap 값 **500 → 260 token**, 목표 대역
+  **130–260 token**(= 100–200 word 검색 정밀도 최적대, annotation-tooling-research.md 근거),
+  metric **chars/4**(§1c tokenEstimate 관례와 단위 통일; wc-w 초안 대체). 하한 130은
+  권고(린터는 상한만 강제) — 하한 미달 노드(mode-hybrid 113 등)를 채우려 산문을 늘리는
+  것은 밀도 목표에 역행하므로 하지 않는다(orchestrator 결정).
+- **① TBox 술어 3종 land**: `ho:alternativeOf`(대칭)·`ho:overlapsWith`·`ho:Anchor` n-ary
+  (+`hasComponent o hasAnchor` chain, AnchorShape, AlternativeOfSharedAnchorShape SPARQL
+  불변식, INSTANCE_CLASSES 등록, §2/§3 문서 동반). abox 엣지 0(실재 대안쌍 부재 — 날조
+  금지 준수). developer 설계 판단 2건 수용: Anchor는 `ho:HarnessComponent` 직속
+  leaf(registryDrift 가드 유지 근거), `anchorConfidence` minCount 1(선별 전순서 보장).
+- **② 린터 cap land**: `lint_uniformity.py` `check_text_cap` (abox 개체만, TBox 기계
+  문서 제외), §1c [지킴] 조항 동반. 경계 260=PASS/261=FAIL 실측.
+- **부속 압축**: 유일 초과 `id:mode-standing-service` 282→252 token(명제 6종 보존,
+  tokenEstimate 252 재산정) → 현 그래프 위반 0.
+- **③ retrieve 선별 land**: alternativeOf 무향 연결 성분당 1-admit(raw 그래프, 기존
+  _rank_key 전순서가 대표 결정, skip은 예산 차감 전, overlapsWith 비배제, 정렬 IRI 순회).
+- **vnv 판정 3건**: ①②+압축 = pass-with-notes (`docs/verify/annotation-tbox-linter-verify.md`),
+  ③ = pass-with-notes (`docs/verify/retrieve-alt-selection-verify.md`) — negative control
+  전수(공유태그 없는 쌍 FAIL, 261 주입 FAIL, 주입 클러스터 1-admit + 대조군 vacuous-pass
+  배제, 예산 미차감 산술 확정), 0-edge byte-identity 18/18, materialize 무회귀.
+  orchestrator 최종 확인: validate·lint_uniformity·check_determinism 전부 PASS.
+- **마감 micro dispatch**: §1c "① land 후 적용" 괄호 시제 정리 + 린터 PREFIX_MAP
+  `anchor-` 1행(§2 표와의 silent divergence 제거).
+- **후속(비차단) 메모**: (a) cap headroom 얇은 노드 6개(252~215) — enrich 시 게이트 유의,
+  (b) harness-level anchor는 chain으로 표현 불가(필요 시 스키마 결정), (c) 첫 anchor 개체
+  저작 wave에서 AnchorShape·prefix 실사용 검증, (d) `gr-lang`↔`gr-standard-terms`의
+  overlapsWith 부여는 판단성 저작이라 보류.
+
+## inspection 재검증 (2026-08-28, land 전 독립 스팟체크)
+vnv 자기보고와 별개로 워킹트리에서 재실측 — **전부 일치, land 승인**:
+- 게이트 3종 직접 실행: `validate.py` PASS(**269** individuals; Anchor registered-not-
+  instantiated는 harmless 4종에 편입 — 설계된 휴면과 일치)·`lint_uniformity.py` PASS(text cap
+  위반 0)·`check_determinism.py` PASS.
+- ① 실재: `alternativeOf`/`overlapsWith` 둘 다 `owl:SymmetricProperty`(tbox:635·639),
+  `ho:Anchor`(tbox:205, dormant-by-design 정의 명문)·**9번째 chain axiom**(tbox:289,
+  `hasComponent o hasAnchor`)·shapes 2종(AnchorShape·AlternativeOfSharedAnchor) 확인.
+- ② 실재: cap **260·chars//4**(§1c tokenEstimate 관례와 단위 통일, 대역 130–260 문서화),
+  유일 초과였던 `mode-standing-service` **252**/260 재실측. 사용자 결정(500→260·wc-w→chars/4)
+  은 브리프 초안과의 층위 구분으로 기록됨 — 모순 아님(초안=42-line 환산, 확정=검색 정밀도 대역).
+- ③ 실재: `alternative_clusters`(retrieve.py:196) 무향 연결성분·docstring의 raw-graph 근거
+  (symmetric materialization 비의존) 확인. abox `alternativeOf` edge **0** = 예상 휴면 상태.
+- 판정: ①②③ 적용 결과 기록 **완결**. 단 **refresh는 HOLD** — 적용 계획 ④(webui/tiptap lane)가
+  미완(Phase 0 매핑 문서 land, Phase 1 이후 잔여)이라 이 보고가 ④의 판정·순서 anchor로 남는다.
+  ④ 완료 시 항목·보고서 함께 refresh.

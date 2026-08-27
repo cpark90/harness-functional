@@ -1,5 +1,5 @@
 ---
-status: answered        # inspection이 작성한 dispatch-ready 초안 — orchestrator가 소비(plans/로 채택) 후 closed
+status: closed        # orchestrator 소비·dispatch 완료 (2026-08-28, 적용 결과는 verified/annotation-backbone-architecture.md 기록란)
 kind: dispatch-brief-draft
 consumer: orchestrator → developer (opus)
 source: docs/feedback/verified/annotation-backbone-architecture.md   # 승인 계획 단계 ①
