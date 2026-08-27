@@ -24,9 +24,13 @@
 사용자 **(A) 승인** + 도구 목적 2건: ①제약 집행(규약을 결정론 게이트로 강제 — anchor 없으면 저장
 거부) ②노이즈 차단 입력(영역당 대안 1선별 = 저장은 중복 허용, 투영은 무노이즈). verdict
 apply-with-changes, 4단계 분할(TBox 술어→린터/게이트→retrieve 선별→webui lane). 적용 대기.
-브리프 초안(사용자 지시로 inspection 작성, 채택=orchestrator): ①=`inquiries/tbox-annotation-
-predicates-brief.md`(Symmetric 최초 도입·Anchor chain axiom·공유-anchor SHACL·§2/§3 동반),
-④Phase1=`inquiries/tool_suggestion-phase1-brief.md`(S1–S8 생존율 스위트·오해소 0 게이트).
+브리프 초안 4종 전부 확보(사용자 지시로 inspection 작성, 채택=orchestrator):
+①=`inquiries/tbox-annotation-predicates-brief.md`(Symmetric 최초 도입·Anchor chain axiom·
+공유-anchor SHACL·§2/§3 동반), ②=`linter-annotation-cap-brief.md`(**cap 500 token 확정**,
+wc-w 관례·abox만·현 최대 199 실측·500/501 경계 control), ③=`retrieve-alternative-selection-
+brief.md`(무향 연결성분당 1 admit·새 정렬키 없음·skip은 예산 차감 전·0-edge byte-identity
+회귀; ① 후 권장), ④Phase1=`tool_suggestion-phase1-brief.md`(S1–S8 생존율·오해소 0).
+순서: ①→③, ②·④는 독립 병행.
 
 ## tool_suggestion 검토 (inquiries lane, answered)
 `inquiries/tool_suggestion.md` = 지식 평면 분리 편집기 설계(4평면: 주석/설계/프로토콜/인터페이스).
