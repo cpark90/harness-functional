@@ -74,6 +74,10 @@ graph_baseline: 245 individuals, validate.py PASS, lint_uniformity.py PASS
 retrieve 선별(3)은 목적 2, webui/tiptap(4)은 두 목적의 UI 표면. **순서 권고**: TBox 술어(1) →
 린터/게이트(2) → retrieve 선별(3, determinism 게이트 유지) → webui lane(4, 별도 wave).
 
+**③의 브리프 초안 확보 (2026-08-27)**:
+`docs/feedback/inquiries/retrieve-alternative-selection-brief.md` (alternativeOf 무향 연결
+성분당 admission 1개 — 새 정렬 키 없음(기존 score→maturity→IRI 전순서가 대표 결정),
+skip은 예산 차감 전, overlapsWith 비배제, 0-edge byte-identity 회귀 게이트; ① land 후 권장).
 **②의 브리프 초안 확보 (2026-08-27, 단위=token 사용자 결정)**:
 `docs/feedback/inquiries/linter-annotation-cap-brief.md` (cap 500 token = 42-line 환산,
 metric=promptText+definition whitespace 합, scope=abox만 — 현 최대 199 실측·위반 0;
