@@ -34,10 +34,11 @@ id:wf-verify-harness a ho:Workflow ; skos:prefLabel "Harness verification loop" 
     ho:hasStep id:wfs-structure-check, id:wfs-trigger-validation, id:wfs-baseline-compare, id:wfs-dryrun ;
     ho:tagged id:c-agent-methodology, id:c-verify-proceed ; ho:tokenEstimate 128 ; ho:maturity "draft" .
 id:wf-compose-harness a ho:Workflow ; skos:prefLabel "Harness composition" ;
-    skos:definition "Assemble a new harness from the ontology's reusable, typed parts: retrieve a context pack, pick a base template, bind every required capability to a provider, satisfy the harness-shape minimums, write the parts back as connected individuals, validate, and pass the coverage-audit gate before materializing. Choose when building a harness by selecting and wiring existing parts rather than authoring one from scratch." ;
-    ho:hasStep id:wfs-retrieve-pack, id:wfs-select-template, id:wfs-bind-capabilities,
-        id:wfs-assemble-minimums, id:wfs-write-individuals, id:wfs-validate, id:wfs-coverage-audit ;
-    ho:tagged id:c-composition ; ho:tokenEstimate 57 ; ho:maturity "reviewed" .
+    skos:definition "Assemble a new harness from the knowledge graph's reusable, typed parts (individuals the ontology describes): analyse the user's intent and the project and question the user until the information gaps close, then retrieve a context pack, pick a base template, bind every required capability to a provider, satisfy the harness-shape minimums, write the parts back as connected individuals, validate, and pass the coverage-audit gate before materializing. Choose when building a harness by selecting and wiring existing parts rather than authoring one from scratch." ;
+    ho:hasStep id:wfs-intent-analysis, id:wfs-retrieve-pack, id:wfs-select-template,
+        id:wfs-bind-capabilities, id:wfs-assemble-minimums, id:wfs-write-individuals,
+        id:wfs-validate, id:wfs-coverage-audit ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 141 ; ho:maturity "reviewed" .
 
 #===================== Workflow steps ==================================
 # Ordered decomposition of id:wf-multiagent's control flow into part-to-part
@@ -136,19 +137,39 @@ id:wfs-dryrun a ho:WorkflowStep ;
     ho:stepOrder 4 ; ho:tokenEstimate 56 ; ho:maturity "draft" .
 
 # Ordered decomposition of id:wf-compose-harness's control flow into part-to-part
-# assembly: the seven-stage pipeline that composes a harness from reusable parts,
+# assembly: the eight-stage pipeline that composes a harness from reusable parts,
 # each step named for the role that performs it, the tool it uses and/or the
 # guardrail that bounds it (reusing EXISTING core parts by IRI) and joined by the
 # task-DAG Deliverables below. Same convention as id:wf-multiagent's steps; the
 # steps refine the workflow's prose summary and roll up to any binding harness via
 # the ho:hasComponent (hasComponent o hasStep) propertyChainAxiom.
+# The pipeline now OPENS with intent analysis rather than with retrieval: what is
+# retrieved, and how each agent lane is activated, are both scoped by what the
+# user actually wants, so the request is analysed -- and what the analysis lacks
+# is asked back -- before the first retrieval runs. That makes the data flow
+# non-linear at one point: id:dlv-intent-profile is consumed BOTH by the retrieval
+# step that follows it and, again, by the assembly step, which settles the
+# activation mode from it (id:gr-mode-fit). Only ho:stepConsumes is doubled there;
+# no second ho:stepDependsOn is added, because the ordering it would assert is
+# already implied transitively by the linear dependency chain -- the consume edge
+# carries information the chain does not.
+id:wfs-intent-analysis a ho:WorkflowStep ;
+    skos:prefLabel "Analyse intent and elicit gaps" ;
+    skos:definition "Analyse the user's intent and the project the harness will run in before any retrieval or construction, and close the information gaps that analysis exposes by questioning the user rather than assuming the answers. Choose as the entry step: everything downstream -- what is retrieved, which template is taken, how each agent lane is activated -- is scoped by this profile, so an unasked question here becomes an assumption baked into the whole composition." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepGuardedBy id:gr-user-elicitation ;
+    ho:stepProduces id:dlv-intent-profile ;
+    ho:stepOrder 1 ; ho:tokenEstimate 114 ; ho:maturity "draft" .
+
 id:wfs-retrieve-pack a ho:WorkflowStep ;
     skos:prefLabel "Retrieve a context pack" ;
-    skos:definition "Run the retrieval tool over the request to draw a budget-capped context pack of candidate parts, rather than loading the whole library. Choose as the entry step: it bounds what the rest of the composition may see, which is the context-rot defense." ;
+    skos:definition "Run the retrieval tool over the analysed request to draw a budget-capped context pack of candidate parts, rather than loading the whole library. Choose as the first retrieval step, once the intent profile has scoped what to look for: it bounds what the rest of the composition may see, which is the context-rot defense." ;
     ho:stepByRole id:role-orchestrator ;
     ho:stepUsesTool id:tool-retriever ;
+    ho:stepConsumes id:dlv-intent-profile ;
     ho:stepProduces id:dlv-context-pack ;
-    ho:stepOrder 1 ; ho:tokenEstimate 41 ; ho:maturity "draft" .
+    ho:stepDependsOn id:wfs-intent-analysis ;
+    ho:stepOrder 2 ; ho:tokenEstimate 80 ; ho:maturity "draft" .
 
 id:wfs-select-template a ho:WorkflowStep ;
     skos:prefLabel "Select a base template" ;
@@ -157,7 +178,7 @@ id:wfs-select-template a ho:WorkflowStep ;
     ho:stepConsumes id:dlv-context-pack ;
     ho:stepProduces id:dlv-base-template ;
     ho:stepDependsOn id:wfs-retrieve-pack ;
-    ho:stepOrder 2 ; ho:tokenEstimate 42 ; ho:maturity "draft" .
+    ho:stepOrder 3 ; ho:tokenEstimate 42 ; ho:maturity "draft" .
 
 id:wfs-bind-capabilities a ho:WorkflowStep ;
     skos:prefLabel "Bind required capabilities" ;
@@ -167,17 +188,17 @@ id:wfs-bind-capabilities a ho:WorkflowStep ;
     ho:stepConsumes id:dlv-base-template ;
     ho:stepProduces id:dlv-capability-bindings ;
     ho:stepDependsOn id:wfs-select-template ;
-    ho:stepOrder 3 ; ho:tokenEstimate 42 ; ho:maturity "draft" .
+    ho:stepOrder 4 ; ho:tokenEstimate 42 ; ho:maturity "draft" .
 
 id:wfs-assemble-minimums a ho:WorkflowStep ;
     skos:prefLabel "Assemble the shape minimums" ;
-    skos:definition "Wire the bound parts into the harness-shape minimums -- one system prompt, at least one workflow, tools, guardrails and one model config -- as a single coherent assembly. Choose to turn a loose set of chosen parts into a well-typed harness spec that satisfies the structural contract." ;
+    skos:definition "Wire the bound parts into the harness-shape minimums -- one system prompt, at least one workflow, tools, guardrails and one model config -- as a single coherent assembly, and settle how each agent lane is activated (dispatched per brief or standing in an open session) from the intent profile rather than by default. Choose to turn a loose set of chosen parts into a well-typed harness spec that satisfies the structural contract." ;
     ho:stepByRole id:role-orchestrator ;
-    ho:stepGuardedBy id:gr-integration-coherence ;
-    ho:stepConsumes id:dlv-capability-bindings ;
+    ho:stepGuardedBy id:gr-integration-coherence, id:gr-mode-fit ;
+    ho:stepConsumes id:dlv-capability-bindings, id:dlv-intent-profile ;
     ho:stepProduces id:dlv-harness-spec ;
     ho:stepDependsOn id:wfs-bind-capabilities ;
-    ho:stepOrder 4 ; ho:tokenEstimate 46 ; ho:maturity "draft" .
+    ho:stepOrder 5 ; ho:tokenEstimate 108 ; ho:maturity "draft" .
 
 id:wfs-write-individuals a ho:WorkflowStep ;
     skos:prefLabel "Write back new individuals" ;
@@ -188,7 +209,7 @@ id:wfs-write-individuals a ho:WorkflowStep ;
     ho:stepConsumes id:dlv-harness-spec ;
     ho:stepProduces id:dlv-authored-individuals ;
     ho:stepDependsOn id:wfs-assemble-minimums ;
-    ho:stepOrder 5 ; ho:tokenEstimate 51 ; ho:maturity "draft" .
+    ho:stepOrder 6 ; ho:tokenEstimate 51 ; ho:maturity "draft" .
 
 id:wfs-validate a ho:WorkflowStep ;
     skos:prefLabel "Validate the assembly" ;
@@ -199,7 +220,7 @@ id:wfs-validate a ho:WorkflowStep ;
     ho:stepConsumes id:dlv-authored-individuals ;
     ho:stepProduces id:dlv-validated-spec ;
     ho:stepDependsOn id:wfs-write-individuals ;
-    ho:stepOrder 6 ; ho:tokenEstimate 39 ; ho:maturity "draft" .
+    ho:stepOrder 7 ; ho:tokenEstimate 39 ; ho:maturity "draft" .
 
 id:wfs-coverage-audit a ho:WorkflowStep ;
     skos:prefLabel "Audit source coverage" ;
@@ -208,7 +229,7 @@ id:wfs-coverage-audit a ho:WorkflowStep ;
     ho:stepGuardedBy id:gr-structural-coverage ;
     ho:stepConsumes id:dlv-validated-spec ;
     ho:stepDependsOn id:wfs-validate ;
-    ho:stepOrder 7 ; ho:tokenEstimate 53 ; ho:maturity "draft" .
+    ho:stepOrder 8 ; ho:tokenEstimate 53 ; ho:maturity "draft" .
 
 #===================== Deliverables (task-DAG data flow) ===============
 # The named artifacts that flow between id:wf-multiagent's steps — the OUTPUT
@@ -230,11 +251,16 @@ id:dlv-verified-result a ho:Deliverable ;
     skos:definition "The authored work together with the verifier's pass judgment, emitted once authoring and verification are complete: the artifact that is admitted into the shared output only after it checks out. Produced by the author-and-verify step and consumed by the integrate-and-gate step." ;
     ho:tagged id:c-multiagent ; ho:tokenEstimate 40 ; ho:maturity "reviewed" .
 
-# The named artifacts that flow between id:wf-compose-harness's seven steps —
+# The named artifacts that flow between id:wf-compose-harness's eight steps —
 # each produced by one step and consumed by the next, so the composition
 # data-flow DAG is recoverable by joining producers to consumers. Domain-neutral
 # coordination artifacts; each rolls up to any binding harness via the
 # ho:hasComponent (hasComponent o hasStep o stepProduces) propertyChainAxiom.
+id:dlv-intent-profile a ho:Deliverable ;
+    skos:prefLabel "Intent profile" ;
+    skos:definition "The analysed intent-and-project profile: the user's goal, the characteristics of the project the harness will run in, and the answers elicited for whatever that analysis was missing. It scopes what the retrieval looks for downstream and which activation mode each agent lane is given. Produced by the intent-analysis step and consumed twice: by the retrieve step, which draws its pack against it, and again by the assembly step, which settles the activation mode from it." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 118 ; ho:maturity "draft" .
+
 id:dlv-context-pack a ho:Deliverable ;
     skos:prefLabel "Context pack" ;
     skos:definition "The budget-capped set of candidate parts retrieved for a request -- the bounded working set the rest of a composition draws from instead of the whole library. Produced by the retrieve step and consumed by the template-selection step." ;

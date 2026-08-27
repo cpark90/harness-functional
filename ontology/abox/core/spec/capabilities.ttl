@@ -29,6 +29,10 @@ id:cap-traceability a ho:Capability ; skos:prefLabel "Traceability" ;
     skos:definition "Preserve a single source of truth: never delete a decision, only deprecate it with a reason and replacement, and increment identifiers without reuse." .
 id:cap-synthesis a ho:Capability ; skos:prefLabel "Synthesis" ;
     skos:definition "Converge the separate deliverables produced by multiple worker roles into one coherent, cross-checked final result -- the terminal convergence step of a multi-agent workflow, provided by a component that both reviews every contribution and compiles the integrated output." .
+id:cap-benchmarking a ho:Capability ; skos:prefLabel "Comparative benchmarking" ;
+    skos:definition "Compare a subject against external reference cases to quantify the gap between them and produce evidence-backed improvement claims, so a component can rank where the subject falls short of outside best practice rather than only describe its own state." .
+id:cap-audit a ho:Capability ; skos:prefLabel "Compliance audit" ;
+    skos:definition "Audit an artifact and an agent's operation against a declared standard or charter and produce compliance findings, so a component can surface where behaviour or output has drifted from the rules it is bound by rather than only assess quality in the abstract." .
 
 # The skill-authoring/packaging capability: a component that PROVIDES it knows how
 # to author a well-formed Claude skill (an on-demand ho:Instruction emitted as a

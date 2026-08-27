@@ -42,7 +42,7 @@ id:os-orchestrator a ho:ObservationSpace ;
 
 id:os-developer a ho:ObservationSpace ;
     skos:prefLabel "Developer observation space" ;
-    skos:definition "The observable envelope of the developer node: its own dispatch brief, the assigned ontology nodes as a budget-capped retrieval pack, and its own role/cache — a partial projection of the system state bounded by its loss-free capacity." ;
+    skos:definition "The observable envelope of the developer node: its own dispatch brief, the assigned knowledge-graph nodes as a budget-capped retrieval pack, and its own role/cache — a partial projection of the system state bounded by its loss-free capacity." ;
     ho:projectsFrom id:global-state ;
     ho:hasAreaOfInterest id:aoi-developer ;
     ho:hasAreaOfObservation id:oa-developer-external, id:oa-developer-internal ;
@@ -93,7 +93,7 @@ id:aoi-orchestrator a ho:AreaOfInterest ;
 
 id:aoi-developer a ho:AreaOfInterest ;
     skos:prefLabel "Developer area of interest" ;
-    skos:definition "What the developer role NEEDS to observe: its dispatch brief and the specific ontology nodes assigned to it, sufficient to author the assigned individuals correctly." ;
+    skos:definition "What the developer role NEEDS to observe: its dispatch brief and the specific knowledge-graph nodes assigned to it, sufficient to author the assigned individuals correctly." ;
     ho:observationKind "external" ;
     ho:maturity "draft" .
 
@@ -157,7 +157,7 @@ id:oa-orchestrator-internal a ho:AreaOfObservation ;
 
 id:oa-developer-external a ho:AreaOfObservation ;
     skos:prefLabel "Developer external observation" ;
-    skos:definition "What the developer perceives beyond itself: its own dispatch brief over the dispatch channel and the assigned ontology nodes retrieved as a budget-capped pack (never the whole store)." ;
+    skos:definition "What the developer perceives beyond itself: its own dispatch brief over the dispatch channel and the assigned knowledge-graph nodes retrieved as a budget-capped pack (never the whole store)." ;
     ho:observationKind "external" ;
     ho:coversInterest id:aoi-developer ;
     ho:observesChannel id:chan-dispatch ;
@@ -201,7 +201,7 @@ id:oa-inspection-external a ho:AreaOfObservation ;
     ho:observationKind "external" ;
     ho:coversInterest id:aoi-inspection ;
     ho:observesChannel id:chan-agent-user, id:chan-orchestrator-inspection ;
-    ho:observedFileScope "The whole design graph (ontology/** and docs/**) read, plus docs/feedback/** " ;
+    ho:observedFileScope "The whole stored graph (ontology/**, both the schema and the knowledge graph) and the design docs (docs/**) read, plus docs/feedback/**" ;
     ho:observesMemory id:mem-firmware, id:mem-longterm ;
     ho:unobserved "The internal sessions of the dispatched workers." ;
     ho:observedTokenVolume 12000 ; ho:tokenEstimate 70 ; ho:maturity "draft" .

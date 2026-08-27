@@ -29,9 +29,18 @@
 # scope only parts that harness already binds (usesTool / hasGuardrail), so
 # each stays a connected, orphan-free HarnessComponent.
 #
-# TAXONOMY -- the roles below fall into 4 groups, read on three axes:
+# TAXONOMY -- the roles below fall into 4 groups, read on four axes:
 #   ORIGIN     A/B/C/D (see per-group headers),
-#   INTERACTION user-facing vs dispatch-invoked (per ho:userFacing above),
+#   INTERACTION user-facing vs not user-facing (per ho:userFacing above),
+#   ACTIVATION how the role is put to work -- a dispatch-invoked INSTANT WORKER
+#              (spawned per brief, reclaimed on return: id:gr-dispatch-execution,
+#              id:mode-sub-agents) or an ONLINE STANDING session (session-resident,
+#              addressed over durable channels and serving requests as they arrive:
+#              id:gr-online-execution, id:mode-standing-service). Only
+#              id:role-orchestrator and id:role-inspection are standing; groups B
+#              and C are dispatch-invoked, and id:role-coordinator (group D) is
+#              neither -- it lives for the span of ONE run with its peer team
+#              (id:mode-agent-teams),
 #   CARRIER    which template binds the role via ho:hasRole.
 #   A. Roles of THIS repo's own harness (carrier id:h-multiagent, reviewed):
 #      orchestrator (user-facing), inspection (user-facing), research, vnv,
@@ -81,19 +90,20 @@
 
 id:role-orchestrator a ho:Role ;
     skos:prefLabel "Orchestrator agent" ;
-    skos:definition "The user-facing planner that decomposes a request into node-scoped briefs and dispatches them to workers, then integrates and gate-checks their results. Performs no substantive work itself." ;
+    skos:definition "The user-facing planner that decomposes a request into node-scoped briefs and dispatches them to workers, then integrates and gate-checks their results. Performs no substantive work itself. An ONLINE STANDING role: its session stays open across requests, so it receives work from the user and from its coordination channels as it arrives rather than being spawned for one brief and reclaimed." ;
     ho:roleGuardrail id:gr-delegated-orchestration, id:gr-report-over-prompt,
-        id:gr-bounded-context, id:gr-reuse-first ;
+        id:gr-bounded-context, id:gr-reuse-first, id:gr-online-execution,
+        id:gr-user-elicitation ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Reads and writes only its own role-scoped memory at session start/end; plans from a bounded retrieval pack, never the whole store." ;
     ho:userFacing true ; ho:maturity "reviewed" .
 
 id:role-inspection a ho:Role ;
     skos:prefLabel "Inspection agent" ;
-    skos:definition "The user-facing role that, in its own session, directly investigates the design graph and its changes, handles user feedback and its ripple effects, and owns the git lifecycle." ;
+    skos:definition "The user-facing role that, in its own standing session, directly investigates the design graph and its changes, handles user feedback and its ripple effects, and owns the git lifecycle. An ONLINE STANDING role: it is never dispatched -- its session stays open independently of any run and it consumes work from its durable channels by completed status marker, on its own cycle." ;
     ho:roleTool id:tool-shell, id:tool-editor, id:tool-retriever ;
     ho:roleGuardrail id:gr-traceability, id:gr-report-over-prompt,
-        id:gr-least-privilege, id:gr-verify-proceed ;
+        id:gr-least-privilege, id:gr-verify-proceed, id:gr-online-execution ;
     ho:tagged id:c-multiagent ;
     ho:roleMemoryPolicy "Runs in its own session; reads and writes only its own role-scoped memory at session start/end and consumes the feedback channel by verified status, never by elapsed time." ;
     ho:userFacing true ; ho:maturity "reviewed" .
@@ -180,7 +190,7 @@ id:role-author a ho:Role ;
 
 id:role-implementer a ho:Role ;
     skos:prefLabel "Implementer agent" ; skos:altLabel "builder" , "data preparer" , "optimizer-tuner" ;
-    skos:definition "A work-performing role, dispatch-invoked only, that turns an agreed specification into the working artifact it describes -- code, a configuration, a prepared dataset, a tuned setup, an authored ontology individual -- and reports what it actually produced against what was specified. Choose it for the construction step of any domain: it is the domain-independent archetype a harness binds for construction work of any kind, and a concrete authoring agent (such as this repository's own node-authoring agent) is an instance of it." ;
+    skos:definition "A work-performing role, dispatch-invoked only, that turns an agreed specification into the working artifact it describes -- code, a configuration, a prepared dataset, a tuned setup, an authored knowledge-graph individual the ontology types -- and reports what it actually produced against what was specified. Choose it for the construction step of any domain: it is the domain-independent archetype a harness binds for construction work of any kind, and a concrete authoring agent (such as this repository's own node-authoring agent) is an instance of it." ;
     ho:roleTool id:tool-editor, id:tool-shell ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-simplicity, id:gr-root-cause ;
@@ -236,6 +246,37 @@ id:role-curator a ho:Role ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable selection and organisation heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
 
+# Oversight is a standing activity of its own, distinct from the worker
+# archetypes above: continually holding a subject against an external reference
+# or a declared standard and raising graded, evidence-backed claims or findings
+# WITHOUT itself deciding on or applying the fix. Two archetypes recur across the
+# corpus as an oversight pair -- one benchmarks the harness's own project against
+# outside best practice, the other audits agents' charter-conformant operation
+# against declared standards -- so they are added here as neutral siblings. Each
+# definition says how it differs from the nearest existing role (research, analyst,
+# synthesizer, vnv, inspection) so none collapse into near-synonyms.
+id:role-benchmarker a ho:Role ;
+    skos:prefLabel "Benchmarker agent" ; skos:altLabel "comparative critic" ;
+    skos:definition "A work-performing role, dispatch-invoked only, that continually surveys external reference cases, compares the harness's own project against them and raises graded improvement claims about the gaps it finds, so the team can spend its effort on the shortfalls that matter most against outside best practice. Choose it when the deliverable is an evidence-backed, ranked set of improvement claims grounded in external comparators the role procured itself. Distinguished from id:role-research, which GATHERS external material but does not compare it against the harness's own project or raise claims; from id:role-analyst, whose subject is material it is GIVEN judged against stated criteria (the benchmarker instead sources its own external comparators and judges against external best practice); and from id:role-synthesizer, the terminal convergence gate that merges everyone's deliverables rather than critiquing the project against outside references." ;
+    ho:roleTool id:tool-websearch, id:tool-retriever ;
+    ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
+        id:gr-grounding, id:gr-cite ;
+    ho:providesCapability id:cap-benchmarking ;
+    ho:tagged id:c-multiagent, id:c-oversight ;
+    ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable benchmarking comparators and heuristics at session end; touches no other role's memory." ;
+    ho:maturity "draft" .
+
+id:role-auditor a ho:Role ;
+    skos:prefLabel "Auditor agent" ; skos:altLabel "compliance watchdog" ;
+    skos:definition "A work-performing role, dispatch-invoked only, that continually audits the harness's own output and other agents' charter-conformant operation, raising an enforcement finding whenever behaviour or output drifts from the declared standards it is bound by. Choose it when the deliverable is an ongoing stream of compliance findings against a charter or standard rather than a one-off assessment. Distinguished from id:role-vnv, which returns a pass/fail verdict on the harness's own composition OUTPUT (the auditor instead audits, over time, whether agents operate WITHIN their charter); from id:role-inspection, this repository's own user-facing feedback-and-git lane; and from id:role-analyst, which diagnoses material it is given against stated criteria (the auditor instead polices operation and output against governance standards continuously)." ;
+    ho:roleTool id:tool-retriever, id:tool-shell ;
+    ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
+        id:gr-traceability, id:gr-no-arbitrary-decision ;
+    ho:providesCapability id:cap-audit ;
+    ho:tagged id:c-multiagent, id:c-oversight, id:c-traceability ;
+    ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable audit checks and standard-conformance heuristics at session end; touches no other role's memory." ;
+    ho:maturity "draft" .
+
 #===================== D. Coordination-only peer role ==================
 # The dedicated coordinating peer of an agent team: it plans, sequences and
 # tracks the status of the team's work but performs NONE of the execution
@@ -284,7 +325,7 @@ id:agent-orchestrator a ho:Agent ;
 
 id:agent-developer a ho:Agent ;
     skos:prefLabel "Developer agent (node)" ;
-    skos:definition "The authoring node the harness compiles by instantiating the neutral implementer role archetype: it perceives its own dispatch brief and the assigned ontology nodes as a budget-capped retrieval pack (external area) plus its own role and cache (internal area), and its functions are file editing and code execution. It does NOT observe other nodes of the graph or other workers' internals." ;
+    skos:definition "The authoring node the harness compiles by instantiating the neutral implementer role archetype: it perceives its own dispatch brief and the assigned knowledge-graph nodes as a budget-capped retrieval pack (external area) plus its own role and cache (internal area), and its functions are file editing and code execution. It does NOT observe other nodes of the graph or other workers' internals." ;
     ho:agentRole id:role-implementer ;
     ho:agentObservation id:os-developer ;
     ho:agentFunction id:cap-fileedit, id:cap-codeexec ;

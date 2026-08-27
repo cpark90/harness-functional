@@ -82,17 +82,23 @@ id:h-support a ho:Harness ;
 
 #===================== HARNESSES =======================================
 
-# SCOPE of ho:hasExecutionMode on this harness: the mode describes the
-# coordination topology of the agents this harness DISPATCHES -- the workers
-# spawned over id:chan-dispatch, which run for the span of their brief and are
-# reclaimed by the orchestrator (id:mode-sub-agents). id:role-inspection is NOT
-# a dispatched agent: it is a maintainer-side lane in its own standing session
-# that coordinates through a persistent file channel with status markers
-# (id:chan-orchestrator-inspection), so it lies OUTSIDE this axis. Recording the
-# scope here because without it the mode's "only for the span of its delegated
-# task / lead is the single integration point" and the channel's "separate
-# sessions ... each side scans the channel on its own cycle" read as
-# contradicting each other on one harness.
+# SCOPE of the TWO ho:hasExecutionMode values on this harness: they describe two
+# CONCURRENT PLANES of the same harness, not one topology chosen over another.
+#   - id:mode-sub-agents is the DISPATCH plane: the workers spawned over
+#     id:chan-dispatch, which run for the span of their brief and are reclaimed
+#     by the orchestrator (role-implementer / research / vnv / design /
+#     synthesizer).
+#   - id:mode-standing-service is the STANDING plane: id:role-orchestrator and
+#     id:role-inspection hold their roles in persistently open sessions and serve
+#     requests as they arrive over durable channels with status markers
+#     (id:chan-agent-user, id:chan-orchestrator-inspection), each side scanning on
+#     its own cycle (id:gr-online-execution).
+# Recording the split here because on one harness the sub-agent mode's "only for
+# the span of its delegated task / lead is the single integration point" and the
+# channel's "separate sessions ... each side scans the channel on its own cycle"
+# otherwise read as contradicting each other: they hold on different planes.
+# id:mode-hybrid does NOT apply -- that is one topology varying by PHASE of a run,
+# whereas these two planes run at the same time.
 id:h-multiagent a ho:Harness ;
     skos:prefLabel "Multi-agent orchestration harness" ; skos:altLabel "orchestrator-workers harness" ;
     skos:definition "A neutral, domain-independent harness that assembles the reusable governance parts decomposed from harness governance docs: an orchestrator plans and dispatches node-scoped briefs to specialised workers (author / verify / inspect) under least-privilege, with traceability, verify-then-proceed and escalation guardrails. Its PURPOSE is to make each role's agent perform its role clearly: it composes, per role, the role's scope of tools and guardrails (ho:roleTool / ho:roleGuardrail), its memory discipline and (where present) its user-facing stance, plus the coordination channels the roles exchange work over — so every dispatched agent has an unambiguous mandate. Use as a template for any structured, multi-agent design or authoring workflow." ;
@@ -104,8 +110,9 @@ id:h-multiagent a ho:Harness ;
     ho:hasGuardrail id:gr-lang, id:gr-verify-proceed, id:gr-design-for-loss, id:gr-traceability,
         id:gr-grounding, id:gr-no-arbitrary-decision, id:gr-least-privilege, id:gr-report-over-prompt,
         id:gr-controlled-vocabulary, id:gr-root-cause, id:gr-simplicity, id:gr-bounded-context,
-        id:gr-dispatch-execution, id:gr-delegated-orchestration, id:gr-execution-separation,
-        id:gr-structural-coverage, id:gr-reuse-first, id:gr-human-checkpoint ;
+        id:gr-dispatch-execution, id:gr-online-execution, id:gr-mode-fit,
+        id:gr-delegated-orchestration, id:gr-execution-separation, id:gr-structural-coverage,
+        id:gr-reuse-first, id:gr-human-checkpoint, id:gr-user-elicitation ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-orchestrator, id:role-inspection, id:role-implementer, id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer ;
@@ -118,7 +125,7 @@ id:h-multiagent a ho:Harness ;
         id:as-model, id:as-roles, id:as-channels, id:as-skills, id:as-execution-mode,
         id:as-data-flow, id:as-error-handling, id:as-test-scenarios, id:as-hooks ;
     ho:appliesPattern id:pat-orchestrator-workers, id:pat-ontology-composition ;
-    ho:hasExecutionMode id:mode-sub-agents ;
+    ho:hasExecutionMode id:mode-sub-agents, id:mode-standing-service ;
     ho:requiresCapability id:cap-orchestration, id:cap-traceability, id:cap-codeexec, id:cap-fileedit ;
     ho:tagged id:c-design, id:c-multiagent, id:c-traceability ;
     ho:maturity "draft" .
@@ -174,6 +181,19 @@ id:h-peer-mesh a ho:Harness ;
 # authority referred to an expert). They are hosted here for the same reason
 # as the parts above -- this is the library carrier, so wiring them leaves every
 # other harness's materialized document byte-identical.
+# It further carries the SAME-ROLE CONCURRENCY discipline (id:c-role-multiplicity)
+# -- claim-before-starting and disjoint write scopes, plus the duplicate-claim
+# error row -- because this is the carrier that staffs a team from repeatable
+# worker archetypes, which is exactly where one role gets several concurrent
+# instances. Those rules presuppose a claimable substrate, so the harness DECLARES
+# it: id:chan-task-board is bound below alongside id:chan-workspace (files carry
+# the deliverables, the board carries the claims). The central board's participant
+# set names id:role-orchestrator, which this carrier does not staff -- it is reused
+# as the neutral DEFAULT rather than redeclared with a local participant set (the
+# redefinition ho:Channel allows), because a second near-identical board node in
+# the central library would be the near-synonym drift the store exists to prevent;
+# the same reuse-as-default holds for id:h-harness-factory, which binds this board
+# while declaring no roles at all.
 id:h-workspace-synthesis a ho:Harness ;
     skos:prefLabel "Workspace-synthesis harness" ; skos:altLabel "convergence-gate library host" ;
     skos:definition "A neutral, domain-independent template that wires the recurring central-library parts a multi-agent worker team reuses: the worker archetypes a team is staffed from (analyst, author, implementer, planner, strategist, tester), which hand off deliverables over a shared file workspace (id:chan-workspace) under the recurring team disciplines -- structured output, ordinal artifact naming, declared hand-off routes, severity-triaged cross-validation, scaling to the request and graceful degradation -- with a terminal synthesizer gate (id:role-synthesizer) that cross-checks every contribution and compiles the integrated final result (providing id:cap-synthesis, which this harness requires), plus the domain-independent error rows such a team declares. It exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- it names no specific problem domain, tool or technology. Derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -184,16 +204,18 @@ id:h-workspace-synthesis a ho:Harness ;
     ho:hasWorkflow id:wf-multiagent ;
     ho:hasGuardrail id:gr-lang, id:gr-structured-output, id:gr-scale-modes, id:gr-graceful-fallback,
         id:gr-cross-validation, id:gr-declared-routes, id:gr-sequenced-artifacts,
-        id:gr-three-flow-acceptance, id:gr-execution-separation ;
+        id:gr-three-flow-acceptance, id:gr-execution-separation,
+        id:gr-work-claim, id:gr-instance-isolation ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer,
         id:role-analyst, id:role-author, id:role-implementer,
-        id:role-planner, id:role-strategist, id:role-tester, id:role-curator ;
-    ho:hasChannel id:chan-workspace ;
+        id:role-planner, id:role-strategist, id:role-tester, id:role-curator,
+        id:role-benchmarker, id:role-auditor ;
+    ho:hasChannel id:chan-workspace, id:chan-task-board ;
     ho:hasFailurePolicy id:fp-agent-failure-retry, id:fp-insufficient-input,
         id:fp-review-critical-rework, id:fp-source-unavailable,
-        id:fp-conflict-contradiction, id:fp-refer-to-expert ;
+        id:fp-conflict-contradiction, id:fp-refer-to-expert, id:fp-duplicate-claim ;
     ho:hasExecutionMode id:mode-sub-agents ;
     ho:requiresCapability id:cap-synthesis ;
     ho:tagged id:c-multiagent, id:c-design, id:c-synthesis ;

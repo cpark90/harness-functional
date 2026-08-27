@@ -58,6 +58,10 @@ id:c-traceability a ho:Concept ;
     skos:prefLabel "Traceability" ;
     skos:definition "Keeping every decision and artifact linked to its source and history; tag components that enforce provenance, non-deletion and grounded records." ;
     skos:topConceptOf id:scheme .
+id:c-oversight a ho:Concept ;
+    skos:prefLabel "Oversight" ;
+    skos:definition "Continually holding a subject against an external reference or a declared standard and raising evidence-backed claims and findings about where it falls short, without itself deciding on or applying the fix; tag the benchmarking and audit roles and capabilities that watch a harness's work rather than perform or decide it." ;
+    skos:topConceptOf id:scheme ; skos:related id:c-traceability .
 
 #===================== Governance methodology (cross-cutting principles) =====
 # Each term below is the *principle* a governance guardrail enforces, kept distinct from
@@ -103,7 +107,7 @@ id:c-graceful-fallback a ho:Concept ;
 id:c-composition a ho:Concept ;
     skos:prefLabel "Harness composition" ;
     skos:altLabel "assembly from parts" ;
-    skos:definition "The practice of assembling a harness from reusable ontology parts -- selecting a base template or pattern, binding required capabilities to providers and satisfying the harness shape -- rather than authoring one from scratch; tag components that encode the composition process." ;
+    skos:definition "The practice of assembling a harness from the knowledge graph's reusable typed parts (individuals described by the ontology) -- selecting a base template or pattern, binding required capabilities to providers and satisfying the harness shape -- rather than authoring one from scratch; tag components that encode the composition process." ;
     skos:broader id:c-agent-methodology .
 id:c-reuse-first a ho:Concept ;
     skos:prefLabel "Reuse-first authoring" ;
@@ -161,6 +165,11 @@ id:c-dispatch a ho:Concept ;
     skos:altLabel "no standalone workers" ;
     skos:definition "The principle that worker agents act only when dispatched by the orchestrator and are never run standalone or invoked directly outside a dispatch." ;
     skos:broader id:c-multiagent .
+id:c-online-agent a ho:Concept ;
+    skos:prefLabel "Online standing agent" ;
+    skos:altLabel "persistent-session role" , "addressed, not spawned" ;
+    skos:definition "The principle that an agent holds an assigned role in a session that stays open across tasks and serves requests AS THEY ARRIVE over durable channels, instead of being spawned for one brief and reclaimed when it returns. The counterpart of id:c-dispatch, which governs the instant workers a dispatch summons: a standing agent is addressed over its channels rather than spawned per task, so it keeps session-spanning context and consumes work on its own cycle." ;
+    skos:broader id:c-multiagent .
 id:c-delegation a ho:Concept ;
     skos:prefLabel "Delegated orchestration" ;
     skos:altLabel "orchestrator does not work directly" ;
@@ -179,7 +188,7 @@ id:c-scale-modes a ho:Concept ;
 id:c-execution-mode a ho:Concept ;
     skos:prefLabel "Execution mode" ;
     skos:altLabel "runtime coordination topology" ;
-    skos:definition "The runtime topology a multi-agent harness coordinates in -- peer agent-teams, lightweight sub-agents, or a phase-varying hybrid -- an axis orthogonal to the architectural data-flow pattern; tags the ho:ExecutionMode individuals a harness selects from via ho:hasExecutionMode (and the DesignPatterns they superseded)." ;
+    skos:definition "The runtime topology a multi-agent harness coordinates in -- peer agent-teams, lightweight sub-agents, agents standing by in persistently open sessions, or a phase-varying hybrid -- an axis orthogonal to the architectural data-flow pattern; tags the ho:ExecutionMode individuals a harness selects from via ho:hasExecutionMode (and the DesignPatterns they superseded)." ;
     skos:broader id:c-multiagent .
 id:c-pattern-taxonomy a ho:Concept ;
     skos:prefLabel "Coordination pattern taxonomy" ;
@@ -200,6 +209,11 @@ id:c-deliverable-artifact a ho:Concept ;
     skos:prefLabel "Deliverable artifact" ;
     skos:altLabel "workspace artifact naming" ;
     skos:definition "The named file a role writes into the shared workspace as its unit of hand-off, together with the naming discipline (ordinal prefix, document type, extension) that makes production order readable and lets a consumer resolve exactly which artifact a producer wrote; tag the components that govern how hand-off artifacts are named and ordered." ;
+    skos:broader id:c-multiagent .
+id:c-role-multiplicity a ho:Concept ;
+    skos:prefLabel "Same-role concurrency" ;
+    skos:altLabel "multiply-staffed role" , "several instances of one role" ;
+    skos:definition "The situation of staffing SEVERAL concurrent agent instances of ONE role on a project, together with the discipline that keeps them from colliding: each instance claims its work item before starting and writes only inside its own disjoint scope, with the merge left to the ordinary fan-in and contradiction machinery (id:pat-fanout-fanin, id:fp-conflict-contradiction). Distinct from id:c-execution-mode, which fixes the runtime topology agents coordinate in: this is about how MANY instances of the same role run at once and how they stay out of each other's way; tag the guardrails and error rows that govern concurrent instances of one role." ;
     skos:broader id:c-multiagent .
 
 #===================== Concept scheme ==================================

@@ -66,6 +66,20 @@ id:gr-bounded-context a ho:Guardrail ; skos:prefLabel "Bounded context projectio
 id:gr-dispatch-execution a ho:Guardrail ; skos:prefLabel "Dispatch-based execution" ; skos:altLabel "no standalone workers" ;
     ho:promptText "Worker agents perform their assigned work only when dispatched by the orchestrator; they are not run standalone or invoked directly outside a dispatch." ;
     ho:tagged id:c-dispatch ; ho:tokenEstimate 34 ; ho:maturity "reviewed" .
+id:gr-online-execution a ho:Guardrail ; skos:prefLabel "Online standing execution" ; skos:altLabel "session-resident role" , "addressed, not spawned" ;
+    ho:promptText "An online agent runs its assigned role in a persistently open session and serves the requests that arrive over its declared channels, in arrival order and on its own scanning cycle; it consumes a channel item only once that item carries its completed status marker, and it leaves dispatch-scoped work to the workers a dispatch summons. Counterpart of id:gr-dispatch-execution, which governs those dispatched workers: a standing agent is addressed over its channels, never spawned per brief." ;
+    ho:tagged id:c-online-agent ; ho:tokenEstimate 100 ; ho:maturity "draft" .
+# The SELECTION rule of the activation axis whose two positions are the pair
+# above (dispatched instant worker / online standing agent): which position a
+# given agent lane takes is a decision to be made per project, not a default.
+# Kept apart from id:gr-scale-modes, which sizes the effort a request gets
+# (full team / reduced subset / single pass) -- that is HOW MUCH, this is HOW an
+# agent is activated at all; the closing clause of promptText carries the
+# disambiguation.
+id:gr-mode-fit a ho:Guardrail ; skos:prefLabel "Fit the activation mode to intent and project" ;
+    skos:altLabel "choose dispatch or online per project" , "no default activation mode" ;
+    ho:promptText "Decide how each agent lane is ACTIVATED from the user's intent and the project's own characteristics -- how requests arrive and at what cadence, how much continuity across requests the work needs, and how much coordination latency is tolerable -- choosing between a worker spawned for one brief and reclaimed when it returns, and a standing agent whose session stays open and serves requests as they arrive. Never settle that choice by default or by habit, and state which characteristic decided it. Distinct from id:gr-scale-modes, which sizes HOW MUCH of the team a request activates: this selects the activation mode itself." ;
+    ho:tagged id:c-execution-mode ; ho:tokenEstimate 157 ; ho:maturity "draft" .
 id:gr-delegated-orchestration a ho:Guardrail ; skos:prefLabel "Delegated-only orchestration" ; skos:altLabel "orchestrator does not work directly" ;
     ho:promptText "The user-facing orchestrator performs no substantive work directly -- no authoring, judgment or tool execution; it only plans and dispatches, and all such work is carried out through the worker agents." ;
     ho:tagged id:c-delegation ; ho:tokenEstimate 42 ; ho:maturity "reviewed" .
@@ -155,6 +169,25 @@ id:gr-three-flow-acceptance a ho:Guardrail ; skos:prefLabel "Three-flow acceptan
     ho:promptText "Cover all three run flows with behaviour fixtures before calling a harness accepted: the normal path from empty state, the path resumed over existing input, and the error path; a fixture set that exercises only the happy path is a demonstration, not an acceptance." ;
     ho:tagged id:c-acceptance-coverage ; ho:tokenEstimate 58 ; ho:maturity "draft" .
 
+#===================== Same-role concurrency ===========================
+# The discipline for a project that staffs SEVERAL concurrent instances of ONE
+# role (id:c-role-multiplicity). Only the two rules that keep such instances
+# from colliding are new here -- the rest of the situation is already covered
+# by existing parts and is deliberately NOT re-authored: the claimable board is
+# id:chan-task-board, the split-and-merge shape is id:pat-fanout-fanin, the
+# merge-time clash is id:fp-conflict-contradiction and the shared-file
+# addressing rule is id:gr-absolute-paths. Split in two because they are two
+# policies, not one: WHEN an instance may start work (claim) and WHERE it may
+# write (isolation) hold independently -- a claim discipline with a shared
+# write scope still corrupts artifacts, and disjoint write scopes without
+# claims still duplicate effort.
+id:gr-work-claim a ho:Guardrail ; skos:prefLabel "Claim before starting" ; skos:altLabel "first claim wins" ;
+    ho:promptText "Where several instances of one role run at the same time, each instance claims its work item on the shared task board before it starts and works only on items it holds a claim on: no unclaimed work, and no second claim on an item another instance already holds -- the earliest claim marker on the board wins." ;
+    ho:tagged id:c-role-multiplicity ; ho:tokenEstimate 77 ; ho:maturity "draft" .
+id:gr-instance-isolation a ho:Guardrail ; skos:prefLabel "Disjoint write scopes per instance" ; skos:altLabel "one writer per artifact" ;
+    ho:promptText "Give concurrent instances of one role disjoint write scopes -- each its own artifact partition or its own working copy -- so that two instances never write the same artifact; their outputs are brought together at the declared fan-in step, never by overwriting one another in place." ;
+    ho:tagged id:c-role-multiplicity ; ho:tokenEstimate 70 ; ho:maturity "draft" .
+
 #===================== Human-in-the-loop oversight =====================
 # A human-approval GATE anchored at milestones -- the HITL axis observed as an
 # explicit "PHASE CHECKPOINT" across ~26 orchestrator commands (wshobson) and as
@@ -172,6 +205,20 @@ id:gr-human-checkpoint a ho:Guardrail ; skos:prefLabel "Human approval checkpoin
     ho:tagged id:c-escalation ; ho:tokenEstimate 88 ; ho:maturity "draft" ;
     dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" , "https://github.com/wshobson/agents" ;
     dct:license "Apache-2.0" , "MIT" .
+
+# The other half of the human-in-the-loop axis: the checkpoint above interrupts
+# work at a milestone to get approval, this one runs BEFORE any construction
+# starts and makes the agent interrogate the user to fill what the intent/project
+# analysis is missing. Distinguished in promptText from the two nearest policies
+# -- id:gr-no-arbitrary-decision (REACTIVE escalation of one open question at the
+# moment of decision) and id:gr-human-checkpoint (a milestone approval gate).
+# Complementary to, not overlapping, id:fp-insufficient-input, which is the
+# RUN-TIME row for a step whose input is already too thin: this guardrail is the
+# up-front questioning that keeps that row from firing.
+id:gr-user-elicitation a ho:Guardrail ; skos:prefLabel "Elicit intent before building" ;
+    skos:altLabel "interrogate the user for gaps" , "no assumed requirements" ;
+    ho:promptText "Before construction begins, analyse the user's intent and the project the harness will run in; wherever that analysis lacks information the composition depends on, put targeted questions to the user and keep asking until the gaps close -- never assume the missing answers and never proceed on them silently. Distinct from id:gr-no-arbitrary-decision, which escalates one open question at the moment of decision, and from id:gr-human-checkpoint, which gates a milestone for approval: this is proactive interrogation that runs before anything is built." ;
+    ho:tagged id:c-composition ; ho:tokenEstimate 138 ; ho:maturity "draft" .
 
 #===================== Lifecycle hooks =================================
 # Event-triggered automations (ho:Hook, a sibling leaf of ho:Guardrail under

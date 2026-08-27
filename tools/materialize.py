@@ -591,17 +591,32 @@ def _execution_modes(g: Graph, h: URIRef) -> list:
 
 
 def _render_execution_mode(g: Graph, h: URIRef, out: list[str], ctx: dict) -> None:
-    """Execution mode: the runtime coordination topology the harness declares.
-    Conditional — a harness that declares no execution mode (e.g. any
-    single-agent harness) emits nothing."""
+    """Execution mode: the runtime coordination topology (or topologies) the
+    harness declares. ho:hasExecutionMode has no maxCount, so a harness may
+    declare SEVERAL modes — planes that run at the same time, such as
+    dispatched workers alongside standing session-resident agents — and every
+    declared mode is rendered. The lead-in sentence follows the COUNT: a single
+    declared mode gets the singular blurb, two or more get the plural one that
+    explains why several are listed. The branch is a pure function of the mode
+    count, so the emit stays deterministic. Conditional — a harness that
+    declares no execution mode (e.g. any single-agent harness) emits nothing."""
     modes = _execution_modes(g, h)
     if not modes:
         return
     out.append("## Execution mode")
     out.append("")
-    out.append("The runtime topology this harness spawns and coordinates its "
-               "agents in (chosen separately from the architectural pattern "
-               "named under Process).")
+    if len(modes) == 1:
+        out.append("The runtime topology this harness activates and "
+                   "coordinates its agents in (chosen separately from the "
+                   "architectural pattern named under Process).")
+    else:
+        out.append("The runtime topologies this harness activates and "
+                   "coordinates its agents in (chosen separately from the "
+                   "architectural pattern named under Process). This harness "
+                   "declares more than one mode, so the planes below run "
+                   "alongside each other — for example dispatched workers "
+                   "alongside standing session-resident agents — and each "
+                   "applies to the part of the harness its description names.")
     out.append("")
     for mode in modes:
         desc = g.value(mode, SKOS.definition)

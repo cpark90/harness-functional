@@ -65,11 +65,12 @@ id:fp-validation-fail a ho:FailurePolicy ;
 # The error rows a delegating, document-producing team declares regardless of
 # its problem domain: a worker that fails, an input too thin to work from, a
 # critical review finding, an unreachable source, two deliverables that
-# contradict each other, and a request that exceeds the team's competence or
-# authority to decide (referred to a qualified expert). They are generalised
-# archetypes, siblings of the two methodology-specific rows above -- each says
-# how it differs from the nearest one so the set stays discriminating rather
-# than overlapping.
+# contradict each other, a request that exceeds the team's competence or
+# authority to decide (referred to a qualified expert), and -- once a role is
+# staffed with several concurrent instances -- two of them taking the same work
+# item (id:c-role-multiplicity). They are generalised archetypes, siblings of
+# the two methodology-specific rows above -- each says how it differs from the
+# nearest one so the set stays discriminating rather than overlapping.
 
 id:fp-agent-failure-retry a ho:FailurePolicy ;
     skos:prefLabel "Dispatched worker fails its task" ;
@@ -112,3 +113,10 @@ id:fp-refer-to-expert a ho:FailurePolicy ;
     ho:failureCondition "The requested work exceeds the agent's competence or authority to decide." ;
     ho:recoveryStrategy "Deliver a bounded, reduced analysis of what is determinable, explicitly mark the out-of-scope decision, and refer it to a qualified expert or the relevant authority, rather than deciding beyond remit or stopping without a usable result." ;
     ho:tokenEstimate 150 ; ho:maturity "draft" .
+
+id:fp-duplicate-claim a ho:FailurePolicy ;
+    skos:prefLabel "Two instances of one role take the same item" ;
+    skos:definition "The row a project needs as soon as it staffs SEVERAL instances of one role at once: the failure mode there is not disagreement but duplication -- two instances holding the same work item, or handing back two results for it. Choose it for any harness that runs concurrent instances of the same role off a shared board, so the collision is settled by claim order that was recorded in advance rather than by whichever result the merge step happens to see first. Distinguished from id:fp-conflict-contradiction, whose condition is two deliverables that CONTRADICT each other on content -- here they may agree entirely, and the fault is duplicated effort on one item." ;
+    ho:failureCondition "Two concurrent instances of the same role hold a claim on one work item, or return two deliverables for it." ;
+    ho:recoveryStrategy "Treat the earliest claim marker on the board as the valid one and have the later instance release its claim and take an unclaimed item instead; where both already produced output, do not discard one silently -- pass the pair to the declared fan-in step, which keeps one and records the other as superseded." ;
+    ho:tokenEstimate 166 ; ho:maturity "draft" .
