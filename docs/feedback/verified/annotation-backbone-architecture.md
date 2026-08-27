@@ -74,6 +74,10 @@ graph_baseline: 245 individuals, validate.py PASS, lint_uniformity.py PASS
 retrieve 선별(3)은 목적 2, webui/tiptap(4)은 두 목적의 UI 표면. **순서 권고**: TBox 술어(1) →
 린터/게이트(2) → retrieve 선별(3, determinism 게이트 유지) → webui lane(4, 별도 wave).
 
+**②의 브리프 초안 확보 (2026-08-27, 단위=token 사용자 결정)**:
+`docs/feedback/inquiries/linter-annotation-cap-brief.md` (cap 500 token = 42-line 환산,
+metric=promptText+definition whitespace 합, scope=abox만 — 현 최대 199 실측·위반 0;
+①과 독립 병행 가능). **이로써 미결이던 cap 단위가 token으로 확정.**
 **①의 브리프 초안 확보 (2026-08-27)**: `docs/feedback/inquiries/tbox-annotation-predicates-brief.md`
 (TBox 술어 3종 — alternativeOf/overlapsWith/Anchor n-ary + chain axiom·registry·SHACL 공유-anchor
 불변식·§2/§3 동반 명세; 채택은 orchestrator).
