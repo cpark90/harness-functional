@@ -83,6 +83,13 @@ or `validate.py` will flag it as an orphan.
 폴더에 **써서** 축적한다 (자기 역할 폴더에만, 파일 하나 + `MEMORY.md` 한 줄 인덱스, 기존
 있으면 갱신). 작성 규약 원본: `.claude/agent-memory/README.md`.
 
+**시행착오 교훈(lesson)**: 시도가 실패·기각되거나 수정을 요구받으면 그 자체가 기록 트리거다 —
+무엇을 시도했고, 왜 실패했고, 대신 무엇을 하는지를 종료 전에 위 메모리에 남긴다(읽기는 이미
+세션 시작 시 하므로 다음 세션이 그 교훈을 안고 시작한다). 같은 교훈이 다음 run에서 또 나오면
+개인 노트로 두지 말고 **표준 규칙으로 승격**한다 — 온톨로지의 guardrail·instruction·error row
+이거나 이 문서의 규칙이다. 저장된 하네스의 대응 노드: `id:gr-lesson-capture` /
+`id:gr-lesson-reuse` / `id:gr-lesson-promotion`.
+
 | agent | 역할 | 파일 수정 | git |
 |---|---|---|---|
 | **orchestrator** (=메인) | **계획·dispatch 전용 — 직접 작업하지 않는다.** 요청을 노드 단위로 분배할 **계획(dispatch brief)만 작성**하고, 저작·판정·조사·적용은 전부 **dispatch로 수행**한다. dispatch 결과를 assemble·통합하고 `validate.py`로 확인만 한다. **vnv·developer를 opus로 spawn·관리.** | dispatch brief·계획 문서 (`ontology/**` 저작은 **developer dispatch 경유**, 직접 편집 안 함) | ✗ |
@@ -123,7 +130,15 @@ or `validate.py` will flag it as an orphan.
 ## 언어 (language policy)
 
 문서작성·개발·사용자 입출력에는 **한글과 영어만** 쓴다. 다른 언어가 **필수적인** 경우(예:
-외부 고유명사·인용 원문)만 예외로 허용한다. 이 규칙은 온톨로지에 저장된 harness guardrail
-`id:gr-lang`("Korean/English only")과 같은 정책이며, 저장된 harness와 이 운영 harness는
-일치해야 한다. `ONTOLOGYSTYLE.md §1d`의 세부(산문은 한글·용어는 영어, `skos:prefLabel`·
-`skos:definition` 등 검색 대상 그래프 데이터 값은 영어)는 이 규칙의 구체화이므로 그대로 따른다.
+외부 고유명사·인용 원문)나 **사용자가 명시적으로 요청한** 경우만 예외로 허용한다. 이 규칙은
+온톨로지에 저장된 harness guardrail `id:gr-lang`("Korean/English only")과 같은 정책이며,
+저장된 harness와 이 운영 harness는 일치해야 한다. `ONTOLOGYSTYLE.md §1d`의 세부(산문은 한글·
+용어는 영어, `skos:prefLabel`·`skos:definition` 등 검색 대상 그래프 데이터 값은 영어)는 이
+규칙의 구체화이므로 그대로 따른다.
+
+쓰는 **용어**는 그 두 언어의 **정규(표준) 용어**로 한정한다. 산문·산출물·명명에 임의 신조어·
+자체 약어·프로젝트 전용 조어 같은 **커스텀 용어는 특별한 요청이 없는 한 포함하지 않으며**,
+표준 용어가 이미 있으면 커스텀 동의어 대신 그것을 쓴다. 이 규칙은 저장된 harness guardrail
+`id:gr-standard-terms`("Standard terminology only")와 같은 정책이다 — 그래프 저작에서 기존
+`ho:` 어휘·`ho:Concept`를 재사용하라는 `id:gr-controlled-vocabulary`(노드 층)와는 층이 다르며,
+이쪽은 **용어 선택**의 규칙이다.

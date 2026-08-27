@@ -114,6 +114,17 @@ id:fp-refer-to-expert a ho:FailurePolicy ;
     ho:recoveryStrategy "Deliver a bounded, reduced analysis of what is determinable, explicitly mark the out-of-scope decision, and refer it to a qualified expert or the relevant authority, rather than deciding beyond remit or stopping without a usable result." ;
     ho:tokenEstimate 150 ; ho:maturity "draft" .
 
+# The lifecycle row of the methodology rows above (id:fp-dispatch-timeout /
+# id:fp-validation-fail): its condition spans RUNS rather than one run, so it is
+# the error side of the lesson-learning discipline (id:c-lesson) -- the row that
+# fires when the capture or reuse rule was not honoured.
+id:fp-repeated-mistake a ho:FailurePolicy ;
+    skos:prefLabel "The same mistake recurs across runs" ;
+    skos:definition "The row a harness needs once it runs more than once: a failure already met in an earlier run happens again, because its lesson was never captured or was captured and never consulted. Choose it for any harness meant to improve across runs rather than merely survive each one -- without this row a recurring fault is paid for afresh every time and nothing in the harness treats the repetition itself as the defect. Distinguished from id:fp-agent-failure-retry, whose condition is ONE unit of work failing inside a single run and whose recovery is a bounded retry: retrying is beside the point here, because the fault is that the harness already knew and did not carry the knowledge forward." ;
+    ho:failureCondition "A failure that already occurred in an earlier run occurs again, its lesson having never been captured or never consulted." ;
+    ho:recoveryStrategy "Handle the immediate failure as its own row prescribes, then close the learning gap that let it repeat: record the lesson if it is missing, and if it was already recorded promote it into a standing guardrail, instruction or error row, so the next run is bound by it instead of being expected to look it up." ;
+    ho:tokenEstimate 172 ; ho:maturity "draft" .
+
 id:fp-duplicate-claim a ho:FailurePolicy ;
     skos:prefLabel "Two instances of one role take the same item" ;
     skos:definition "The row a project needs as soon as it staffs SEVERAL instances of one role at once: the failure mode there is not disagreement but duplication -- two instances holding the same work item, or handing back two results for it. Choose it for any harness that runs concurrent instances of the same role off a shared board, so the collision is settled by claim order that was recorded in advance rather than by whichever result the merge step happens to see first. Distinguished from id:fp-conflict-contradiction, whose condition is two deliverables that CONTRADICT each other on content -- here they may agree entirely, and the fault is duplicated effort on one item." ;

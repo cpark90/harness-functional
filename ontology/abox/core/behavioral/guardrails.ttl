@@ -24,8 +24,22 @@ id:gr-lang a ho:Guardrail ; skos:prefLabel "Korean/English only" ; skos:altLabel
     ho:languageCondition "Prose (documentation, comments, harness .md): Korean" ,
         "Technical terms, including in answers: English" ,
         "Code, identifiers, commit messages: English" ;
-    ho:promptText "Use only Korean and English, unless another language is essential to the task: write prose (documentation, comments, harness .md) in Korean but keep technical terms in English; write code, identifiers and commit messages in English." ;
-    ho:tokenEstimate 44 ; ho:maturity "draft" ; ho:tagged id:c-communication .
+    ho:promptText "Use only Korean and English, unless another language is essential to the task or the user explicitly requests it: write prose (documentation, comments, harness .md) in Korean but keep technical terms in English; write code, identifiers and commit messages in English." ;
+    ho:tokenEstimate 67 ; ho:maturity "draft" ; ho:tagged id:c-communication .
+# The TERM-CHOICE half of the language policy above: id:gr-lang fixes WHICH
+# languages may be used, this one fixes WHICH WORDS inside them -- the field's
+# established term rather than a private coinage -- and carries the same
+# "unless the user explicitly asks for it" exception. Deliberately NOT merged
+# into id:gr-lang (one Guardrail = one policy: a harness can want standard
+# terminology without the Korean/English restriction, and vice versa), and kept
+# apart from id:gr-controlled-vocabulary, which is the AUTHORING rule for the
+# knowledge store itself (reuse registered classes, properties and concept tags
+# instead of minting near-synonym nodes). Different layers: nodes there,
+# wording here; the closing clause of promptText carries that disambiguation.
+id:gr-standard-terms a ho:Guardrail ; skos:prefLabel "Standard terminology only" ;
+    skos:altLabel "no custom coinage" , "no invented terms" ;
+    ho:promptText "Use the established standard term for a concept -- the field's accepted Korean or English term -- in prose, outputs, naming and identifiers, and do not coin custom terms, ad-hoc abbreviations or invented project-specific names unless the user explicitly requests them; where a standard term already exists, prefer it over a bespoke synonym. Distinct from id:gr-controlled-vocabulary, which governs authoring INSIDE the knowledge store (reuse the registered classes, properties and concept tags instead of minting near-synonym nodes): this rule governs the WORDING chosen in what the harness writes and names." ;
+    ho:tagged id:c-communication ; ho:tokenEstimate 152 ; ho:maturity "draft" .
 id:gr-verify-proceed a ho:Guardrail ; skos:prefLabel "Verify then proceed" ; skos:altLabel "no time assumptions" ;
     ho:promptText "Never assume readiness from elapsed time; advance only on confirmed state (received response, ACK, verified flag). Timeouts are give-up bounds, not correctness premises." ;
     ho:tagged id:c-verify-proceed ; ho:tokenEstimate 38 ; ho:maturity "reviewed" .
@@ -219,6 +233,46 @@ id:gr-user-elicitation a ho:Guardrail ; skos:prefLabel "Elicit intent before bui
     skos:altLabel "interrogate the user for gaps" , "no assumed requirements" ;
     ho:promptText "Before construction begins, analyse the user's intent and the project the harness will run in; wherever that analysis lacks information the composition depends on, put targeted questions to the user and keep asking until the gaps close -- never assume the missing answers and never proceed on them silently. Distinct from id:gr-no-arbitrary-decision, which escalates one open question at the moment of decision, and from id:gr-human-checkpoint, which gates a milestone for approval: this is proactive interrogation that runs before anything is built." ;
     ho:tagged id:c-composition ; ho:tokenEstimate 138 ; ho:maturity "draft" .
+
+#===================== Lesson learning (trial and error) ===============
+# The discipline that turns a failed or corrected attempt into knowledge the
+# harness still holds on its next run (id:c-lesson). Split in three because they
+# are three policies that hold independently: WHAT a failure obliges an agent to
+# write down (capture), WHAT it must read before starting comparable work
+# (reuse), and WHEN a private note stops being private (promotion) -- an agent
+# that records lessons but never consults them repeats them anyway, and one that
+# consults them but never promotes the recurring ones leaves every other agent
+# to rediscover the same rule.
+#
+# NO TBox EXTENSION, DELIBERATELY: an ho:Lesson class was considered and
+# rejected. This store is a library of neutral, domain-independent PARTS; an
+# individual lesson ("run 12 failed because the catalog was stale") is instance
+# data about one execution, not a reusable part, so a class for it would fill
+# the central library with run records. The reusable thing is the DISCIPLINE,
+# which the existing vocabulary already carries: the rules below (ho:Guardrail),
+# the step that performs them (ho:WorkflowStep), the tier a lesson is retained
+# in (id:mem-longterm, ho:Memory) and the row for a lesson that was never
+# captured (id:fp-repeated-mistake, ho:FailurePolicy). A lesson that recurs does
+# not become an instance here either -- it is promoted into a standing part of
+# one of those kinds (id:gr-lesson-promotion).
+#
+# Deliberately NOT re-stated here: each role's own ho:roleMemoryPolicy (which
+# already fixes that a role writes back reusable findings at session end) and
+# id:mem-longterm's read/write timings. Those say WHEN memory is written and
+# read; these say which EXPERIENCE obliges a write, what the entry must contain,
+# and what happens to it once it repeats.
+id:gr-lesson-capture a ho:Guardrail ; skos:prefLabel "Capture the lesson from a failure" ;
+    skos:altLabel "record what went wrong" , "no lesson dies with the session" ;
+    ho:promptText "Whenever an attempt fails, is rejected or has to be corrected, record the lesson in the durable store before the run ends: what was attempted, why it failed, and the rule that replaces it. The trigger is the correction itself, not the topic of the work -- a failure whose lesson is left in the session transcript is the one that gets repeated, because the next run starts without it." ;
+    ho:tagged id:c-lesson ; ho:tokenEstimate 95 ; ho:maturity "draft" .
+id:gr-lesson-reuse a ho:Guardrail ; skos:prefLabel "Consult lessons before repeating work" ;
+    skos:altLabel "check past mistakes first" , "do not re-derive a known lesson" ;
+    ho:promptText "Before starting work of a kind that has been attempted before, read the lessons already recorded for that kind of work and act on them, instead of re-deriving the approach or walking into a mistake that is already written down. This is the obligation on the AGENT -- to look the lessons up and apply them at the point of starting; that a durable tier is consulted when its trigger fires (id:mem-longterm) is the storage side of the same discipline, not this rule." ;
+    ho:tagged id:c-lesson ; ho:tokenEstimate 115 ; ho:maturity "draft" .
+id:gr-lesson-promotion a ho:Guardrail ; skos:prefLabel "Promote a recurring lesson into a standing rule" ;
+    skos:altLabel "a lesson twice learned becomes a rule" ;
+    ho:promptText "When the same lesson is drawn again in a later run, stop carrying it as a private note and promote it into a standing component -- a guardrail, an instruction or an error-handling row -- so every agent afterwards runs under it rather than each rediscovering it. Distinct from id:gr-generalize-not-overfit, which generalises ONE piece of feedback at the moment it is acted on, and from id:gr-root-cause, which fixes where a fault actually lies: the trigger here is RECURRENCE across runs, and the action is to move a proven lesson out of a private store into the shared parts." ;
+    ho:tagged id:c-lesson ; ho:tokenEstimate 143 ; ho:maturity "draft" .
 
 #===================== Lifecycle hooks =================================
 # Event-triggered automations (ho:Hook, a sibling leaf of ho:Guardrail under

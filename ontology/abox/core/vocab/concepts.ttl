@@ -124,6 +124,11 @@ id:c-acceptance-coverage a ho:Concept ;
     skos:altLabel "three-flow fixtures" ;
     skos:definition "The principle that behaviour fixtures must cover the normal flow, the flow resumed over existing input and the error flow rather than the happy path alone, so a run that merely completed is never mistaken for one that was accepted; tag the components that fix how much behaviour a harness must demonstrate before it counts as done." ;
     skos:broader id:c-agent-methodology .
+id:c-lesson a ho:Concept ;
+    skos:prefLabel "Lesson learning" ;
+    skos:altLabel "trial-and-error learning" , "learning from mistakes" ;
+    skos:definition "The principle of turning trial-and-error experience into retained, reusable knowledge: an attempt that failed or had to be corrected yields a lesson -- what was tried, why it failed, what to do instead -- which is stored durably, consulted before comparable work is attempted again, and promoted into a standing rule once it recurs, so a harness improves across runs instead of repeating its mistakes. Tag the components that govern how such experience is captured, reused and promoted, and the store it is retained in. Distinct from id:c-memory, which fixes the tier architecture knowledge is held in: this fixes WHICH experience is worth retaining and what is then done with it." ;
+    skos:broader id:c-agent-methodology ; skos:related id:c-memory .
 
 id:c-root-cause a ho:Concept ;
     skos:prefLabel "Root-cause resolution" ;

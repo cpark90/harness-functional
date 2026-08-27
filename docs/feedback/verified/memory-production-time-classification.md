@@ -59,3 +59,17 @@ graph_baseline: 245 individuals, validate.py PASS
 파급 위험: 낮음. 신규 술어는 optional(기존 개체에 sh:minCount 강제 없이 시작 가능하나,
 3개체 전부 부여하므로 minCount 1로 조여도 무방 — shapes 강도는 developer 재량이 아니라
 brief에 명시할 것). 기존 read-side 술어·소비자(`retrieve.py`·materialize)는 비접촉.
+
+## 적용 결과 (orchestrator 기록, 2026-08-28)
+
+적용 계획 1~2를 developer dispatch(opus, workflow `wf_bba119db-082`)로 land, vnv 판정
+**pass** (`docs/verify/memory-writetiming-verify.md`).
+
+- TBox `ho:memoryWriteTiming` + shapes `sh:in ("immediate-apply" "deliberate-store"
+  "authored")` + **minCount 1**(orchestrator 확정 — 3개체 전부 부여하므로 조임).
+- ABox: mem-cache/mem-longterm/mem-firmware에 writeTiming 각 1 triple, mem-cache
+  `skos:altLabel "Short-term memory"`, 두 정의에 생산 시점 문장 보강(영어, cap 이내).
+- vnv 증거: SHACL 이빨 non-vacuous(닫힌값 밖 FAIL·미부여 FAIL·대조군 conforms),
+  "short-term" 재검색 랭킹 개선 실측, validate·lint PASS, 3-tier 비훼손.
+- 참고: developer의 구조화 반환만 실패(작업은 정상 land — vnv가 독립 검증). 이 항목은
+  refresh 대상(적용 결과 기록 완료).

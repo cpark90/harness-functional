@@ -74,8 +74,8 @@ id:chan-peer a ho:Channel ;
 
 id:chan-task-board a ho:Channel ;
     skos:prefLabel "Task-board channel" ; skos:altLabel "shared task list" ;
-    skos:definition "A shared task list over which workers claim tasks and report progress with task-update entries, and off which the leader is automatically notified when a worker goes idle. The fourth hand-off medium after files (id:chan-workspace), direct messages (id:chan-peer) and spawn/return (id:chan-dispatch): coordination here is by a durable board of claimable task items with progress updates, distinct from those three. The worker roles and the orchestrator are the endpoints; the user is not." ;
-    ho:channelParticipant id:role-orchestrator, id:role-implementer, id:role-research,
+    skos:definition "A shared task list over which workers claim tasks and report progress with task-update entries, and off which the leader is automatically notified when a worker goes idle. The fourth hand-off medium after files (id:chan-workspace), direct messages (id:chan-peer) and spawn/return (id:chan-dispatch): coordination here is by a durable board of claimable task items with progress updates, distinct from those three. The default endpoints are the worker roles; the notified leader is a harness-dependent endpoint that each binding harness fills with its own lead/coordinating role, so no single leader role is fixed here. The user is not an endpoint." ;
+    ho:channelParticipant id:role-implementer, id:role-research,
         id:role-vnv, id:role-design ;
     ho:tagged id:c-multiagent ;
     ho:involvesUser false ;

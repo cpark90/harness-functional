@@ -19,10 +19,12 @@
 # co-located with the roles (agent-state) because ho:roleMemoryPolicy above is
 # a single free-text directive that cannot express the THREE distinct tiers an
 # agent keeps. Each tier is a first-class ho:Memory component distinguished by
-# WHEN it is read (ho:memoryReadTiming) and HOW LONG it persists
-# (ho:memoryPersistence): firmware (always read in full, durable baseline),
-# cache (accumulated within one spawned task, ephemeral) and long-term (read
-# only on a trigger, durable, consulted selectively). All three are bound to
+# WHEN it is read (ho:memoryReadTiming), HOW newly produced knowledge is routed
+# into it at production time (ho:memoryWriteTiming) and HOW LONG it persists
+# (ho:memoryPersistence): firmware (always read in full, durable baseline,
+# authored up front), cache (accumulated within one spawned task, ephemeral,
+# applied immediately) and long-term (read only on a trigger, durable,
+# consulted selectively, stored deliberately). All three are bound to
 # the neutral id:h-multiagent template via ho:hasMemory (subPropertyOf
 # hasComponent) so each is a connected, orphan-free HarnessComponent.
 ########################################################################
@@ -33,26 +35,29 @@ id:mem-firmware a ho:Memory ;
     skos:prefLabel "Firmware memory" ;
     skos:definition "The fixed baseline memory an agent MUST read in full on every execution/spawn: its always-loaded, mandatory ruleset, read whole each time so it frames behaviour before any task-specific state." ;
     ho:memoryReadTiming "every-execution" ;
+    ho:memoryWriteTiming "authored" ;
     ho:memoryPersistence "durable" ;
     ho:memoryReadScope "full" ;
     ho:tagged id:c-memory, id:c-multiagent ;
     ho:tokenEstimate 55 ; ho:maturity "draft" .
 
 id:mem-cache a ho:Memory ;
-    skos:prefLabel "Cache memory" ;
-    skos:definition "The task-scoped working memory that accumulates the agent's behaviour rules within a single spawned task and is discarded when that task ends: volatile, internal to the spawn, never surviving it." ;
+    skos:prefLabel "Cache memory" ; skos:altLabel "Short-term memory" ;
+    skos:definition "The task-scoped working memory that accumulates the agent's behaviour rules within a single spawned task and is discarded when that task ends: volatile, internal to the spawn, never surviving it. On the write side it is the immediate-apply tier: knowledge produced while the task runs is folded into the ongoing reasoning at once instead of being written down for a later run." ;
     ho:memoryReadTiming "task-continuous" ;
+    ho:memoryWriteTiming "immediate-apply" ;
     ho:memoryPersistence "ephemeral" ;
     ho:memoryReadScope "full" ;
     ho:tagged id:c-memory, id:c-multiagent ;
-    ho:tokenEstimate 55 ; ho:maturity "draft" .
+    ho:tokenEstimate 105 ; ho:maturity "draft" .
 
 id:mem-longterm a ho:Memory ;
     skos:prefLabel "Long-term memory" ;
-    skos:definition "Durable memory NOT read on every execution/spawn; the agent consults and reflects only the relevant portion when a defined condition is met, pulling it in selectively on demand rather than loading it each time." ;
+    skos:definition "Durable memory NOT read on every execution/spawn; the agent consults and reflects only the relevant portion when a defined condition is met, pulling it in selectively on demand rather than loading it each time. On the write side it is the deliberate-store tier: knowledge produced in a run is deliberately written down at the end WITHOUT being applied to the current logic, taking effect only when a later run's trigger reads it back -- which is why the lessons drawn from trial and error (id:c-lesson) are the representative content of this tier rather than of the other two." ;
     ho:memoryReadTiming "conditional" ;
+    ho:memoryWriteTiming "deliberate-store" ;
     ho:memoryPersistence "durable" ;
     ho:memoryReadScope "selective" ;
     ho:memoryActivationCondition "A defined trigger condition is met (e.g. the current task matches the memory's applicability); only then is the relevant portion consulted and reflected." ;
-    ho:tagged id:c-memory, id:c-multiagent ;
-    ho:tokenEstimate 80 ; ho:maturity "draft" .
+    ho:tagged id:c-memory, id:c-multiagent, id:c-lesson ;
+    ho:tokenEstimate 144 ; ho:maturity "draft" .

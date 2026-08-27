@@ -26,9 +26,9 @@ id:wf-multiagent a ho:Workflow ; skos:prefLabel "Multi-agent orchestration loop"
     ho:derivedFrom id:wf-planexec ;
     ho:tagged id:c-multiagent, id:c-design ; ho:tokenEstimate 74 ; ho:maturity "reviewed" .
 id:wf-harness-evolution a ho:Workflow ; skos:prefLabel "Harness evolution loop" ;
-    skos:definition "Keep an already-deployed harness correct as its subject drifts: audit the harness's current state against the source it reflects, route each piece of incoming feedback to the layer that actually owns it -- output quality to the skill or instruction, a missing responsibility to a role or agent, wrong sequencing to the orchestration, weak activation to the trigger description -- and record the applied change so the next audit starts from a known state. Choose when MAINTAINING an existing harness; choose id:wf-compose-harness instead when building a new one." ;
-    ho:hasStep id:wfs-audit, id:wfs-feedback-route, id:wfs-change-log ;
-    ho:tagged id:c-agent-methodology ; ho:tokenEstimate 130 ; ho:maturity "draft" .
+    skos:definition "Keep an already-deployed harness correct as its subject drifts: audit the harness's current state against the source it reflects, route each piece of incoming feedback to the layer that actually owns it -- output quality to the skill or instruction, a missing responsibility to a role or agent, wrong sequencing to the orchestration, weak activation to the trigger description -- record the applied change, and capture what the round taught before it closes, so the next round starts from both a known state and the accumulated lessons. Choose when MAINTAINING an existing harness; choose id:wf-compose-harness instead when building a new one." ;
+    ho:hasStep id:wfs-audit, id:wfs-feedback-route, id:wfs-change-log, id:wfs-lesson-capture ;
+    ho:tagged id:c-agent-methodology ; ho:tokenEstimate 160 ; ho:maturity "draft" .
 id:wf-verify-harness a ho:Workflow ; skos:prefLabel "Harness verification loop" ;
     skos:definition "Judge an assembled harness before it is trusted: check its structure against the spec, confirm that the requests which SHOULD activate it do and the near-misses which should NOT do not, compare behaviour with and without the component under test, and close with an end-to-end dry run on a representative request. Choose when accepting a newly composed or newly changed harness -- verification is a separate judgment pass, not something the authoring step declares about its own output." ;
     ho:hasStep id:wfs-structure-check, id:wfs-trigger-validation, id:wfs-baseline-compare, id:wfs-dryrun ;
@@ -102,6 +102,20 @@ id:wfs-change-log a ho:WorkflowStep ;
     ho:stepGuardedBy id:gr-traceability ;
     ho:stepDependsOn id:wfs-feedback-route ;
     ho:stepOrder 3 ; ho:tokenEstimate 50 ; ho:maturity "draft" .
+
+# The closing step of the evolution loop, added after the change record: the
+# round's EXPERIENCE, not just its state, is what the next round needs. It
+# declares no ho:Deliverable because the other three steps of this workflow
+# declare none either -- the task-DAG data-flow vocabulary is exercised on
+# id:wf-multiagent and id:wf-compose-harness, and adding a lone Deliverable here
+# would make this workflow's DAG half-specified rather than more explicit.
+id:wfs-lesson-capture a ho:WorkflowStep ;
+    skos:prefLabel "Capture the round's lessons" ;
+    skos:definition "Draw out of the round's outcome the lessons worth keeping -- what was attempted, why it failed or had to be corrected, and the rule that replaces it -- write them into the durable store, and flag any lesson already drawn in an earlier round as a candidate for promotion into a standing part. Choose as the closing step: recording WHAT changed leaves the next round the state but not the experience, so without this the loop keeps re-deriving its own corrections." ;
+    ho:stepByRole id:role-inspection ;
+    ho:stepGuardedBy id:gr-lesson-capture ;
+    ho:stepDependsOn id:wfs-change-log ;
+    ho:stepOrder 4 ; ho:tokenEstimate 115 ; ho:maturity "draft" .
 
 id:wfs-structure-check a ho:WorkflowStep ;
     skos:prefLabel "Check structure against spec" ;

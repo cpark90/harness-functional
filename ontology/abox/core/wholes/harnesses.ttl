@@ -29,7 +29,7 @@ id:h-coding a ho:Harness ;
     ho:hasSystemPrompt id:sp-coding ;
     ho:usesTool id:tool-shell, id:tool-editor ;
     ho:hasWorkflow id:wf-react ;
-    ho:hasGuardrail id:gr-nodestruct, id:gr-lang ;
+    ho:hasGuardrail id:gr-nodestruct, id:gr-lang, id:gr-standard-terms ;
     ho:usesModel id:mc-opus ;
     ho:appliesPattern id:pat-react ;
     ho:requiresCapability id:cap-codeexec, id:cap-fileedit ;
@@ -44,7 +44,7 @@ id:h-research a ho:Harness ;
     ho:hasSystemPrompt id:sp-research ;
     ho:usesTool id:tool-websearch, id:tool-retriever ;
     ho:hasWorkflow id:wf-planexec ;
-    ho:hasGuardrail id:gr-cite, id:gr-lang ;
+    ho:hasGuardrail id:gr-cite, id:gr-lang, id:gr-standard-terms ;
     ho:usesModel id:mc-opus ;
     ho:appliesPattern id:pat-planexec ;
     ho:requiresCapability id:cap-websearch, id:cap-retrieval, id:cap-citation ;
@@ -59,7 +59,7 @@ id:h-support a ho:Harness ;
     ho:hasSystemPrompt id:sp-support ;
     ho:usesTool id:tool-retriever ;
     ho:hasWorkflow id:wf-singleshot ;
-    ho:hasGuardrail id:gr-cite, id:gr-lang ;
+    ho:hasGuardrail id:gr-cite, id:gr-lang, id:gr-standard-terms ;
     ho:usesModel id:mc-sonnet ;
     ho:appliesPattern id:pat-reflection ;
     ho:requiresCapability id:cap-retrieval ;
@@ -99,6 +99,19 @@ id:h-support a ho:Harness ;
 # otherwise read as contradicting each other: they hold on different planes.
 # id:mode-hybrid does NOT apply -- that is one topology varying by PHASE of a run,
 # whereas these two planes run at the same time.
+#
+# CARRIER of the LESSON-LEARNING discipline (id:gr-lesson-capture / -reuse /
+# -promotion): they are bound HERE, not on a library-carrier harness, because
+# this is the template whose roles already keep a durable role-scoped store and
+# whose memory tiers are bound above (id:mem-longterm) -- it is the harness that
+# actually operates the discipline, and a rule of this kind only holds if the
+# agents running under it are the ones told to record and consult. That makes
+# this one of the few bindings that DOES change this harness's materialized
+# document (three added operating-rules bullets), which is intended here: the
+# byte-identical-stability argument applies to parts that merely need a host, not
+# to a rule this harness's own agents must follow. The error side of the same
+# discipline (id:fp-repeated-mistake) is bound to id:h-harness-factory instead,
+# where the evolution loop that would have caught the repetition lives.
 id:h-multiagent a ho:Harness ;
     skos:prefLabel "Multi-agent orchestration harness" ; skos:altLabel "orchestrator-workers harness" ;
     skos:definition "A neutral, domain-independent harness that assembles the reusable governance parts decomposed from harness governance docs: an orchestrator plans and dispatches node-scoped briefs to specialised workers (author / verify / inspect) under least-privilege, with traceability, verify-then-proceed and escalation guardrails. Its PURPOSE is to make each role's agent perform its role clearly: it composes, per role, the role's scope of tools and guardrails (ho:roleTool / ho:roleGuardrail), its memory discipline and (where present) its user-facing stance, plus the coordination channels the roles exchange work over — so every dispatched agent has an unambiguous mandate. Use as a template for any structured, multi-agent design or authoring workflow." ;
@@ -107,12 +120,13 @@ id:h-multiagent a ho:Harness ;
     ho:hasSystemPrompt id:sp-methodical ;
     ho:usesTool id:tool-shell, id:tool-editor, id:tool-websearch, id:tool-retriever ;
     ho:hasWorkflow id:wf-multiagent, id:wf-compose-harness ;
-    ho:hasGuardrail id:gr-lang, id:gr-verify-proceed, id:gr-design-for-loss, id:gr-traceability,
+    ho:hasGuardrail id:gr-lang, id:gr-standard-terms, id:gr-verify-proceed, id:gr-design-for-loss, id:gr-traceability,
         id:gr-grounding, id:gr-no-arbitrary-decision, id:gr-least-privilege, id:gr-report-over-prompt,
         id:gr-controlled-vocabulary, id:gr-root-cause, id:gr-simplicity, id:gr-bounded-context,
         id:gr-dispatch-execution, id:gr-online-execution, id:gr-mode-fit,
         id:gr-delegated-orchestration, id:gr-execution-separation, id:gr-structural-coverage,
-        id:gr-reuse-first, id:gr-human-checkpoint, id:gr-user-elicitation ;
+        id:gr-reuse-first, id:gr-human-checkpoint, id:gr-user-elicitation,
+        id:gr-lesson-capture, id:gr-lesson-reuse, id:gr-lesson-promotion ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-orchestrator, id:role-inspection, id:role-implementer, id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer ;
@@ -148,7 +162,8 @@ id:h-peer-mesh a ho:Harness ;
     ho:hasSystemPrompt id:sp-methodical ;
     ho:usesTool id:tool-editor ;
     ho:hasWorkflow id:wf-multiagent ;
-    ho:hasGuardrail id:gr-lang, id:gr-report-over-prompt, id:gr-least-privilege, id:gr-execution-separation ;
+    ho:hasGuardrail id:gr-lang, id:gr-standard-terms, id:gr-report-over-prompt, id:gr-least-privilege,
+        id:gr-execution-separation ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-implementer, id:role-vnv, id:role-research, id:role-design, id:role-coordinator ;
     ho:hasChannel id:chan-peer ;
@@ -187,13 +202,15 @@ id:h-peer-mesh a ho:Harness ;
 # worker archetypes, which is exactly where one role gets several concurrent
 # instances. Those rules presuppose a claimable substrate, so the harness DECLARES
 # it: id:chan-task-board is bound below alongside id:chan-workspace (files carry
-# the deliverables, the board carries the claims). The central board's participant
-# set names id:role-orchestrator, which this carrier does not staff -- it is reused
-# as the neutral DEFAULT rather than redeclared with a local participant set (the
-# redefinition ho:Channel allows), because a second near-identical board node in
-# the central library would be the near-synonym drift the store exists to prevent;
-# the same reuse-as-default holds for id:h-harness-factory, which binds this board
-# while declaring no roles at all.
+# the deliverables, the board carries the claims). The central board is reused as
+# the neutral DEFAULT rather than redeclared with a local participant set (the
+# redefinition ho:Channel allows): its default participants are worker roles this
+# carrier staffs, and the leader endpoint it notifies is harness-dependent -- each
+# binding harness fills it with its own lead/coordinating role -- so no local clone
+# is warranted, and a second near-identical board node in the central library would
+# be the near-synonym drift the store exists to prevent. The same reuse-as-default
+# holds for id:h-harness-factory, which binds this board while declaring no roles
+# at all.
 id:h-workspace-synthesis a ho:Harness ;
     skos:prefLabel "Workspace-synthesis harness" ; skos:altLabel "convergence-gate library host" ;
     skos:definition "A neutral, domain-independent template that wires the recurring central-library parts a multi-agent worker team reuses: the worker archetypes a team is staffed from (analyst, author, implementer, planner, strategist, tester), which hand off deliverables over a shared file workspace (id:chan-workspace) under the recurring team disciplines -- structured output, ordinal artifact naming, declared hand-off routes, severity-triaged cross-validation, scaling to the request and graceful degradation -- with a terminal synthesizer gate (id:role-synthesizer) that cross-checks every contribution and compiles the integrated final result (providing id:cap-synthesis, which this harness requires), plus the domain-independent error rows such a team declares. It exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- it names no specific problem domain, tool or technology. Derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -202,7 +219,8 @@ id:h-workspace-synthesis a ho:Harness ;
     ho:hasSystemPrompt id:sp-methodical ;
     ho:usesTool id:tool-editor ;
     ho:hasWorkflow id:wf-multiagent ;
-    ho:hasGuardrail id:gr-lang, id:gr-structured-output, id:gr-scale-modes, id:gr-graceful-fallback,
+    ho:hasGuardrail id:gr-lang, id:gr-standard-terms, id:gr-structured-output, id:gr-scale-modes,
+        id:gr-graceful-fallback,
         id:gr-cross-validation, id:gr-declared-routes, id:gr-sequenced-artifacts,
         id:gr-three-flow-acceptance, id:gr-execution-separation,
         id:gr-work-claim, id:gr-instance-isolation ;
@@ -265,6 +283,13 @@ id:h-workspace-synthesis a ho:Harness ;
 # CLAUDE.md byte-identical; this harness gains one appended `## Hooks` section
 # (rendered by the conditional "hooks" assembly section in the central default
 # order). Every harness with no ho:hasHook still emits nothing for that section.
+# Its evolution loop now closes with a lesson-capture step (id:wfs-lesson-capture,
+# reached by the hasStep roll-up), so this carrier also holds the error row for the
+# case that step exists to prevent: id:fp-repeated-mistake -- a failure met again in
+# a later run because its lesson was never captured or never consulted. The
+# capture / reuse / promotion RULES themselves stay on id:h-multiagent, whose agents
+# keep the durable store they act on; this carrier holds only the row that fires
+# when they were not honoured.
 id:h-harness-factory a ho:Harness ;
     skos:prefLabel "Harness-factory harness" ; skos:altLabel "harness-authoring methodology host" ;
     skos:definition "A neutral, domain-independent template that wires the harness-authoring methodology parts: the guardrails that bound multi-agent orchestration complexity and govern faithful authoring, verification and model selection, plus the shared task-board channel (id:chan-task-board) over which workers claim and report tasks. It is a meta-harness -- its subject is the methodology of composing, verifying and evolving harnesses themselves. Like id:h-workspace-synthesis it exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- the parts live here rather than on id:h-multiagent so binding them leaves that harness's materialized document byte-identical. It names no specific problem domain, tool or technology, derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -273,7 +298,7 @@ id:h-harness-factory a ho:Harness ;
     ho:hasSystemPrompt id:sp-methodical ;
     ho:usesTool id:tool-editor, id:tool-shell ;
     ho:hasWorkflow id:wf-multiagent, id:wf-harness-evolution, id:wf-verify-harness ;
-    ho:hasGuardrail id:gr-lang, id:gr-depth-limit, id:gr-single-active-team,
+    ho:hasGuardrail id:gr-lang, id:gr-standard-terms, id:gr-depth-limit, id:gr-single-active-team,
         id:gr-bottleneck-avoidance, id:gr-flatten-hierarchy, id:gr-bounded-iteration,
         id:gr-integration-coherence, id:gr-discriminating-eval, id:gr-single-responsibility,
         id:gr-generalize-not-overfit, id:gr-absolute-paths, id:gr-well-formed-skill, id:gr-opus-required,
@@ -283,7 +308,7 @@ id:h-harness-factory a ho:Harness ;
     ho:hasChannel id:chan-task-board ;
     ho:hasHook id:hook-session-start, id:hook-pre-tool-use, id:hook-post-tool-use, id:hook-stop ;
     ho:hasTestScenario id:scn-compose-smoke, id:scn-trigger-near-miss ;
-    ho:hasFailurePolicy id:fp-dispatch-timeout, id:fp-validation-fail ;
+    ho:hasFailurePolicy id:fp-dispatch-timeout, id:fp-validation-fail, id:fp-repeated-mistake ;
     ho:appliesPattern id:pat-orchestrator-workers ;
     ho:hasExecutionMode id:mode-hybrid ;
     ho:requiresCapability id:cap-orchestration, id:cap-fileedit, id:cap-codeexec, id:cap-skill ;

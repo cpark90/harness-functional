@@ -17,3 +17,4 @@
 
 <!-- 학습 인덱스 (한 줄씩) -->
 - [도구 인터프리터](tool-interpreter.md) — `rdflib`/`pyshacl`/`owlrl`는 특정 인터프리터에만; 셸 기본 python3에 없으면 `/usr/bin/python3`로 실행
+- [Workflow dispatch 운용](workflow-dispatch-resume.md) — agentType+opus로 규정 유지, 한도 실패는 resumeFromRunId 재개, null 반환≠작업 실패(vnv로 확인), 타 세션 FAIL 귀속 판별, 브리프 소비 사이클
