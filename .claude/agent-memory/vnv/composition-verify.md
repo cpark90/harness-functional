@@ -42,3 +42,26 @@
 - `docs/verify/neutral-parts-rework.md` (pass-with-notes: 중립화 rework — grep 0매치, dropped-id 12개
   0건, 로더등가 1364/symdiff0, 63개체, drift 0, requires→provides 내부바인딩; notes=h-multiagent Tool
   없음(shape는 허용, 중립 의도), gr-design-for-loss 적용범위 좁음, context-budget 원칙 미추출).
+
+## oversight-pair (central archetype + 2 recipes 동시검증) 재현 — docs/verify/oversight-pair-verify.md
+- **central+recipe 페어 검증 표준 시퀀스**: ① central validate/lint/determinism PASS(250,0-orphan) →
+  ② recipe closure(임시 `ln -sfn <central> central`→`HARNESS_CATALOG=catalog-v001.xml
+  HARNESS_ROOT_ONTOLOGY=…/recipes/<r> /usr/bin/python3 central/tools/validate.py`, 264=250+14local,
+  끝나면 `rm -f central`) → ③ `gen_recipe_catalog.py --repo . --check`(55 in-sync).
+- **capability 게이트가 핵심**: `specializes`는 `providesCapability` 전파 안 함 → 로컬 role이
+  `providesCapability core:cap-*` 직접 명시해야 harness requiresCapability 충족. rdflib로 union서
+  실제 triple 읽어 확인(개발자 주석 말고). role-comparator→cap-benchmarking, role-operation-auditor→cap-audit.
+- **specializes 타깃 resolution은 SpecializesTypingShape 초과 필수축**(shape는 coarse Harness/Component
+  partition만) → rdflib로 각 로컬 role의 specializes object가 central `ho:Role` typed·recipe-ns 밖인지.
+  dangling core: refs=모든 core: object가 typed subject로 resolve하는지 스캔(0이어야). 스크립트는
+  scratchpad/chk.py(central glob parse + recipe parse).
+- **anti-drift for new archetypes**: 정의 산문에 "Distinguished from id:role-X, which…" 판별절이
+  브리프가 지정한 sibling 전부(benchmarker↔research/analyst/synthesizer, auditor↔vnv/inspection/analyst)에
+  대해 박혀 있는지. cap 신설은 기존 cap 정의와 축 대조. recipe는 **신규 central vocab 0**(Golden #2).
+  altLabel 중복(archetype↔specialization "compliance watchdog")=결함 아님(dup-label check는 prefLabel-scoped).
+- **coverage-audit 함정 2개(accepted-reason, GAP 아님)**: (Note-1) "continuous/지속"=mode-agent-teams
+  (persistent standing team "for the span of run")+promptText "continually"로 충분; ExecutionCadence류
+  신클래스 만들면 그게 drift. (Note-2) "enforce/단속"=raise enforcement finding to approval gate
+  (c-enforcement-finding+chan-agent-user+gr-no-arbitrary-decision), autonomous remedy 아님=repo raise-don't-decide
+  거버넌스 의도적 out-of-model, recipe header에 명시=silent skip 아님. gr-no-arbitrary-decision=raise-don't-decide,
+  chan-agent-user def="enforces human approval gate before any application".
