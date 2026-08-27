@@ -90,6 +90,13 @@ metric=promptText+definition whitespace 합, scope=abox만 — 현 최대 199 �
 어휘 ho: 재사용·cap+영역당 1선별을 Phase 4에 강제·Phase 0=기존 lane 형식화). ④ 착수 시 이
 문서가 설계 원본.
 
+**보강 조사 확보 (2026-08-27, 사용자 요청)**: `docs/feedback/inquiries/annotation-tooling-research.md`
+— 12-에이전트 웹 조사(1차 소스 검증) 종합. 핵심: **GAP 1(edge confidence)은 n-ary로 사실상
+결정**(rdflib 7.6.0이 RDF-star 파싱 불가 — 로컬 실증; RDF 1.2 forward-compatible), **cap 단위는
+token 권고**(42 line 근거 없음, 256–300 tok 대역 실증), G4 total-order 전례 5종, 설계원본 v0.2
+교정표(§6.4: Yjs null-on-delete·tiptap 유료 경계·CAPRA 정정 등), delta-SHACL 게이트 실측
+포함. ①~④ brief 작성 시 이 문서 §8(주입 지도)을 함께 소비할 것.
+
 ## 판정
 **apply-with-changes** — (A) 승인·계획 확정. 규모상 4단계 분할 dispatch(위 순서)로 적용 권고.
 orchestrator가 developer dispatch로 수행; 각 단계 후 vnv 게이트(validate·determinism·lint) +

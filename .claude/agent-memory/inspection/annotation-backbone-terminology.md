@@ -40,6 +40,21 @@ brief.md`(무향 연결성분당 1 admit·새 정렬키 없음·skip은 예산 �
 경계 명문화 필요). 보완: cap·영역당 1선별 미반영(retrieve와 선별규칙 공유), §9 부재, 기존 lane
 매핑에서 시작(주석≈docs/feedback 채널). 편입: 승인 항목 적용계획 ④ webui lane의 구체화.
 
+## 보강 조사 dossier (2026-08-27, 12-에이전트 워크플로)
+`inquiries/annotation-tooling-research.md` — ①~④ brief 소비용 §8 주입 지도. 재사용 사실:
+- **RDF-star는 이 스택에서 불가**(rdflib 7.6.0 `<<>>` BadSyntax **로컬 실증**·pySHACL 미지원)
+  → G1 n-ary 사실상 결정; RDF 1.2 reifier≡n-ary라 `rdf:reifies` 1 triple로 후행 정합.
+- pySHACL `focus_nodes`/`use_shapes`(0.27+) delta 게이트: 실측 0.11s→<0.01s, **focus 밖 위반
+  침묵**(affected set 계산 필수, 전역 제약은 full 백스톱).
+- cap 단위 함정: 브리프②의 500은 **whitespace-word**(wc -w 관례), 문헌 최적대 130–260은
+  **BPE token** — 혼용 금지; 500 words≈650+ BPE.
+- 인용 교정 상시 목록: CAPRA=SW아키텍처 평가(결정론 경계=Evidence Anchoring만)·Prometheus
+  tool-scoping 출처=Inside the Scaffold·Yjs RelativePosition은 삭제 시 null·tiptap
+  Comments/AI Toolkit 유료(UniqueID만 MIT).
+
 ## 함정
 - 채팅으로 온 사용자 제안은 inspection이 inbox 항목으로 **전사**(status: open, 결정 선택지 포함)
   후 verified에 분석 — 승인 태깅은 사용자만.
+- **병행 세션 주의**: 같은 날 다른 inspection/orchestrator 세션이 같은 lane에 브리프를 쓸 수
+  있다(이번: 작업 중 ①~④ 브리프 4종+tool_suggestion 복원이 병행 생성됨) — verified 편집 전
+  재읽기·조사 결론과 병행 결정(예: cap 500) 충돌 시 모순 아닌 층위 구분으로 명시할 것.
