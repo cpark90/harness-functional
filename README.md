@@ -1,9 +1,10 @@
 # harness_ontology
 
-Manage many kinds of **agent/LLM harnesses** as a formal ontology, so an agent
-can read the stored knowledge and compose a new harness for a request — even as
-the ontology grows large — without **orphaned nodes**, **context drift**, or
-**context rot**.
+Manage many kinds of **agent/LLM harnesses** with a formal **harness ontology**
+(the OWL schema + SHACL shapes) and the **harness knowledge graph** of instances
+described with it, so an agent can read the knowledge graph and compose a new
+harness for a request — even as that graph grows large — without **orphaned
+nodes**, **context drift**, or **context rot**.
 
 The strategy in one line: **store formally (OWL + SHACL, validated and
 connected), read narrowly (a small, budget-capped projection per request).**
@@ -12,10 +13,10 @@ See [`docs/DESIGN.md`](docs/DESIGN.md) for the full rationale.
 ## Layout
 
 ```
-ontology/
-  tbox/harness.ttl            # OWL 2 schema: classes + properties + SKOS vocab
-  abox/core/*.ttl             # central neutral parts library, split per component type
-  shapes/harness-shapes.ttl   # SHACL: connectivity + typed-edge invariants
+ontology/                     # store for both layers (ontology + knowledge graph)
+  tbox/harness.ttl            # ontology: OWL 2 schema — classes + properties + SKOS vocab
+  abox/core/*.ttl             # knowledge graph: central neutral parts library, per component type
+  shapes/harness-shapes.ttl   # ontology: SHACL — connectivity + typed-edge invariants
 tools/
   ontology_lib.py             # shared loader + OWL RL reasoning
   validate.py                 # reasoner + SHACL + reachability + capability + dedup
@@ -71,9 +72,9 @@ cd tools/webui/frontend && npm install && npm run build   # → tools/webui/stat
 cd ../../.. && PYTHONPATH=tools uvicorn tools.webui.server:app --port 8000
 ```
 
-## Growing the ontology
+## Growing the knowledge graph
 
 Add nodes to `ontology/abox/*.ttl` using the existing TBox vocabulary, then
 **re-run `validate.py`**. Every new node is held to the same anti-orphan /
-anti-drift rules, so the knowledge base compounds instead of decaying. See
+anti-drift rules, so the knowledge graph compounds instead of decaying. See
 `CLAUDE.md` for the agent-facing authoring + composition procedure.

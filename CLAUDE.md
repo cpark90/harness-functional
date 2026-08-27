@@ -1,12 +1,18 @@
 # CLAUDE.md — working in this repo
 
-This project stores **agent/LLM harnesses** as a formal OWL ontology and
-projects request-scoped **context packs** so an agent can compose new harnesses
-without orphaned nodes, drift, or context rot. Read `docs/DESIGN.md` once.
+This project builds two things from one repository: a **harness ontology** — the
+OWL schema and SHACL shapes that describe what an agent/LLM harness is made of
+(`ontology/tbox/`, `ontology/shapes/`, IRI `…/schema`) — and a **harness
+knowledge graph** — the instances described with it (`ontology/abox/`, data
+graphs `…/data/**`, individuals `…/id/**`). It projects request-scoped **context
+packs** from the knowledge graph so an agent can compose new harnesses without
+orphaned nodes, drift, or context rot. The `ontology/` directory is the store
+that holds both layers — it is deliberately *not* renamed (see `docs/DESIGN.md`
+§Terminology). Read `docs/DESIGN.md` once.
 
 ## Golden rules
 
-1. **Never load the whole ontology into context to answer a request.** Use
+1. **Never load the whole stored graph into context to answer a request.** Use
    `python3 tools/retrieve.py "<request>"` and work from the pack it returns.
    That budget cap is the context-rot defense — don't bypass it.
 2. **Never hand-edit for meaning without the vocabulary.** New nodes reuse
@@ -14,7 +20,8 @@ without orphaned nodes, drift, or context rot. Read `docs/DESIGN.md` once.
    near-synonym class or an untyped edge is exactly the drift this repo
    prevents.
 3. **After any change to `ontology/`, run `python3 tools/validate.py`.** It
-   must print `PASS`. If it fails, fix the ontology — do not weaken the shapes.
+   must print `PASS`. If it fails, fix the nodes you changed — do not weaken the
+   shapes.
 
 ## Environment
 

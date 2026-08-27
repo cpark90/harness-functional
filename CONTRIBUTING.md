@@ -45,7 +45,7 @@ the tools enforce locally, so the knowledge base compounds instead of rotting.
 
 ## Rules of thumb
 
-- **Never load the whole ontology to make a change** — use
+- **Never load the whole stored graph to make a change** — use
   `python3 tools/retrieve.py "<request>"` and work from the pack.
 - **Reuse the vocabulary.** New nodes reuse existing `ho:` classes/properties and
   `skos:Concept` tags. A new concept must be connected (a `skos:broader` parent

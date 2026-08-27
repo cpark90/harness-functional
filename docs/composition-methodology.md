@@ -91,7 +91,7 @@ vocabulary").
 ## The 7 steps (as `wf-compose-harness` formalizes them)
 
 1. **Retrieve a budget-capped context pack** for the request
-   (`tools/retrieve.py`) — never load the whole ontology (`CLAUDE.md` golden
+   (`tools/retrieve.py`) — never load the whole stored graph (`CLAUDE.md` golden
    rule 1; the anti-context-rot term `c-bounded-context`).
 2. **Take a template**: the top base-harness candidate from the pack, or a
    `ho:DesignPattern` when none fits.

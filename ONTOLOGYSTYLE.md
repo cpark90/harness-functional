@@ -80,8 +80,9 @@ SHACL 연결성 shape + 전역 reachability BFS가 이를 강제한다. (설계 
 - **[지킴]** `ho:observedTokenVolume`(`ho:AreaOfObservation`의 런타임 관측량, §3)은 이
   `tokenEstimate` 규칙과 **별개 축**이다 — projection 비용이 아니라 관측량이므로 위 필수 대상에
   포함되지 않는다(둘의 구분은 §3 참조).
-- **[지킴]** **온톨로지 전체를 context에 로드하지 않는다.** 요청 처리·composition은 항상
-  `python3 tools/retrieve.py "<request>"`가 준 pack에서 시작한다 (CLAUDE.md 골든룰 1).
+- **[지킴]** **저장된 그래프 전체(stored graph = `ontology/**`의 두 층)를 context에 로드하지
+  않는다.** 요청 처리·composition은 항상 `python3 tools/retrieve.py "<request>"`가 준
+  pack에서 시작한다 (CLAUDE.md 골든룰 1).
 - **[권장]** `promptText`는 최소·자기완결로. 긴 프롬프트를 한 노드에 몰지 말고 재사용
   가능한 `Instruction`으로 쪼갠다 — 예산 admission이 노드 단위로 걸리기 때문.
 - **[권장]** 예외: 하네스의 **주제가 이 온톨로지(`ho:`) 자신**인 techdoc류에서는 지시문·
@@ -232,7 +233,9 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
   grab-bag 파일은 타입별로 split해
   각 타입을 자기 그룹에 둔다(예: roles.ttl→roles+observation+memory).
 - **[지킴]** 스키마(클래스·프로퍼티)는 `tbox/`, 개체는 `abox/`. abox에서 새 클래스·프로퍼티를
-  선언하지 않는다.
+  선언하지 않는다. 용어상 **TBox+shapes = ontology 층, ABox = knowledge graph 층**이며
+  `ontology/`는 두 층을 함께 담는 저장소 디렉토리다(`docs/DESIGN.md` §Terminology) — 이 문서의
+  나머지 `ontology/…` 표기는 그 경로를 가리킨다.
 - **[권장]** 짧은 노드(레이블만)는 **한 줄**로:
   `id:dom-coding a ho:Domain ; skos:prefLabel "Software coding" ; ho:salience 0.9 .`
 - **[권장]** 텍스트·프레디킷이 여럿인 노드는 **여러 줄**, 프레디킷마다 4칸 들여쓰기:
