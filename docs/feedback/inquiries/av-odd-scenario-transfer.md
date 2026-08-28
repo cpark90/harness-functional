@@ -452,3 +452,207 @@ SOTIF 개요 <https://report.asam.net/iso-21448-sotif> · NATM <https://unece.or
 3. 이 발견은 이식의 정당성을 강화한다 — 필요성이 이미 인지돼 어휘까지 만들어졌지만
    **형식이 없어 아무도 쓰지 못한 것**이다. ODD 형식(공유 taxonomy·판정·임계·관측자·조건부
    규칙·기본값 의미론)이 정확히 그 빠진 조각이다.
+
+---
+
+## 부록 B — (A) 구체화: 사례조사 기반 설계 정련 (2026-08-28)
+
+사용자 결정: **"(B)를 우선으로 진행하고 동시에 (A)는 사례조사를 하면서 더 구체화해서 진행."**
+이에 따라 재개 조사(prior-transfer + 보충 4축: 상류 위험분석 / 형식 oracle / 런타임 집행
+아키텍처 / handover 파라미터)를 본문 설계에 반영한다. **본문 §1~§11과 충돌하는 부분은 이
+부록이 우선**한다(아래 B2 교정표).
+
+### B1. 선행 이식 지도 — 우리는 0에서 시작하지 않고, 두 다리는 비어 있다
+
+| 선행 연구 | 무엇을 이미 했나 | 우리에게 주는 것 |
+|---|---|---|
+| **Khlaaf, "AI ODD Taxonomy"** (Trail of Bits) | AI 일반용 ODD를 **5축**으로 재정의: Application/Domain · Users/Agents · **Vector**(인터페이스·공격 표면) · Protected Characteristics · **Assets** | envelope을 domain 축으로 좁히지 말 것. + **위험분석 행의 열(column)로 ODD 축을 쓰는** 형식 |
+| **Tuan & Sanyal, Agent Operational Envelope** | 운용범위 = 5-tuple ⟨권한 Π, 도메인 Σ, 불변식 Φ, 거버넌스 Γ, 자율수준 Λ⟩ + **Trust Certificate 6-tuple**(envelope·시나리오집합·결과행렬·판정·시각·버전서명) + 판정 {Approved/Conditional/Rejected} | 우리가 만들려는 것과 **가장 가까운 선행물**이며 ontology-first. 자기 고백한 최대 한계="검증 커버리지는 온톨로지 커버리지에 갇힌다" = 우리 coverage-audit 게이트의 존재 이유 |
+| **3-layer assume–guarantee** (LLM 에이전트) | 계약 3층(사용자 보증 → **ODD 검증** → 기능 보증), 자율 envelope ℰ=(L, Π, **H**=체크포인트 전 최대 실행 지평) | 보증 사슬(앞 층의 보장이 뒤 층의 전제) = Contract 합성 템플릿; **실행 지평 H**는 값싼 신규 필드 |
+| **AMLAS** (York, 공개) | ML 보증 6단계 — ODD가 **요구사항 단계와 통합시험 단계에 두 번** 들어감; 개발/내부시험/검증 **데이터 방화벽** | envelope을 두 번 소비할 것; TestScenario에 **저작용 vs 판정용** 구분(반순환성) |
+| **Ag-ODD**(농업) | ODD를 **비-주행 도메인으로 옮긴 유일한 방법론 레시피**: ①use case → ②ODD·③논리시나리오 병렬 도출 → ④**양방향 반복 검증**(시나리오가 envelope의 구멍을 드러내면 envelope을 고친다, 안정될 때까지) + permissive/restrictive **속성별** 의미론 + LoD | 우리 전이의 절차 원본. 그리고 경고: "자동차의 중심 과업이 새 도메인의 중심 과업이 아니다" — 그들은 **process 축**을 신설했다 → 우리는 **task/process 축**이 envelope 1급 축 |
+| **CSA L0–L5 / Endsley 5단** | 두 사다리가 독립적으로 **같은 판별자**에 수렴: **인간 승인 단위의 granularity**. Endsley는 {decide, act} 배분으로 정의(인간 move: decide+act / suggest 후 decide / concur / veto / none) | 자율 사다리의 최종 형식. **L0(권고만, 행동 안 함)이 실재 구성**이므로 L1부터 시작하면 잃는다 |
+| **Model Cards** | Intended use / **Out-of-scope uses** — 산문 envelope의 사실상 표준. 그리고 out-of-scope 시 **더 맞는 모델로 리다이렉트**를 권고 | 우리가 이겨야 할 기준선. 리다이렉트는 **여러 하네스를 아는 그래프만 할 수 있는 회복 전략** |
+
+**비어 있는 두 다리 (우리 기여 지점)**: ① 에이전트 TestScenario에 functional→logical→concrete
+사다리를 적용한 선행 연구 **없음**(LLM×시나리오 문헌은 전부 역방향 — LLM으로 AV 시나리오를
+생성), ② SOTIF known/unknown×safe/unsafe를 LLM에 이식한 사례 **없음**. 따라서 이 둘은
+"선행 채택"이 아니라 **우리 설계**로 제시해야 하며, 공개 출처에서 직접 도출한다.
+
+### B2. 본문 교정표 (사례조사가 뒤집은 것 — 이 부록이 우선)
+
+| 본문 서술 | 교정 |
+|---|---|
+| ODD ≈ targetsDomain + addressesTask + 환경 전제 | **부족**. AI ODD는 5축(도메인·이해관계자·**인터페이스 표면**·보호속성·**자산**)이며, domain 축만으로 좁히는 것이 Khlaaf가 명시적으로 지적한 오류. envelope에 최소 **주체 축**과 **표면 축**을 추가 |
+| "COD 감시 = ObservationSpace" | **범주 오류**. 정확히는 3분: (i) 속성 공간=OD taxonomy(중앙 부품 라이브러리), (ii) **선언 envelope=그 속성들 위의 술어식**, (iii) COD=측정된 튜플(ObservationSpace가 공급). **모니터는 별도 타입의 평가자**(주기·권한·재진입 조건을 가짐). ObservationSpace는 측정 절반뿐 |
+| ISO 34503/PAS 1883 = "ODD taxonomy" | 이름과 달리 **OD(운용 도메인=속성 공간) taxonomy**다. ODD는 그 위에 선언된 부분집합(술어). → **중앙=OD 어휘 / 하네스 envelope=술어 = 다른 레인**이라는 우리 층 분리가 형식적으로 정당화됨 |
+| 자율성 = J3016 삼중항 | 삼중항은 **구조**로 맞다. 다만 에이전트 도메인의 두 사다리가 수렴한 **판별자는 "인간 승인 단위의 크기"**이고, Endsley는 {decide, act} 배분으로 정의한다. 삼중항(무엇을 나누나) + 승인단위(어디서 끊나) + Endsley 배분(누가 무슨 move) — 세 표현을 한 개념 집합으로 정렬. **L0 필수** |
+| HITL/HOTL/HOOTL이 자율성 어휘 | **3개의 직교 스킴**: (a) 위치(DoD 계보), (b) 승인단위 사다리 L0–L5, (c) **인간이 왜 있는가**(Crootof 9역할: 교정·복원력·정당화·존엄·책임·대역·마찰·명목·인터페이스). 하나로 뭉치면 정보 손실 |
+| 검증 레인 = GSN | GSN은 구조로 맞으나, frontier-AI 템플릿은 **CAE + Defeater(주장에 대한 명시적 반론) + Out-of-scope claim**을 쓴다. **지지 증거만 나열하는 보고서는 이 분야 기준선보다 구조적으로 약하다** — Defeater를 1급 요소로 |
+| safe-halt | **동사가 아니라 상태**(MRC는 "도달하는 조건"). 게다가 **자동 재개 불가**가 정의의 일부(정지 후 수동 입력 없이는 움직이지 않음, 재활성화는 새 사이클). 자기 재개하는 것은 halt가 아니라 pause |
+| 시뮬/트랙/실도로 = fidelity tier | 축이 하나 더 있다. LLM 문헌은 **시험 대상 계층**(guardrail / orchestration / system)으로도 배정한다. fidelity와 layer는 **독립**이며 TestScenario는 둘 다 필요 |
+| requires/providesCapability로 권한 표현 | **capability ≠ authorization**(confused-deputy). "할 수 있나?"와 "이 주체가 지금 해도 되나?"는 다른 관계 — approvalScope는 능력 그래프에서 파생되면 안 되고 **(주체, 행위, 맥락)의 독립 권한 관계** |
+
+### B3. 정련된 필드셋 — 이제 발명이 아니라 **인용**으로 채운다
+
+**(a) Guardrail** (AV 런타임 집행 아키텍처에서 전량 도출; 우리 harvest의 attachesAt/approvalScope
+설계를 대체·구체화):
+- `attachmentPoint` {intake-filter, plan-checker, action-gate, post-hoc-auditor} — 각 값에 AV
+  선례가 있음(ODD 체커=intake / Planner Safety Gate=plan / Trajectory Gate=action / 채널
+  비교기=post-hoc). **경험적 근거**: 행위 수준 감시는 목표 수준 위반을 **0% 검출**했다 →
+  *action gate만 있는 하네스는 결함*이라는 감사 규칙이 증거를 갖는다.
+- `approvalScope`를 **권한 사다리**로: {observe-and-report, reject-action(거부만), substitute-
+  fallback, minimal-edit, suspend-agent, revoke-capability}. 마지막 둘(일시정지·능력 회수)은
+  현재 우리가 표현 못 하는 층.
+- `enforcementMode` {block-and-substitute(Simplex) | minimal-edit(ASIF)} — "도구 호출을
+  거부했다"와 "인자를 안전 범위로 깎았다"의 차이. 현재 구분 불가.
+- `envelopeDefinition` {explicit(정적 규칙) | implicit(대안 경로 시뮬레이션 — "되돌릴 수 있을
+  때만 허용")} — implicit은 요청마다 온라인 계산이라는 비용까지 함께 옴.
+- `checkCadence` + `detectionLatencyBound` — 감시자는 연속 관측하지 않는다. **두 점검 사이에
+  doer가 한 일은 무방비**. 이 필드가 "부착점"을 위치 라벨에서 측정 가능한 속성으로 바꾼다.
+- `checkHorizon`(plan-checker) — 몇 스텝 앞까지 시뮬레이션하는가. 문서화된 trade-off: 짧으면
+  늦게 잡고 길면 과차단.
+- `guardrailPriority`(정수) — 순서 있는 cascade(우선순위 증가)로 결정론적 합성.
+- `guardrailIntegrity` vs 피검 component 무결성 — **mixed-integrity 원리**: doer는 싸도 되고
+  **checker만 비싸게 검증**한다. 이것이 우리 아키텍처의 정당화 그 자체.
+- `overridable`(기본 false) + `overridableBy`(피검 역할 제외) — **Command Override 안티패턴**:
+  검사받는 쪽이 "안전하다"고 주장해 우회할 수 있으면 검사가 아니다. `force=true`·`skip_review`가
+  이 안티패턴의 실제 형태.
+- `enforcementDeterminism` {deterministic-rule, model-judged} — **같은 모델이 자기를 검사하면
+  단일 고장 격리 영역**이라 원리적으로 자기 인증 불가(AV의 "attempted high-SIL doer/checker"
+  = 권장하지 않음 패턴). LLM-judges-itself 가드레일에 대한 온톨로지 층위의 반론.
+- `guardrailDetects` {in-envelope-error(범위 안인데 틀림), out-of-envelope(애초에 범위 밖),
+  adversarial(주입·오염)} — 세 번째는 **보안**이라 위협모델·증거요건이 다르다(별도 개념 태그).
+- **비용 법칙**: 감시자는 doer보다 싸야 한다 — 매 행동마다 도는 검사가 doer보다 비싸면
+  action gate에 앉을 수 없고 post-hoc으로 강등된다. `tokenEstimate`를 guardrail에 규율.
+- **평가 지표**: PASS와 나란히 **false rejection rate**를 보고할 것 — 없으면 "전부 거부하는
+  가드레일"이 만점을 받는다.
+
+**(b) 열화 사다리 (degraded-mode ladder)** — safe-halt 하나가 아니라 **등급별 rung**,
+각 rung이 6필드: {목표, 통제 보유자, 남은 능력(도구·컨텍스트), 자율 가용성, 사용자 비용,
+**남은 회복탄력성**}. 에이전트 인스턴스: 완전 자율 → 범위축소 자율(정리 후 인계) →
+행동마다 승인 → 상태 체크포인트 후 정지 → 정리 없는 강제 중단. 마지막 열(남은 탄력성)이
+"다음 고장이면 복구 불가"를 말해 준다 — safe-halt가 말해야 하는 바로 그것.
+**범위 변경(envelope change)이 컴포넌트 고장과 나란히 1급 열화 트리거**임에 주의.
+
+**(c) 인계(handover) 4-슬롯 스키마** — 지금의 "인간에게 에스컬레이션"보다 훨씬 규정적:
+1. **통지 기간**: `noticeLeadTime`(통지→기한)과 `responseWindow`(실질 응답 기한)는 **두 개의
+   수**다. 실증(129연구 메타분석): **여유를 더 주면 응답이 더 느려진다**(평균 +1.35초) —
+   사람은 주어진 시간을 상황 파악에 쓴다. 단일 timeout 필드는 틀린 모델을 굳힌다.
+   2단계(권고 통지 → 명령 통지) + 단계 간 간격(**U자형**: 너무 짧아도 너무 길어도 나빠짐) +
+   예산의 ~40% 지점 에스컬레이션. **절대값은 이식 금지**(공개 권고치 5–15초로 수렴 없음).
+2. **정보 payload**: SA 3층(지각/이해/예측). 핵심 실증 — 자동화는 **이해(Level 2)를 파괴하고
+   지각(Level 1)은 온전**하게 둔다 → **diff·명령문·로그만 보여주는 승인 화면은 결핍이 없는
+   층만 채우고 결핍된 층은 비운다**. 필수 3슬롯: 무엇이 일어날 것인가 / 그것이 선언된 과업·
+   Contract 기준에 비추어 무슨 뜻인가 / 이후 상태와 **무엇이 비가역이 되는가**.
+3. **준비성 전제**: 가용성은 **기본 false**이며 계속 재획득해야 한다 — 독립 신호 **2개 이상이
+   최근 창(rolling window) 안에** 있어야 가용. 세션 시작 승인 1회를 **은행에 넣어두고 런 내내
+   인간이 있다고 간주하는 흔한 패턴은 금지**. 상실 시 warn → (시한) → 인계 요구 → 정지.
+4. **무응답 처리**: 통지는 **조용히 소멸할 수 없다**(확인된 인계 또는 fallback 시작으로만 종료).
+   대기 중에도 **하네스는 계속 안전하게 동작**해야 한다(쓰기 도중 얼어붙거나 방기 금지).
+   fallback은 속도 제한(원자 단위는 마치거나 체크포인트) + **공표** + 종단 상태 + **자기 재개
+   불가**. 심각 고장은 예산을 건너뛰는 즉시 fallback(2-tier).
++ `responseComplexity` {stabilize | execute-specified-action | **choose-among-options**} —
+필요 리드타임이 등급마다 다르다. 그리고 **개입 종류(interventionKind)** 는 하나가 아니다:
+지각 교정 / 옵션 승인(기계가 후보를 내고 인간이 고름) / 목표·경유지 지정 / **검사된 명령**
+(인간 입력을 하네스가 검사·거부 — 권한 방향이 반대!) / 직접 실행 / 감시 전용.
+
+**(d) Oracle 사다리 4단** — "산문을 시제논리로 바꾼다"가 아니라 **적합한 rung을 고르는 문제**:
+① 분석적 규칙 술어(물리/규칙이 알려진 경우; 파라미터를 **명시 가정 개체**로 선언) ②
+궤적 위의 시간논리(순서·타이밍이 관건; G/F/U + **경계 구간**) ③ 지표+목표값 KPI ④
+커버리지·통계 논증(단일 실행 판정이 불가능한 경우). **모든 rung에 공통 불변식: oracle은
+boolean이 아니라 signed margin(부호=판정, 크기=여유)을 낸다** — 이것이 탐색·심각도 순위·
+일관성 검사를 가능케 한다. LLM-judge도 **보정된 점수를 내면 유효한 backend**이므로 전부를
+형식논리로 만들 필요는 없다.
+부수 함정: (i) **단조성 함정** — 서로 다른 단위의 하위 oracle을 논리곱하면 한 항이 margin을
+지배해 탐색을 오도한다(정규화를 oracle 노드에 기록), (ii) **전제 슬롯 필수** — 시작부터
+이미 실패한 실행이 until류 oracle을 자동 통과시킨다(실측된 실제 함정), (iii) 지식경계
+용어 데드밴드(`oracleTolerance`) 없으면 판정이 진동.
++ 시나리오 **슬롯 템플릿**: 하나의 파라미터화된 형태에서 N개 시나리오를 생성 —
+{전제(정상·정지 상태) × 환경 슬롯 × **행위자 행동** × **상대방 행동** × **공유 위험 술어 1개**}.
+**상대방(counterparty) 슬롯이 우리에게 완전히 없다** — scenarioPrompt는 입력을 적을 뿐
+"상대가 런 도중 어떻게 변해가는가"(중간에 목표 변경·모순 지시·침묵·불량 산출물 반환)를
+못 적는다. 멀티에이전트 모드에서 특히 결함.
++ 변량 선언: {정적 파라미터, 시변 신호, 반복 횟수, 시드, **탐색 행태 {falsification |
+minimization}**} — falsification=위반 하나 찾으면 정지(CI 게이트), minimization=예산 전부
+써서 최악을 찾음(stable 승격 전). **단일 실행은 승격 증거가 될 수 없다**(10회 반복 규율,
+무작위 baseline 대비 보고).
+
+### B4. 상류 도출 절차 — "이 하네스에 어떤 guardrail이 필요한가"를 **유도**한다
+
+지금까지 우리 guardrail은 관찰·수집으로 늘었다. AV는 이를 **유도 절차**로 만든다:
+
+1. **손실 → 위험 → 시스템 제약**(각 단계가 앞 단계를 괄호 추적성으로 참조),
+2. **통제 구조도**를 그리고, 각 통제 행위마다 **네 가지 비안전 유형**을 훑는다:
+   (a) 필요한데 안 함, (b) 했는데 위험, (c) **너무 이르거나 늦거나 순서가 틀림**,
+   (d) 너무 일찍 멈추거나 너무 오래 지속(연속 행위에만 — 이산 행위면 **명시적 제외로 기록**),
+3. 각 비안전 행위에서 **통제자 제약**(=우리 Guardrail)과 **손실 시나리오**(=우리
+   FailurePolicy)를 두 갈래로 도출: 왜 그 행위가 나왔나 / 안전한 행위가 왜 잘못 실행됐나
+   (후자를 대부분 빠뜨린다).
+4. 위험분석 **행 형식**은 Khlaaf 형식을 차용: `ID | 위험 원천 | 서술 | 촉발 사건 |
+   [envelope 5축 각각의 열] | 잠재적 영향 | 위험지수 | 권고 완화 | 완화 후 지수`.
+   **envelope 축이 위험분석 행의 열이 된다** — 빈 칸이 곧 GAP이므로 coverage-audit이
+   기계적으로 검사 가능.
+5. **등급(tier)은 별개 축**이며 **엄밀도 스케일링에만** 쓴다(위험 기각용 아님). 중요한 것은
+   라벨이 아니라 **상속 규칙**: 등급은 안전 목표에 부여되고 **거기서 파생된 모든 요구가 상속**한다.
+   등급별로 "권장 방법 표"(행=방법, 열=등급)를 두는 형식이 우리 maturity(draft/reviewed/stable)
+   승격 요건의 정확한 이식처다.
+6. SOTIF 완화 3선택지를 **명시적 선택으로 기록**: ①기능 수정 ②**envelope 축소**(가장 싸고
+   정직한 수정인데 우리는 "범위 축소"를 완화책으로 쓸 어휘가 없다) ③런타임 guardrail+열화.
+   어느 것을 골랐는지가 곧 safety case 증거다.
+7. 도구 배제 우선순위(Varshney): **아예 능력을 주지 않음 > 안전 실패 설계 > 안전 여유 >
+   절차적 안전장치**. "가드레일로 막기보다 능력을 빼는 것이 낫다"는 어휘가 지금 없다.
+
+### B5. (A) 인벤토리에 대한 변경
+
+- **W1 확장**: envelope에 **5축**(도메인·과업·주체·표면·자산) 반영, `envelopeObservable` 유지,
+  속성별 permissive/restrictive + **Boolean/categorical/numeric 타입 선언**, 술어식 문법
+  (`S | ¬S | S∧S`), **envelope 모니터를 별도 Guardrail 종류로**(ObservationSpace와 분리),
+  `violationDwell`(순간 이탈 무시), autonomyTier에 **L0 포함** + Endsley {decide,act} 배분 +
+  **승인 단위** 판별자, **capability≠authorization** 분리 명문화.
+- **W2 확장**: oracle을 **4-rung + signed margin**으로, 시나리오 **슬롯 템플릿**과 **상대방
+  행동 슬롯**, 변량에 falsification/minimization, `scenarioRole`(저작용/판정용 방화벽),
+  layer-under-test 축(fidelity와 독립).
+- **W3 확장**: CAE **Defeater + out-of-scope claim**을 GSN 구조에 추가, 보고서에
+  **(파라미터 바인딩, margin) 이력 + 최악 사례**, **reportedVerdict vs validatedVerdict** 분리,
+  무작위 baseline 대비, 10회 반복 규율.
+- **W4 확장**: `harness-qualification` recipe에 **STPA 유도 절차 + Khlaaf 위험분석 행 형식**을
+  전단계로 삽입, **양방향 반복 검증**(envelope ↔ 시나리오가 서로를 교정, 안정될 때까지).
+- **신규 W6 후보**(작음): **리다이렉트 회복 전략** — 범위 밖 요청을 "그 범위를 선언한 다른
+  하네스"로 넘기는 것. 여러 하네스를 아는 **그래프만 할 수 있는 일**이고 Model Cards가
+  권고만 하고 못 한 것 — 우리의 차별점으로 명시할 가치가 있다.
+
+### B6. 새로 확인된 함정 (저작 시 금지·주의)
+
+1. 감시자가 doer보다 비싸면 그 부착점에 앉을 수 없다 — 비용을 필드로.
+2. false rejection rate 없는 guardrail 평가는 자기기만.
+3. 같은 모델의 자기검증은 단일 고장 격리 영역 — 인증 불가(안티패턴 개체로 명문화).
+4. 승인 은행화(세션 시작 1회 승인으로 런 전체 커버) 금지 — 정족수+신선도.
+5. 긴 통지가 빠른 응답을 사지 않는다 — 통지와 응답기한은 별개 수.
+6. 지지 증거만 있는 검증 보고서는 기준선 미달 — Defeater 필수.
+7. margin 정규화 없는 논리곱 oracle은 탐색을 오도.
+8. "안전하나 계약 이탈"을 명시적 REJECT로 — 2×2 판정표(안전×달성가능)로 표현.
+9. fallback 자체의 충분성도 검사 대상(실패의 상당수가 fallback 발동 **이후** 발생).
+10. 절대 수치(초·임계값) 이식 금지 — 스키마·비율·형태·인과 방향만 이식.
+
+### B7. 부록 B 주요 출처
+
+Khlaaf AI-ODD <https://arxiv.org/pdf/2606.29390> · Agent Operational Envelope
+<https://arxiv.org/html/2606.04037v2> · 3-layer assume–guarantee <https://arxiv.org/html/2605.18672> ·
+Ag-ODD <https://arxiv.org/pdf/2511.02937> · AMLAS <https://www.york.ac.uk/media/assuring-autonomy/documents/AMLASv1.1.pdf> ·
+Safety cases(CAE·defeater) <https://arxiv.org/html/2411.08088> / <https://arxiv.org/abs/2403.10462> ·
+CSA 자율수준 <https://cloudsecurityalliance.org/blog/2026/01/28/levels-of-autonomy> ·
+Endsley SA·자동화 <https://maritimesafetyinnovationlab.org/wp-content/uploads/2019/12/Automation-and-Situation-Awareness-Endsley.pdf> ·
+Model Cards <https://arxiv.org/pdf/1810.03993> · Swiss Cheese 가드레일 <https://arxiv.org/html/2408.02205v3> ·
+confused deputy <https://arxiv.org/pdf/2606.28679> · OD/ODD/COD 형식화 <https://arxiv.org/html/2408.14481> ·
+Koopman 안전 아키텍처 <https://course.ece.cmu.edu/~ece642/lectures/Xtra_SafetyArchPatterns.pdf> ·
+Command Override 안티패턴 <http://safeautonomy.blogspot.com/2019/02/> · CMU 특허(단계별 doer/checker)
+<https://patents.google.com/patent/US10962972B2/en> · RTA 형식화 <https://arxiv.org/pdf/2209.01120> ·
+NASA RTA 증명의무 <https://shemesh.larc.nasa.gov/fm/papers/NFM2024-draft.pdf> · NXP 열화 사다리
+<https://arxiv.org/pdf/2011.00892> · mission vs platform 감시 <https://arxiv.org/pdf/2606.06996> ·
+RSS <https://arxiv.org/pdf/1708.06374> · ISO34502-STL 슬롯 템플릿 <https://arxiv.org/pdf/2403.18764> ·
+PSY-TaLiRo <https://arxiv.org/pdf/2106.02200> · ARCH-COMP 보고형식 <https://easychair.org/publications/paper/fKVR/open> ·
+criticality metrics <https://arxiv.org/pdf/2108.02403> · R157(무료 EUR-Lex) <https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:42021X0389> ·
+takeover 메타분석 <https://pure.tudelft.nl/ws/portalfiles/portal/68632405/1_s2.0_S1369847818303693_main.pdf> ·
+takeover 리뷰 <https://arxiv.org/pdf/2507.22262> · 텔레오퍼레이션 개입 유형 <https://arxiv.org/pdf/2208.08876> ·
+STPA Handbook(무료) <https://psas.scripts.mit.edu/home/get_file.php?name=STPA_handbook.pdf>

@@ -145,5 +145,37 @@ TBox 카디널리티에서 유효 구성 열거 → 가지치기(SHACL) → 환�
 가능한 게이트**(범위이탈 negative control)로 이식 가치가 즉시 측정된다. **(C) W3**은 스키마
 파급이 없어 W1과 **병행 가능** — 두 개를 동시에 돌리는 것도 합리적 선택이다.
 
+## 사용자 결정 (2026-08-28, inbox `status: approved`)
+
+**"(B)를 우선으로 진행하고 동시에 (A)는 사례조사를 하면서 더 구체화해서 진행."**
+
+이에 따라 inspection이 두 갈래를 모두 진행했다:
+
+- **(B) 착수 지원**: W1 dispatch 브리프 초안 확보 —
+  `docs/feedback/inquiries/av-w1-envelope-brief.md` (envelope 클래스 3 + AutonomyTier +
+  envelope-exit 정책 + shapes 4종 이빨 + ABox 개체 ~40 + **죽은 어휘 정리 택1 강제** +
+  registry 3중 등록 체크리스트 + negative control 게이트). 채택·dispatch는 orchestrator.
+- **(A) 구체화**: 재개 조사(prior-transfer + 보충 4축)를 구상 문서 **부록 B**에 반영
+  (`inquiries/av-odd-scenario-transfer.md`). 부록 B는 본문에 **우선**한다.
+
+### (A) 구체화가 이 계획을 바꾼 지점 (요약 — 상세는 부록 B2·B5)
+
+1. **envelope은 5축**(대상영역·과업/절차·관여주체·인터페이스 표면·자산) — 도메인 축으로
+   좁히는 것은 선행 연구가 명시적으로 지적한 오류. W1 ABox 인벤토리를 5축 스킴으로 교체.
+2. **"COD 감시 = ObservationSpace"는 범주 오류** — 속성공간/선언 술어식/측정 튜플/평가자
+   4분이 정답. envelope 모니터는 ObservationSpace가 아니라 **별도 Guardrail 종류**.
+3. **자율성 사다리에 L0(권고만) 필수**, 판별자는 **인간 승인 단위의 크기**, 정의는 Endsley의
+   {decide, act} 배분으로. HITL/HOTL/HOOTL은 **직교하는 별도 스킴**(+ "인간이 왜 있는가"의
+   9역할 축까지 셋).
+4. **capability ≠ authorization** — approvalScope는 능력 그래프에서 파생 금지(confused-deputy).
+5. **검증 보고에 Defeater 필수**(지지 증거만 나열하면 이 분야 기준선 미달) → W3 확장.
+6. **safe-halt는 상태 + 자동 재개 불가** — 자기 재개하면 halt가 아니라 pause.
+7. **신규 W6 후보**: 범위 밖 요청의 **리다이렉트**(그 범위를 선언한 다른 하네스로) — 여러
+   하네스를 아는 **그래프만 할 수 있는 회복 전략**이며 우리 차별점.
+
+또한 **우리가 처음인 두 지점**이 확인됐다(선행 없음): 에이전트 TestScenario의 functional→
+logical→concrete 사다리, SOTIF 4영역의 LLM 이식. 이 둘은 "선행 채택"이 아니라 **우리 설계**로
+제시해야 한다(출처 표기 시 주의).
+
 ## 적용 결과 (orchestrator 기록란 — 적용 후 채움)
-(미기록 — 승인 대기)
+(미기록 — W1 브리프 채택·dispatch 대기)
