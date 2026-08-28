@@ -311,12 +311,12 @@ id:wfs-control-transfer a ho:WorkflowStep ;
 id:dlv-dispatch-brief a ho:Deliverable ;
     skos:prefLabel "Dispatch brief" ;
     skos:definition "The node-scoped brief the orchestrator produces when planning a request and hands to the worker it dispatches: WHAT is delegated to WHOM, self-contained enough that a cold-start worker can act on it alone. Produced by the plan-and-dispatch step and consumed by the author-and-verify step." ;
-    ho:tagged id:c-multiagent ; ho:tokenEstimate 44 ; ho:maturity "reviewed" .
+    ho:tagged id:c-multiagent, id:c-dispatch ; ho:tokenEstimate 44 ; ho:maturity "reviewed" .
 
 id:dlv-verified-result a ho:Deliverable ;
     skos:prefLabel "Verified result" ;
     skos:definition "The authored work together with the verifier's pass judgment, emitted once authoring and verification are complete: the artifact that is admitted into the shared output only after it checks out. Produced by the author-and-verify step and consumed by the integrate-and-gate step." ;
-    ho:tagged id:c-multiagent ; ho:tokenEstimate 40 ; ho:maturity "reviewed" .
+    ho:tagged id:c-multiagent, id:c-verify-proceed ; ho:tokenEstimate 40 ; ho:maturity "reviewed" .
 
 # The named artifacts that flow between id:wf-compose-harness's eight steps —
 # each produced by one step and consumed by the next, so the composition

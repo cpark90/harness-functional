@@ -94,7 +94,7 @@ id:role-orchestrator a ho:Role ;
     ho:roleGuardrail id:gr-delegated-orchestration, id:gr-report-over-prompt,
         id:gr-bounded-context, id:gr-reuse-first, id:gr-online-execution,
         id:gr-user-elicitation ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-delegation ;
     ho:roleMemoryPolicy "Reads and writes only its own role-scoped memory at session start/end; plans from a bounded retrieval pack, never the whole store." ;
     ho:userFacing true ; ho:maturity "reviewed" .
 
@@ -104,7 +104,7 @@ id:role-inspection a ho:Role ;
     ho:roleTool id:tool-shell, id:tool-editor, id:tool-retriever ;
     ho:roleGuardrail id:gr-traceability, id:gr-report-over-prompt,
         id:gr-least-privilege, id:gr-verify-proceed, id:gr-online-execution ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-online-agent ;
     ho:roleMemoryPolicy "Runs in its own session; reads and writes only its own role-scoped memory at session start/end and consumes the feedback channel by verified status, never by elapsed time." ;
     ho:userFacing true ; ho:maturity "reviewed" .
 
@@ -114,7 +114,7 @@ id:role-research a ho:Role ;
     ho:roleTool id:tool-websearch, id:tool-retriever ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-grounding, id:gr-bounded-context ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable findings at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
@@ -124,7 +124,7 @@ id:role-vnv a ho:Role ;
     ho:roleTool id:tool-shell, id:tool-retriever ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-verify-proceed, id:gr-no-arbitrary-decision ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-verify-proceed ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable verification heuristics at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
@@ -174,7 +174,7 @@ id:role-analyst a ho:Role ;
     ho:roleTool id:tool-editor ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-grounding, id:gr-structured-output ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable diagnostic heuristics at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
@@ -194,7 +194,7 @@ id:role-implementer a ho:Role ;
     ho:roleTool id:tool-editor, id:tool-shell ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-simplicity, id:gr-root-cause ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable construction knowledge at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
@@ -204,7 +204,7 @@ id:role-planner a ho:Role ;
     ho:roleTool id:tool-editor ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-bottleneck-avoidance, id:gr-structured-output ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable planning heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
 
@@ -214,7 +214,7 @@ id:role-strategist a ho:Role ;
     ho:roleTool id:tool-editor ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-grounding, id:gr-no-arbitrary-decision ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable option-framing heuristics at session end; touches no other role's memory." ;
     ho:maturity "reviewed" .
 
@@ -242,7 +242,7 @@ id:role-curator a ho:Role ;
     ho:roleTool id:tool-editor ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-grounding, id:gr-structured-output ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable selection and organisation heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
 
@@ -308,7 +308,7 @@ id:role-coordinator a ho:Role ;
     skos:prefLabel "Coordinator agent" ; skos:altLabel "coordinating peer" , "team coordinator" ;
     skos:definition "A coordination-only peer role in an agent team that plans, sequences and checks the status of the team's work but performs none of the execution itself -- the execution is carried out by execution agents spawned separately for it, so coordinating a peer team never collapses planning and doing into one agent. Choose it to give a peer team an explicit coordinating peer without letting that peer also do the work. Distinguished from id:role-orchestrator, which is the user-facing lead that decomposes a request and dispatches node-scoped briefs to workers (a central-dispatch lead, not a peer that runs alongside the team), and from id:role-planner, an ordinary dispatched worker whose deliverable is a plan document others then execute -- this role instead runs with the team throughout, coordinating and tracking status rather than producing a plan artifact." ;
     ho:roleGuardrail id:gr-execution-separation, id:gr-least-privilege, id:gr-verify-proceed ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-delegation ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable coordination and status-tracking heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
 
@@ -338,7 +338,7 @@ id:agent-orchestrator a ho:Agent ;
     ho:agentObservation id:os-orchestrator ;
     ho:agentFunction id:cap-orchestration ;
     ho:cognitiveCapacity 150000 ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-delegation ;
     ho:maturity "draft" .
 
 id:agent-developer a ho:Agent ;
@@ -348,7 +348,7 @@ id:agent-developer a ho:Agent ;
     ho:agentObservation id:os-developer ;
     ho:agentFunction id:cap-fileedit, id:cap-codeexec ;
     ho:cognitiveCapacity 150000 ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-bounded-context ;
     ho:maturity "draft" .
 
 id:agent-vnv a ho:Agent ;
@@ -358,7 +358,7 @@ id:agent-vnv a ho:Agent ;
     ho:agentObservation id:os-vnv ;
     ho:agentFunction id:cap-codeexec ;
     ho:cognitiveCapacity 150000 ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-verify-proceed ;
     ho:maturity "draft" .
 
 id:agent-inspection a ho:Agent ;
@@ -368,7 +368,7 @@ id:agent-inspection a ho:Agent ;
     ho:agentObservation id:os-inspection ;
     ho:agentFunction id:cap-traceability ;
     ho:cognitiveCapacity 150000 ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-online-agent ;
     ho:maturity "draft" .
 
 id:agent-synthesizer a ho:Agent ;
@@ -378,5 +378,5 @@ id:agent-synthesizer a ho:Agent ;
     ho:agentObservation id:os-synthesizer ;
     ho:agentFunction id:cap-synthesis ;
     ho:cognitiveCapacity 150000 ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-synthesis ;
     ho:maturity "draft" .

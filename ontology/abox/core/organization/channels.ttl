@@ -29,7 +29,7 @@ id:chan-agent-user a ho:Channel ;
     skos:prefLabel "Agent-user channel" ; skos:altLabel "feedback channel" ;
     skos:definition "The single agent<->user conduit (a durable feedback inbox with report-back files), used instead of volatile chat: the user files change/decision requests and agents leave reports and decision requests, keeping chat minimal (report-over-prompt). The user is the only endpoint who may flip an item's approval status (open->approved); that tagging is the sole authorization signal, so the channel enforces a human approval gate before any application." ;
     ho:channelParticipant id:role-orchestrator, id:role-inspection ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-communication ;
     ho:involvesUser true ;
     ho:channelMedium "durable file channel (inbox/report)" ;
     ho:maturity "reviewed" .
@@ -38,7 +38,7 @@ id:chan-orchestrator-inspection a ho:Channel ;
     skos:prefLabel "Orchestrator-inspection channel" ; skos:altLabel "coordination channel" ;
     skos:definition "Coordination between the orchestrator and inspection, which run in SEPARATE sessions and therefore cannot use chat or spawn return values. All hand-off is via durable files plus status markers (write as wip, rename on completion; a frontmatter status field). Two lanes ride it: a verify lane (feedback inbox -> verified reports) and an inquiry lane (open -> answered -> closed). Each side scans the channel on its own cycle and consumes only completed items -- verify-then-proceed, never assuming the other session finished by elapsed time." ;
     ho:channelParticipant id:role-orchestrator, id:role-inspection ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-communication ;
     ho:involvesUser false ;
     ho:channelMedium "persistent file channel + status markers (wip->rename, frontmatter status)" ;
     ho:maturity "reviewed" .
@@ -48,7 +48,7 @@ id:chan-dispatch a ho:Channel ;
     skos:definition "The orchestrator->worker conduit: the orchestrator plans a request into node-scoped briefs and dispatches each to a specialised worker agent (spawned as a subagent under least-privilege), then integrates the returned results. Workers act only when dispatched over this channel, not standalone. Distinct from the durable file channels because coordination here is the spawn/return of the subagent invocation itself." ;
     ho:channelParticipant id:role-orchestrator, id:role-implementer, id:role-research,
         id:role-vnv, id:role-design ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-communication ;
     ho:involvesUser false ;
     ho:channelMedium "dispatch (subagent spawn)" ;
     ho:maturity "reviewed" .
@@ -58,7 +58,7 @@ id:chan-workspace a ho:Channel ;
     skos:definition "A shared file workspace over which worker roles hand off intermediate deliverables: each writes its output as a named artifact file in a common directory and downstream roles read it from there, so contributions accumulate as durable artifacts rather than transient messages. Distinct from central dispatch (id:chan-dispatch, coordination by spawn/return) and from a message mesh (id:chan-peer, coordination by direct messages): coordination here is by shared files, which lets a terminal convergence gate pick up every worker's deliverable from one place. The user is not an endpoint." ;
     ho:channelParticipant id:role-implementer, id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-communication ;
     ho:involvesUser false ;
     ho:channelMedium "shared file workspace (named artifact files in a common directory)" ;
     ho:maturity "reviewed" .
@@ -67,7 +67,7 @@ id:chan-peer a ho:Channel ;
     skos:prefLabel "Peer channel" ; skos:altLabel "peer message mesh" ;
     skos:definition "The peer-to-peer coordination conduit of a peer-mesh harness: worker roles send work, requests, judgments and results DIRECTLY to one another over a message mesh, with no central-only orchestrator relaying every hand-off (contrast id:chan-dispatch, where the orchestrator spawns each worker and integrates every result). The channel that realises id:pat-peer-mesh. Coordination topology is a pluggable, extensible dimension: a harness selects peer-mesh by declaring ho:appliesPattern id:pat-peer-mesh together with this channel, exactly as an orchestrator-workers harness pairs id:pat-orchestrator-workers with id:chan-dispatch; a new topology is added as a new ho:DesignPattern + ho:Channel without disturbing either existing one. Peers here are worker roles only — no central dispatcher endpoint — and the user is not an endpoint." ;
     ho:channelParticipant id:role-implementer, id:role-vnv, id:role-research, id:role-design ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-communication ;
     ho:involvesUser false ;
     ho:channelMedium "peer message mesh" ;
     ho:maturity "reviewed" .
@@ -77,7 +77,7 @@ id:chan-task-board a ho:Channel ;
     skos:definition "A shared task list over which workers claim tasks and report progress with task-update entries, and off which the leader is automatically notified when a worker goes idle. The fourth hand-off medium after files (id:chan-workspace), direct messages (id:chan-peer) and spawn/return (id:chan-dispatch): coordination here is by a durable board of claimable task items with progress updates, distinct from those three. The default endpoints are the worker roles; the notified leader is a harness-dependent endpoint that each binding harness fills with its own lead/coordinating role, so no single leader role is fixed here. The user is not an endpoint." ;
     ho:channelParticipant id:role-implementer, id:role-research,
         id:role-vnv, id:role-design ;
-    ho:tagged id:c-multiagent ;
+    ho:tagged id:c-multiagent, id:c-communication ;
     ho:involvesUser false ;
     ho:channelMedium "shared task board (claimable task items with task-update entries)" ;
     ho:maturity "draft" .

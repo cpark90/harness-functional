@@ -508,16 +508,23 @@ ho:AnchorShape a sh:NodeShape ;
 # of drift, but ONLY under the rule its definition states: alternatives re-tell
 # the SAME knowledge region. This shape gives that rule teeth rather than leaving
 # it a prose promise — two nodes linked by ho:alternativeOf must share at least
-# one ho:tagged Concept, so "alternative" cannot be used to excuse two nodes that
-# are simply about different things. A SPARQL constraint because SHACL Core has
-# no way to compare one node's value set against another's. The property is
-# symmetric, so the reasoner materialises both directions and each violating pair
-# is reported from both ends.
+# one ho:tagged Concept whose ho:conceptFacet is a DISCRIMINANT facet ("anatomy"
+# or "method"): only those facets say what a node is ABOUT. A shared quality /
+# domain / scope Concept says something about both nodes without saying they
+# cover the same content (sharing "multiagent" or "safety" is not sharing a
+# region), so it cannot excuse two nodes that are simply about different things.
+# A SPARQL constraint because SHACL Core has no way to compare one node's value
+# set against another's. The property is symmetric, so the reasoner materialises
+# both directions and each violating pair is reported from both ends. Federation
+# note: this fires ONLY on declared ho:alternativeOf subjects — facet-less
+# recipe-local Concepts are never violations by themselves; they merely cannot
+# anchor a region, and a recipe that wants alternativeOf declares a facet on its
+# shared Concept (facet is recommended, not required, outside id/core/).
 ho:AlternativeOfSharedAnchorShape a sh:NodeShape ;
     sh:targetSubjectsOf ho:alternativeOf ;
     sh:sparql [
         a sh:SPARQLConstraint ;
-        sh:message "ho:alternativeOf must link descriptions of the SAME region: this node and {?other} share no ho:tagged Concept (tag both with the shared region, or the pair is drift, not an alternative)." ;
+        sh:message "ho:alternativeOf must link descriptions of the SAME region: this node and {?other} share no ho:tagged Concept with a discriminant ho:conceptFacet (\"anatomy\"/\"method\") — tag both with the shared content region, or the pair is drift, not an alternative (a shared quality/domain/scope tag says nothing about content)." ;
         sh:prefixes <https://harness-ontology.dev/shapes> ;
         sh:select """
             SELECT $this ?other
@@ -526,6 +533,8 @@ ho:AlternativeOfSharedAnchorShape a sh:NodeShape ;
                 FILTER NOT EXISTS {
                     $this ho:tagged ?region .
                     ?other ho:tagged ?region .
+                    ?region ho:conceptFacet ?facet .
+                    FILTER(?facet IN (\"anatomy\", \"method\"))
                 }
             }
             """ ] .

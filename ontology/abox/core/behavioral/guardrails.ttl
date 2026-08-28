@@ -103,7 +103,7 @@ id:gr-delegated-orchestration a ho:Guardrail ; skos:prefLabel "Delegated-only or
     ho:tagged id:c-delegation ; ho:tokenEstimate 42 ; ho:maturity "reviewed" .
 id:gr-execution-separation a ho:Guardrail ; skos:prefLabel "Separated plan and execution" ; skos:altLabel "plan/status role does not execute" ;
     ho:promptText "An agent that plans work or checks/verifies its status does not itself perform the execution; execution is always carried out by a distinct, separately-spawned execution agent -- in every coordination topology, orchestrator-workers and agent-teams alike." ;
-    ho:tagged id:c-multiagent ; ho:tokenEstimate 50 ; ho:maturity "draft" .
+    ho:tagged id:c-multiagent, id:c-agent-methodology ; ho:tokenEstimate 50 ; ho:maturity "draft" .
 id:gr-reuse-first a ho:Guardrail ; skos:prefLabel "Reuse-first composition" ; skos:altLabel "anti-orphan authoring" ;
     ho:promptText "Compose by REUSING existing typed parts first; author a new part only when none fits, and in the same change connect it (a broader parent / a tag / a provider) so it is never an orphan -- this is the anti-drift, anti-orphan discipline of composition." ;
     ho:tagged id:c-reuse-first ; ho:tokenEstimate 62 ; ho:maturity "reviewed" .
@@ -151,7 +151,7 @@ id:gr-generalize-not-overfit a ho:Guardrail ; skos:prefLabel "Generalize, do not
     ho:tagged id:c-design ; ho:tokenEstimate 50 ; ho:maturity "draft" .
 id:gr-absolute-paths a ho:Guardrail ; skos:prefLabel "Absolute workspace paths" ;
     ho:promptText "Reference shared-workspace files by absolute path rooted at the workspace directory rather than by relative path, so every agent and session resolves the same file regardless of its working directory." ;
-    ho:tagged id:c-multiagent ; ho:tokenEstimate 46 ; ho:maturity "draft" .
+    ho:tagged id:c-multiagent, id:c-deliverable-artifact ; ho:tokenEstimate 46 ; ho:maturity "draft" .
 id:gr-well-formed-skill a ho:Guardrail ; skos:prefLabel "Well-formed skill" ;
     ho:promptText "Author every skill in well-formed shape: a present description, the required section headings and no forbidden files, so the skill is discoverable, invocable and passes its structural contract." ;
     ho:tagged id:c-skill-authoring ; ho:tokenEstimate 46 ; ho:maturity "draft" .
@@ -172,7 +172,7 @@ id:ins-well-formed-skill a ho:Instruction ; skos:prefLabel "Well-formed skill au
     ho:tokenEstimate 72 ; ho:maturity "draft" .
 id:gr-opus-required a ho:Guardrail ; skos:prefLabel "Opus model required" ; skos:altLabel "dispatch model floor" ;
     ho:promptText "Spawn quality-critical dispatch roles (authoring and judgment) on the top-tier model, since their output determines final correctness; make the model requirement explicit rather than leaving it to template default." ;
-    ho:tagged id:c-multiagent ; ho:tokenEstimate 50 ; ho:maturity "draft" .
+    ho:tagged id:c-multiagent, id:c-dispatch ; ho:tokenEstimate 50 ; ho:maturity "draft" .
 
 #===================== Team review, routing and acceptance discipline ==
 id:gr-cross-validation a ho:Guardrail ; skos:prefLabel "Cross-validate every deliverable" ; skos:altLabel "severity-triaged peer review" ;

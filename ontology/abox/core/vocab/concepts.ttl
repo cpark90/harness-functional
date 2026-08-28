@@ -205,7 +205,7 @@ id:c-online-agent a ho:Concept ;
 id:c-delegation a ho:Concept ;
     skos:prefLabel "Delegated orchestration" ;
     skos:altLabel "orchestrator does not work directly" ;
-    skos:definition "The principle that the user-facing orchestrator does no substantive work directly but only plans and dispatches, with all execution flowing through the worker agents." ;
+    skos:definition "The principle that a role which coordinates work -- whether the user-facing orchestrator or a non-user-facing coordinating peer -- does no substantive work directly but only plans, delegates and tracks it, with all execution flowing through the worker agents." ;
     skos:broader id:c-multiagent ; ho:conceptFacet "method" .
 id:c-synthesis a ho:Concept ;
     skos:prefLabel "Synthesis" ;
