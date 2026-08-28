@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [tools/plane-editor, id:pat-knowledge-plane-separation]
 related: [docs/verify/plane-editor-c1b-verify.md, docs/verify/plane-editor-phase1-verify.md]
 ---
@@ -73,6 +73,10 @@ related: [docs/verify/plane-editor-c1b-verify.md, docs/verify/plane-editor-phase
 
 어느 쪽이든 Phase 2 이후 스키마 결정으로 편성한다(항목 원문과 동일). 아래에 (b′)/(c′) 중
 선택을 남겨 주면 해당 브리프를 준비한다.
+
+## 사용자 결정 2 (2026-08-28)
+**(b′) 안정 블록 id로 진행.** — inspection이 dispatch-ready 브리프 작성:
+`inquiries/block-id-anchor-brief.md` (채택·dispatch는 orchestrator).
 
 > 정정: 본문 "참고"의 "결정 5·6 미응답"은 stale — 이후 사용자가 5-(a)·6-(b)로 응답 완료
 > (`plane-editor-and-kg-content-decisions.md` 처리 기록 참조). 6-(b)에는 이 lane의 지적
