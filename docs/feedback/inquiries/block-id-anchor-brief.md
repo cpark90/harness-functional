@@ -1,5 +1,5 @@
 ---
-status: answered        # inspection이 작성한 dispatch-ready 초안 — orchestrator가 소비(plans/로 채택) 후 closed
+status: answered        # ⚠ HOLD — anchor-move-mechanism-recheck에 상반 답변((b)=Loro) 존재, 사용자 재확인 전 채택 금지
 kind: dispatch-brief-draft
 consumer: orchestrator → developer (opus)
 source: docs/feedback/anchor-move-recovery-tradeoff.md   # 사용자 결정 (b′), status: approved
