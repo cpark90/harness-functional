@@ -56,3 +56,11 @@ related: [docs/feedback/anchor-move-recovery-tradeoff.md]
 본 항목 작성 세션이 (b′) 결정 push를 보기 전에 재질의를 올린 것으로 보인다(중복 질의).
 **해소 전까지 block-id 브리프 채택과 Loro wave 착수 둘 다 HOLD** — 사용자 확인이 유일한
 해소 신호다. 확인되면 이 절과 상대 항목에 최종 결정을 기록하고 패배한 경로를 폐기한다.
+
+## 충돌 해소 (사용자 최종 확인, 2026-08-28)
+
+**최종 결정 = (b′) 안정 블록 id** (본 항목 선택지의 (a)). 본 항목의 앞선 답 "(b)"는 중복
+질의 상황에서 나온 것으로 **철회(superseded)** 처리한다. Loro 스택 교체는 착수하지 않는다
+(조사 기록은 미래 참조용으로 유지). 실행 경로: `inquiries/block-id-anchor-brief.md` (HOLD
+해제됨) — orchestrator 채택 → developer dispatch. 바인딩 강화 wave(N-1~N-4)는 결정과 무관하게
+계속 진행(항목 원문대로).

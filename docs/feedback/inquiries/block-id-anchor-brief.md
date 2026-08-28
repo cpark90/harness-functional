@@ -1,5 +1,5 @@
 ---
-status: answered        # ⚠ HOLD — anchor-move-mechanism-recheck에 상반 답변((b)=Loro) 존재, 사용자 재확인 전 채택 금지
+status: answered        # HOLD 해제 (2026-08-28 사용자 최종 확인 = b′) — orchestrator 채택 가능
 kind: dispatch-brief-draft
 consumer: orchestrator → developer (opus)
 source: docs/feedback/anchor-move-recovery-tradeoff.md   # 사용자 결정 (b′), status: approved
