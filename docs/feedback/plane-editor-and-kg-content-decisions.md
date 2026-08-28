@@ -163,3 +163,37 @@ backbone)으로 처리됐으나, 실측하면 **깊이 1의 평면 구조**(top 
   후에는 잔여 강화 필요성을 재평가한다.
 - **§7 채택 내역**: `inquiries/b-wave-facet-design.md` §7에 확정 기록 (요지: facet 5개 유지
   scope 포함 / 판단 3건은 초안 배정 / B2=27개 한정 / **B1 선행 land 후 B2 별도 wave**).
+
+---
+
+## 적용 결과 (orchestrator 기록, 2026-08-28)
+
+- **결정 1-(a) 병행 착수 / 2-(a) `ontology/` 밖 링크 스토어 — 착지·판정 완료.**
+  산출: `tools/plane-editor/link-store/links.json`(단일 파일, 결정론적 정렬) +
+  `check_links.py`(8개 검사 축) + 설계결정 평면(`decisions.json`) +
+  `run-link-checks.mjs`. vnv 판정 **pass-with-notes** — `docs/verify/plane-editor-phase2-verify.md`.
+  - 링크 어휘는 기존 `ho:` 관계 5종 재사용(신조어 0). 이름만 빌린 것이 아님을 **TBox 사본을
+    변형해 반증 시험**(술어를 AnnotationProperty로 강등 → FAIL, `ho:supersedes` 신설 →
+    B9 경계 FAIL). 원본 `ontology/` 무접촉.
+  - **cap 계약 표면 실증**(Phase 4 이중 구현 금지 조항의 선이행): 격리 도구층에서 cap을
+    260→40으로 바꾸자 편집기 수용 경계가 1043자→163자로 따라 이동, 추정기를 //8로 바꾸자
+    계약이 따라옴. 편집기 코드에 `260`·`/4` 리터럴 0건 = 값 복제 아님.
+  - negative control: 요구 5종 + developer 추가 3종 + vnv 창안 우회 27케이스 전부 차단,
+    정상 대조군은 통과(vacuous 아님).
+  - 잔여 결함 F1(medium): 검사기가 자기 STORE_VERSION을 남의 주석 스토어(v2)에도 적용해
+    실사용 스토어를 물면 exit 2 → **바인딩 준비 wave에서 해소 중**.
+- **앵커 lane(1-(a)의 차단 조건 C1)**: C1 → C1b로 두 차례 강화해 오해소 구멍 4종을 닫았다
+  (`docs/verify/plane-editor-c1-verify.md`, `plane-editor-c1b-verify.md`). 판정 축을 문자열
+  유사도에서 **CRDT item 정체성**으로 옮긴 것이 핵심. 바인딩 차단은 **(b) 조건부 해제** —
+  조건 3건(문서 정체성 바인딩 / 저장소 계약 무결성 / 끊긴 종단점 가시화)을 해소하는 wave가
+  진행 중이며, 그 판정이 최종 해제 여부를 정한다.
+  - **원리적 제약 1건이 사용자 결정으로 올라감**: 블록 이동 복구와 재타이핑 거절은 동시
+    만족 불가(두 편집의 Yjs 업데이트가 byte 동일) → `docs/feedback/anchor-move-recovery-tradeoff.md`.
+- **결정 3-(a)**: 채널 규약 문서(`verified/README.md`)는 inspection 소유라 조사 lane으로
+  요청 등록 — `docs/feedback/inquiries/verified-lane-vocabulary-promotion.md`(status: open).
+- **결정 4-(a)**: B-wave 착수. 설계는 "깊이를 늘리지 않고 facet 선언 속성"으로 확정되어
+  별도 항목 `b-wave-backbone-layering.md`(approved, "(B) → (A)")로 이관됐고 **B1 진행 중**.
+  B2·B3는 B1 게이트 통과 후 다른 세션이 인수하기로 합의됨.
+- **결정 5·6은 여전히 미응답**이다(overlapsWith 저작 / shape 강화 방식). 특히 6은 승인 문구가
+  "정의 유사도 하한"인데 이 lane 실측이 그 축의 실패를 보였으므로, B1 facet 시뮬레이션을
+  근거로 **facet 공유 대안**을 다시 묻는 항목이 B3 착수 시 올라온다.

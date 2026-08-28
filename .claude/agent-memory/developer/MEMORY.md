@@ -6,6 +6,7 @@
 - **반복 핵심**: (1) 중간노드 도달성=hasComponent propertyChain(직접sub=Harness mistype). (2) 2클래스 공용술어=domain 생략+definition 명시. (3) ⊑HarnessComponent=harness 배선/rollup 필수. (4) bound 노드 prefLabel/definition 수정=byte-id 깨짐(2run cmp). (5) recipe closure=HARNESS_ROOT_ONTOLOGY. (6) 신규 leaf·클래스=`lib.INSTANCE_CLASSES` 등록(미등록=개체 증발).
 
 <!-- 학습 인덱스 (한 줄씩, 상세는 토픽 파일) -->
+- [b2-b3-content-tag-backfill-region-shape](b2-b3-content-tag-backfill-region-shape.md) — 태그 백필=선례 역조회+verbatim 근거(대조문이 한 clause 부정하면 탈락). 대안군은 공통 태그. region shape=facet 2줄 필터+vacuous-pass 배제(git show HEAD 옛 shapes).
 - [recipe-br-w1-declare-and-local-standin](recipe-br-w1-declare-and-local-standin.md) — recipe-side W1 선언(중앙 c-envelope-* 재사용·onEnvelopeExit는 포인팅만). 2-harness 대조군(첫 appliesPattern=진짜 arm만). 이월 어휘=recipe-local+승격금지 배너. tokenEstimate 클래스별 측정식+줄번호 sed.
 - [sim-hil-bk2-sim-coding-parts](sim-hil-bk2-sim-coding-parts.md) — carrier 이분법(선언=h-coding/라이브러리=h-ws, role+tool+gr 동일 carrier). cap mint 최후수단 사유 패턴(provided-only 합법). pat 연결=참 아니면 tagged. baseline=편집 전 스냅샷. materialize=bare slug, Tool/retrievalPolicy 미렌더.
 - [sim-hil-wave-h-hil-parts](sim-hil-wave-h-hil-parts.md) — step 배정에 host workflow 없으면 재량 신설+보고(도달성=hasStep 롤업뿐). 선언 하네스 carrier=산출물 변화를 의도로(주석 명시). 승인 게이트 결과=3행 분해(무응답/거부/종결해석). 공석 leaf 채우면 B-T 주석 동갱신.
@@ -128,4 +129,5 @@
 - [plane-editor-phase2-link-planes](plane-editor-phase2-link-planes.md) — ontology/ 밖 스토어. 도구 상수는 복제 말고 `--emit-contract` 계약 표면으로(추정기 N은 probe로 역산), 판정은 한 언어에만(JS=직렬화·Python=판정). 어휘 재사용은 rdfs:range까지, 고아는 양쪽 미해소일 때만, negative control은 control에서 한 곳만 변형+위반 1건.
 - [annotation-tbox-symmetric-anchor](annotation-tbox-symmetric-anchor.md) — 대칭술어+n-ary Anchor(⊑HC assert), sh:sparql은 sh:prefixes 필수.
 - [envelope-shape-teeth-and-dead-vocab](envelope-shape-teeth-and-dead-vocab.md) — 셰이프 이빨=control 1+negative 4(메시지 키워드 필터). 행 종류 둘이면 롤업 체인도 둘. 근사 동의어=domain 축소.
+- [plane-editor-identity-and-store-contract](plane-editor-identity-and-store-contract.md) — 정체성=발급시점(콘텐츠해시 금지)+CRDT 상태 보관, 값 아닌 관계만 리포트. 자기보고 증거는 다른 selector와 교차검증(문자 이름표↔exact 길이↔SV), 마이그레이션은 강등 전용·외부사실만 붙임. 정밀도 게이트엔 orphan 예산+부착위치 지표. 남의 상수는 강요 말고 버전 협상(읽기≠바인딩)+소유모듈 드리프트 알람. 종단점=(문서,레코드), 끊김은 상태(보고)·상태 모름은 위반.
 - [concept-facet-axis-b1](concept-facet-axis-b1.md) — 계층=노드 말고 닫힌값 속성(broader 0.5=발견성 반감). 판정은 순서테스트+부모 타이브레이크. **shapes=연합 불변식(값/개수)·린터=중앙 coverage(ID_CORE 스코프)** — minCount는 recipe repo를 깨뜨림(239 Concept). 팩은 datatype 선언엔 불변, 엣지 변경에만 움직임(재부모화 시 옛 부모=skos:related로 델타 최소).
