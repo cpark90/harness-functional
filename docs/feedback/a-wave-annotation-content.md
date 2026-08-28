@@ -75,3 +75,52 @@ vnv의 기준**이고, 제 43쌍은 *다른 것*을 잰 유용한 별개 자산�
 2. (a)
 3. (a)
 4. (b)
+
+## 적용 결과 (orchestrator, 2026-08-28)
+
+사용자 답 **1.(a) 2.(a) 3.(a) 4.(b)** 전부 처리. 판정 2건 모두 차단 결함 0.
+
+- **결정 1 (a) `overlapsWith` 2쌍 저작** — `gr-well-formed-skill → ins-well-formed-skill`,
+  `chan-peer → pat-peer-mesh`. 개체 신설 0. 대칭 술어라 **한 방향만 저작**(TBox 정의문이
+  "authoring ONE direction is enough"로 관례를 명시, OWL RL이 역방향 생성). vnv 확인:
+  raw 2 → reasoned 4, raw 그래프만 보는 소비자 0.
+- **결정 2 (a)** — 43쌍은 저작하지 않음(조치 없음).
+- **결정 3 (a) 쌍둥이 7쌍 정의 축약** — Concept 정의문만 축약(Guardrail promptText는 자기완결성
+  유지). **회수 실측 69 tok**. ⚠ **승인 문서의 근거는 성립하지 않았다**: "약 225 tok = 기본 예산
+  25% 회수"는 admission 예산 기준으로 **0**이다 — vnv가 `retrieve.py`(179–182)를 읽어 확인한 대로
+  Concept은 token_cost의 **15-floor**로 계산되므로 정의문 길이가 예산에 반영되지 않는다. 회수는
+  렌더 텍스트에서만 실현된다. 발견성은 유지(7쌍 14노드 전부 팩 잔존, 9질의 중 8개 점수 동일).
+- **결정 4 (b) `Anchor`/`anchorConfidence` 지금 저작** — anchor **7개 / 노드 3개**
+  (`mem-longterm`·`role-tester`·`role-auditor`), 눈금 2단계(0.9 primary / 0.4 secondary),
+  부착 노드와 colocate. 후보 52 중 45는 주·부 구분이 정의문에서 읽히지 않아 의도적 미저작.
+  **선언 전용**(orchestrator 결정): 소비 코드는 만들지 않고, 켜는 조건을 측정 가능한 기준으로
+  남겼다 — *"가중이 고칠 랭킹 결함이 실측되는 것"*. 소비 여부는 별도 항목
+  `docs/feedback/anchor-confidence-consumption.md`(status: open)로 올렸다.
+
+### ⚠ 이 웨이브가 낸 회귀와 그 수정 (기록 필수)
+
+**"선언 전용 = 검색 중립"은 성립하지 않았다.** 소비 코드가 0줄이어도 개체 존재만으로 팩이
+오염됐다 — 40질의 중 29개 변화, anchor 120회 admit, "traceability audit oversight" **36 → 19
+붕괴**, "acceptance test coverage"에서 **주석 대상 노드가 자기 anchor에 밀려 탈락**. 경로 둘:
+① anchor prefLabel의 lexical seed 상위 진입, ② harness→hasComponent→anchor rollup 확산.
+
+**수정**: `tools/retrieve.py`에서 주석 층(`ho:Anchor`)을 projection에서 제외(seed 선택 + 인접
+그래프 구성 두 곳). 판정 기준을 **"40질의 팩이 anchor 저작 이전과 byte-identical"** 로 잡아
+검색 의미 변경이 아니라 오염 제거임을 기계 증명 — **80/80 identical**. anchor 개체는 보존.
+
+**vnv 판정** `docs/verify/anchor-first-wave-verify.md` = PASS-with-notes(차단 0 / 비차단 5).
+자체 기준선·자체 질의로 80/80 재현했고, **anti-vacuous 대조군**(수정 전 코드 + anchor 그래프)이
+68/80 differ·q01 36→19 붕괴를 재현해 **스위트의 감지력**을 증명했다. 우회 유입 경로 탐색
+(`_resolve_id_tokens` 산문 경로·`alternative_clusters`·json 섹션·IRI 부분일치) **전부 음성**.
+
+### 후속으로 남긴 것 (비차단)
+
+- **N2**: `role-benchmarker`는 정의가 `role-auditor`와 동문인데 anchor 미저작이고 사유 기록이
+  없다 — 저작 규율(정의문에서 읽히면 저작)의 반례. 소비가 꺼져 있어 실해는 없으나, 소비를 켜기로
+  결정한다면 **먼저 정리해야 할 일관성 부채**다.
+- **N1**: 잔존 태그 보강 웨이브의 `c-dispatch` 2줄이 anchor 웨이브 diff에 섞여, anchor-only
+  기준선으로는 그 효과가 측정되지 않았다(별도 실측: 8/40 팩 변화, 방향은 개선, 누출 없음).
+  웨이브가 겹칠 때 기준선이 무엇을 격리하는지 명시해야 한다는 교훈.
+- **shape 이빨 소재 명문화(적용 완료)**: `AnchorShape`의 `sh:class`가 `prp-rng` 추론 아래에서
+  vacuous 만족되어 발화하지 않고 실제 차단은 `ConceptConnectivityShape`가 한다는 사실을 주석으로
+  남겼다. vnv가 주장 3개를 전부 재현해 참으로 확인.

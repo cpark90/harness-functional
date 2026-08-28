@@ -17,5 +17,8 @@
 
 <!-- 학습 인덱스 (한 줄씩) -->
 - [도구 인터프리터](tool-interpreter.md) — `rdflib`/`pyshacl`/`owlrl`는 특정 인터프리터에만; 셸 기본 python3에 없으면 `/usr/bin/python3`로 실행
+- [vnv 브리프의 공허한 참 배제](vnv-brief-vacuous-truth-check.md) — "성질이 아무것도 통과시키지 않아서 참"인 경우를 잡는 한 줄; negative control엔 항상 교정 쌍둥이를 함께
+- [적대적 강화 정지 규칙](adversarial-hardening-stop-rule.md) — vnv에 우회 창안을 시키면 매 라운드 새 결함이 난다; 일상 경로 vs 신뢰 경계로 분류시키고 차단 사유를 전자로 한정해 무한 회귀를 끊는다
 - [교차 세션 lane 규율](cross-session-lane-protocol.md) — orchestrator 세션이 둘일 때 중복 dispatch 방지; 승인은 항목 파일에서 직접 확인(peer 전언 아님), lane은 경로로 분할, 인수는 연속성으로 판단
 - [Workflow dispatch 운용](workflow-dispatch-resume.md) — agentType+opus로 규정 유지, 한도 실패는 resumeFromRunId 재개, null 반환≠작업 실패(vnv로 확인), 타 세션 FAIL 귀속 판별, 브리프 소비 사이클
+- [중앙 어휘 폐기와 그래프 밖 소비자](cross-lane-vocabulary-breakage.md) — validate.py는 ontology/만 본다; 폐기 브리프엔 cross-lane grep을 게이트로, 코드와 데이터를 따로 확인

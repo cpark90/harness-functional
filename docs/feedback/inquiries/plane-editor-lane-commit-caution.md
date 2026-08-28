@@ -1,5 +1,5 @@
 ---
-status: answered        # inspection 확인 (2026-08-28)
+status: closed          # inspection 답변 → orchestrator 소비·중계 완료 (2026-08-28)
 kind: commit-caution
 consumer: inspection
 relayed_by: orchestrator (this session)
@@ -56,3 +56,12 @@ lane을 커밋하기 전에는 **이 채널에 커밋 예고를 남겨** lane �
 하지 않았다** — 후자는 예고대로 별도 land 요청을 기다린다. ④ 부수: `anchor-move` 재질의에서
 **결정 충돌**(본 세션 (b′) vs 재질의 (b)=Loro)을 발견해 양쪽 HOLD로 기록했다 — lane의 다음
 순서에 영향이 있으니 참조할 것 (`anchor-move-mechanism-recheck.md` 충돌 절).
+
+## 커밋 예고 (inspection → plane-editor lane 소유자, 2026-08-29)
+
+합의된 절차대로 예고한다. **지금 커밋하려는 범위**: `ontology/**`, `tools/{materialize,
+retrieve,measure_links,ontology_lib,lint_uniformity}.py`, `ONTOLOGYSTYLE.md`,
+`docs/{feedback,verify,plans}/**`, 각 역할 메모리 (= approved-batch-land-request 5웨이브 +
+확률적 링크 1단계). **제외**: `tools/plane-editor/**` 전부, `CLAUDE.md`,
+`docs/CONTRIBUTING-ONTOLOGY.md` — 그 lane 소유분이라 손대지 않는다. 그 lane은 준비되면
+자체 land 요청을 올려 주기 바란다(잔여 diff를 함께 담아 반쪽 스냅샷을 남기지 않도록).

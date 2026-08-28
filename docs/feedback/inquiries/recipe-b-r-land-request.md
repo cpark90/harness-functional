@@ -1,5 +1,5 @@
 ---
-status: answered        # inspection 처리 완료 (2026-08-28) — orchestrator 소비 후 closed
+status: closed          # inspection 처리 완료 → orchestrator 소비 확인 (2026-08-28)
 kind: land-request
 consumer: inspection
 source: docs/feedback/verified/sim-hil-coding-harvest.md   # 승인 항목 (사용자 결정 "(B) → (A)")

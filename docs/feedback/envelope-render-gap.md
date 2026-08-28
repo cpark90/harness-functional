@@ -47,3 +47,46 @@ W1 적용은 **그래프 층위까지만** 승인된 범위였고(사용자 결�
 
 ## 사용자 피드백
 (a)
+
+## 적용 결과 (orchestrator, 2026-08-28)
+
+**(a) 렌더 wave 편성 — 완료.** developer dispatch로 적용, 게이트 3종 PASS(중앙 + recipe union 3종).
+
+- **렌더**: `_render_operating_rules` 뒤에 조건부 companion 3개 — `## Operating envelope`(정의문 +
+  default posture + on-range-exit + statement 표) / `## Autonomy tier`(정의문 + 5슬롯) /
+  `## Environment fidelity`. 선언이 없으면 아무것도 emit하지 않는다.
+- **statement 표 칼럼** = `Attribute | Verdict | Boundary | Decided by`. 뺀 것: `envelopeValueType`
+  (threshold가 자체 설명적)·`envelopeClosure`(default 줄이 posture를 이미 서술)·statement
+  prefLabel(중복)·내부 메타. `hasEnvelopeRule`은 **데이터가 0건이지만 렌더 경로를 구현**해 뒀다
+  (선언 데이터가 조용히 누락되는 이번 버그 클래스의 재발 방지).
+- **`(see Error handling)` 포인터는 exit 행이 그 하네스의 `hasFailurePolicy`에 실제 등재된
+  경우에만** 출력 — 무조건 출력하면 dangling 참조가 된다.
+- **그래프 바인딩**: `h-coding`·`h-multiagent`에 `gr-envelope-check` + `fp-envelope-exit`/`-severe`
+  등재. 두 술어의 비중복을 주석으로 명문화 — "onEnvelopeExit는 exit이 탈 정책을 **지정**,
+  hasFailurePolicy는 하네스 오류 카탈로그에 **등재**한다".
+- **회귀(이번 웨이브의 갱신된 게이트)**: envelope 선언 하네스 `h-coding` +38 / `h-multiagent` +31,
+  **CLAUDE.md 삭제·수정 0(순수 추가)**. 미선언 하네스 5종은 전 파일 **byte-identical**(조건부
+  섹션의 증명). staging recipe는 `h-eval-user-sim`·`h-coding-swe`·`h-swe-baseline`이 fidelity
+  블록만 +6/−0이고, **`h-hil-approval`은 +32/−0**(envelope + tier + fidelity를 모두 선언하므로) —
+  최초 기록의 "staging 3종 +6/−0"은 부정확했다(vnv note N4로 지적되어 정정). MANIFEST의 `−1`은
+  tokenEstimate 합계 한 줄로 구조적 필연. materialize 2회 결정성 유지, dangling `id:` 0.
+
+### AssemblySection을 신설하지 않은 사유 (orchestrator 확인)
+
+`ho:sectionKind`가 shapes의 **닫힌 `sh:in` enum**이라 신규 kind는 shapes 변경을 요구하는데, 그것은
+이번 브리프의 금지 경계였다. 그래서 무조건부 섹션 `as-operating-rules`가 cluster를 위치시키고,
+그 정의문에 companion 구성·enum 제약·"향후 1급 kind 승격은 byte-identical refactor"를 기록했다.
+의미상으로도 envelope/tier/fidelity는 하네스가 **운용되는 규칙**이라 Operating rules 뒤가 정합적.
+
+**orchestrator 판단**: 승인된 의도(선언된 데이터가 문서에 보이게 한다)는 이 형태로 충족됐으므로
+**1급 sectionKind 승격은 지금 하지 않는다**. 승격은 shapes enum 확장 + AssemblySection 개체
+신설을 요구하는 별도 설계 결정이고, 산출물은 동일하다(byte-identical refactor). 필요해지면 그때
+결정 항목으로 올린다.
+
+### 미해결(발견만, 이번 범위 밖)
+
+- 섹션 lead-in 문장이 코드 리터럴인 렌더러가 execution-mode 외에도 다수(error-handling·
+  test-scenarios·hooks·data-flow·roles·channels·skills). 이번 companion들도 lead-in은 관례를 따랐고
+  본문 데이터는 그래프 출처다.
+- `h-hil-approval`(staging)은 envelope을 선언하지만 `gr-envelope-check` 미바인딩·exit 행 미등재 —
+  렌더러가 포인터를 생략해 진실을 유지한다. recipe 갱신은 staging 경계라 별도.

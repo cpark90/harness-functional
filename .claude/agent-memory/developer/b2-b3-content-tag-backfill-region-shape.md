@@ -17,9 +17,28 @@
 5. 일반화 노드(gr-execution-separation)는 자식 개념(c-dispatch/c-delegation)로 좁히지 말고
    **상위 method 개념(c-agent-methodology)** — 원 저작 의도(topology-independent)를 보존.
 
+## B-잔여 웨이브(35→13) 추가 판정 근거의 종류
+1. **이웃 노드의 contrast 절도 verbatim 근거다**: fp-dismissal-vs-decline 정의가
+   "fp-unanswered-approval, which **escalates** WHILE the window is open"이라 말함 →
+   fp-unanswered-approval=c-escalation의 결정적 근거. 자기 정의만 보지 말 것.
+2. **ABox 캐리어 섹션 주석이 idiom을 확정한다**: guardrails.ttl 배선 주석이
+   stopping-condition/auto-reply-budget/bounded-iteration을 "the complexity-governance
+   family"라 명명 → c-complexity-governance 배정의 저작 의도 증거.
+3. **닫힌 대안군(6 AutonomyTier)은 공통 태그 1개**: 정의들이 서로 contrast하는 닫힌
+   집합이면 verbatim 없는 멤버(tier-per-action)도 가족 규칙으로 같은 태그
+   (c-operating-envelope — 각 정의의 "declared envelope"/"rangeless"가 앵커).
+4. **정의문 없는 노드(tool-shell 등 skeleton)=무조건 SKIP** — 텍스트 없으면 근거 없음.
+5. **자기 원리가 B1에서 quality로 분류된 guardrail(gr-cite/grounding/traceability/
+   structural-coverage)은 c-agent-methodology 우산 태깅 금지** — method 신설이 필요한
+   진짜 GAP이며 fail-closed로 남기는 게 정직(35 중 13 SKIP이 승인문서 기대와 일치).
+6. approval-gate 가족(gr-human-checkpoint 선례)=c-escalation: dual-approval/plan-evidence/
+   rejection-feedback/nodestruct/wf-approval-gated까지 한 region으로 — 미래 alternativeOf
+   후보들이 실제 같은 영역에 모임.
+
 ## 랭킹 회귀 측정
 - 편집 **전에** 40질의 pack+sha를 scratchpad JSON으로 저장(pack 자체를 저장해야 노드/점수
-  단위 귀속이 됨). 편집 후 hash 다르면 dropped/added/rescored/top5로 분해해 "의도한 방향"을
+  단위 귀속이 됨). CLI 40회는 타임아웃(그래프 재로드×40) — `sys.path`에 tools 넣고
+  `retrieve.project(g, q, DEFAULT_BUDGET)`를 **한 번 로드한 그래프로 in-process 호출**. 편집 후 hash 다르면 dropped/added/rescored/top5로 분해해 "의도한 방향"을
   개체 단위로 서술. **hash만 다르고 pack 내용 동일 = 새 tagged 엣지가 edges 섹션에 렌더된 것**
   (nodes/relevance 동일 확인으로 판별).
 - 태그 추가는 datatype과 달리 **엣지라서 랭킹을 움직인다** — 태그된 개체가 개념 질의에 새로
