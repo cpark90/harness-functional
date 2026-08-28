@@ -114,6 +114,15 @@ recipe lane 규약(메모리 준수): 중앙 커밋 대상 아님 — staging �
 **catalog+CI 매트릭스 동반 갱신**, federate 게이트(central symlink) 사전 실행. 각 recipe에
 dct:source+dct:license 귀속(수확 게이트 판정은 dossier §7).
 
+## 사용자 결정 (2026-08-28, inbox `status: approved`)
+
+**"(B) → (A)"** — 축소 범위(B: 즉시 막힌 TBox 4 + 1티어 상위 ~25개체 + recipe 3종)로 **먼저
+착수**하고, 그 결과 검증 후 **전체(A)로 확장**한다. 따라서 아래 순서는 B 부분집합을 1차 wave로
+돌린 뒤 같은 순서로 잔여분을 잇는다. 추가 지침(inspection): AV 이식 항목
+(`verified/av-odd-scenario-transfer.md`)이 이 계획의 **형식·절차 상위 프레임**이므로, A 확장분
+착수 전에 두 항목의 **술어 경계**(approvalScope·attachesAt·environmentFidelity vs envelope)를
+먼저 명문화할 것.
+
 ## 순서·게이트 (선택 A 기준; B는 동일 순서의 부분집합)
 
 1. **TBox wave**(T1–T4 [+선택 T5–T8]) — developer 1 dispatch, shapes·registry(PREFIX_MAP은

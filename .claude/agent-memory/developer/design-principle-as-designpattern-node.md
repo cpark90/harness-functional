@@ -41,3 +41,22 @@ id:c-execution-mode's runtime lanes"). `retrieve.py`가 emit 시 `id:` 토큰을
 validate PASS / lint_uniformity PASS / 브리프 질의에서 seed rank 1 (relevance 18.45, 팩
 898/900 token). 병행 세션이 같은 파일을 만지므로 `git diff -- <담당파일>`로 **자기 hunk만**
 확인하고 나머지(예: `c-lesson` 신설, mode-standing-service 압축)는 건드리지 않는다.
+
+## 재dispatch 방어 — "아직 없다"는 브리프 전제도 검증 대상
+
+같은 원리가 **두 번 dispatch**됐다(2026-08-28). 원인: 노드를 land한 커밋
+(`1406d87 Land annotation stages 1-3 + Phase 0 map`)의 메시지가 stage 1–3·Phase 0만 나열하고
+`pat-knowledge-plane-separation`은 **한 줄도 언급하지 않아** orchestrator에게 미착지로 보였다.
+(같은 커밋의 다른 산출물 — cap 260·`ho:alternativeOf`/`Anchor`·1-admit — 은 브리프가 "최근
+land됨"으로 정확히 알고 있었다.)
+
+- 저작 착수 전 **양방향 확인**: 기존 메모의 "brief가 land됐다 주장 → grep으로 불신"에 더해,
+  **"brief가 없다고 전제 → `git grep -n '<slug>' HEAD -- ontology/`로 존재 확인"** 도 돌린다.
+  1분짜리 검사가 중복 노드(=근사동의어 drift, golden rule 2 정면 위반)를 막는다.
+- 이미 있으면 결론은 **신설 0 + 커버리지 감사표**(소스 요소 ↔ 기존 노드 문면 대응, CLAUDE.md
+  step 7 형식)로 보고한다. 억지 저작·"보강 삼아 정의문 손대기"는 하지 않는다 — 이미 land된
+  노드의 definition 수정은 문면 결정이라 별도 브리프 소관이고, cap 여유(973자=243 tok,
+  260까지 67자)를 소모한다.
+- 도구층/온톨로지층 경계 판정 근거는 **inspection 판정문의 스코핑 문장**을 그대로 쓴다
+  (여기선 §6.3 "평면별 원자 단위 읽기 응답"이 유일한 암묵 요소인데 inspection이 도구층으로
+  귀속시킨 항목이라 GAP 아님).
