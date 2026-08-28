@@ -283,3 +283,36 @@ note N1(선언 하네스 문서에 envelope 규율 미출현)을 실물로 해�
 plane-editor 결정 1·2·4는 병행 세션 lane, 결정 3(verified lane 어휘 승격)은 inspection 조사
 lane(`inquiries/verified-lane-vocabulary-promotion.md`)으로 이관됨. 미응답 5·6은 어느 세션도
 착수하지 않는다.
+
+**B-R (recipe 3종) — 완료 2026-08-28. B 부분집합 전체 종료.** staging 저작만(중앙 트리플 0),
+land(published clone push·커밋)는 레인 규약대로 inspection 소관.
+
+- 산출: `staging/harness-recipes/recipes/{hil-approval,eval-user-sim,coding-swe}/`(각 `.ttl` +
+  README), `catalog-v001.xml` 생성기 재생성(21 central + 41 recipe, `--check` 멱등).
+  CI는 생성기 라이브 호출 규약이라 워크플로 파일 편집 불요(`--print-matrix`에 3 IRI 노출).
+- **W1 축 첫 실선언**: `hil-approval`이 `autonomyTier core:tier-per-action-approval` +
+  `hasEnvelope id:oe-hil-approval`(restrictive, statement 4행 전부 observable 보유,
+  exit→중앙 `fp-envelope-exit`/`-severe`)를 선언. HarnessAutonomyShape 3제약 통과.
+- **T4 첫 실사용**: eval-user-sim `"mock"`, coding-swe 양 arm `"replica"`, hil-approval
+  `"production"`.
+- **`pat-minimal-baseline` 첫 `appliesPattern` 주체**: coding-swe를 2 harness로 구성
+  (`h-coding-swe` rich arm + `h-swe-baseline` control arm, 동일 model/wf/fixture로 통제변인
+  고정) — 중앙에서 태그로만 걸려 있던 대조군 아키타입이 실물을 얻음.
+- **제약 준수**: 양면 oracle·pass^k는 `id:gr-two-sided-oracle`·`id:gr-passk-reliability`로
+  **recipe-local** 표현, TTL 배너 + README에 "승격 금지" 명시(중앙 신설 0).
+
+**vnv 판정 (B-R) = PASS-with-notes** (차단 0 / 비차단 5) —
+`docs/verify/sim-hil-br-recipes-verify.md`. **"inspection이 land해도 되는 상태인가: 예"**.
+중앙 무수정이 기계 증명(B-R 식별자 전수 grep 0, 판정 시점 중앙 364 불변, 병행 세션의 B1 편집은
+소유자 분리로 오귀속 배제), union validate 375/374/369 + 로컬 노드 수기 검산 일치, lint 7축
+0×3, catalog 멱등·well-formed, materialize 2회 byte-identical·dangling 0, W1 negative control
+4케이스 발화, 재량 4건 전부 수용, §7 라이선스·태그 URL 일치, §3층 coverage 닫힘.
+
+- 비차단: N1 envelope/tier/fidelity가 `materialize.py` 미참조로 산출 문서 미렌더(→ 결정 요청
+  `docs/feedback/envelope-render-gap.md` 신규 등록), N2 hil "production" 근거 문구가 과일반화
+  (선언 자체는 블루프린트 전제로 수용), N3 `h-swe-baseline`의 FailurePolicy 미바인딩 주석 부재
+  (land 전 보강 dispatch 완료), N4 recipe repo README doc-lag(선행 사안), N5 pack 전역 gaps.
+
+**남은 것**: B 부분집합은 종료. A 확장(1티어 잔여 ~25 + recipe 3종: sim-society/coding-pair/
+sdd-chain, 2티어, T5–T9)은 사용자 결정 "(B) → (A)"의 후속 단계로 미착수. 착수 전 inspection
+지침대로 AV 항목과의 술어 경계를 재확인할 것(B-T에서 1차 명문화 완료).

@@ -69,3 +69,34 @@
 - **recipe 진입 판정은 §3층 표를 열 단위로 닫는다**: bind 목록의 비-노드 항목(양면 oracle·
   pass^k 같은 이월된 TBox 축)이 함정 — 중앙 부재를 "recipe-local 처리 조건"으로 명시해
   다음 brief의 신설-드리프트를 선제 차단.
+
+## B-R (recipe 3종: hil-approval / eval-user-sim / coding-swe) 판정 절 — docs/verify/sim-hil-br-recipes-verify.md
+
+- **중앙 무수정 증명은 "소유자 분리 grep"으로**: 병행 lane(B1 facet)이 같은 워킹트리
+  `ontology/`를 편집 중이라 diff-empty 증명이 불가 → `git diff HEAD -- ontology/` 전문에
+  **이번 웨이브 식별자 전수 패턴**(로컬 slug + dct:source 도메인까지) grep=0 + validate
+  개체수==직전 wave 최종 baseline(364)로 "이번 산출물이 중앙에 쓴 트리플 0"을 판정. staging/은
+  gitignore(`git check-ignore -v`)라 land 경로=published clone(inspection) 확인도 한 줄.
+- **recipe union lint는 "로드 트리플 수 > 중앙"으로 union 실로드 확인 필수**(9421>9178) —
+  lint/validate/retrieve/materialize 전부 `HARNESS_CATALOG`+`HARNESS_ROOT_ONTOLOGY` env로 동작
+  (ontology_lib:44-46), 카탈로그 미매핑이면 중앙만 조용히 PASS.
+- **recipe-local 제약(승격 금지) 판정 3요소**: ①로컬 NS 소속(`/id/<recipe>/`) ②중앙 전수
+  grep 0 ③금지 표기가 TTL 헤더 배너+README **양쪽** + "rebind, not re-author" 업그레이드 경로.
+- **W1 선언 negative control은 recipe union 위에서**: in-memory 4케이스(무변형 CONTROL /
+  hasEnvelope 제거→AutonomyShape / observable 제거→StatementShape / 닫힌값 밖 fidelity→sh:in)
+  — tier의 `envelopeBinding`/`fallbackOwner` 값을 먼저 읽고 어느 constraint가 대상인지 지정
+  (per-action tier는 fallbackOwner "user"라 safe-halt/receptive-user 절 비대상이 정답).
+- **★"N1 해소" 류 주장은 층위 분리로 판정**: 그래프 선언(validate+negctl로 실증)과 **문서
+  렌더**(materialize.py 술어 grep 0 + 산출 CLAUDE.md grep 0)는 별개 — envelope/tier/fidelity는
+  렌더러 미지원이라 선언 층위만 해소, 문서 층위는 렌더 wave로 남김(비차단·중앙 tools 소관).
+  onEnvelopeExit fp는 envelope에 걸려 있어 Error-handling 표(hasFailurePolicy 소스)에도 미출현.
+- **재량 bind 사실 대조 = emit 텍스트 상호 참조**: 확대 bind 각각을 persona promptText·wf
+  step·중앙 개체의 approvalScope 값과 짝지어 사실 확인(예: rejection-feedback↔"stated reason
+  becomes the context of your next attempt"). 2-harness 대조군 구성의 "유일 비날조 경로"는
+  대안 전수(단일 하네스 단언=날조/중앙 신설=무수정 위반/별도 recipe=통제변인 공동 단언 불가)로.
+- **catalog 검증**: ElementTree parse + 블록별 엔트리 수기 카운트 + `gen_recipe_catalog.py
+  --check`(exit 0=멱등) + `--print-matrix`에 신규 IRI — CI는 매트릭스를 생성기에서 파생하므로
+  matrix 노출=--print-matrix 확인으로 닫힘.
+- 함정: T4 값 사실성은 closed set 소속만이 아니라 **TBox 정의문 rung 서술과 실행 형상 대조**
+  (mock=수제·no real system, replica=live non-prod copy). "production" 같은 전제 선언은 근거
+  추론의 과일반화(드릴 반례)와 선언 자체 성립을 분리해 note 처리.
