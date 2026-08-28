@@ -123,6 +123,12 @@ dct:source+dct:license 귀속(수확 게이트 판정은 dossier §7).
 착수 전에 두 항목의 **술어 경계**(approvalScope·attachesAt·environmentFidelity vs envelope)를
 먼저 명문화할 것.
 
+**B wave 브리프 초안 확보 (2026-08-28, 사용자 지시로 inspection 작성)**:
+`docs/feedback/inquiries/sim-hil-b-wave-brief.md` — 3단 분할(B-T: T1–T4+경계규칙 / B-K: 확정
+26부품+§8 dedup 강제 / B-R: hil-approval·eval-user-sim·coding-swe). 주요 판단: `gr-safe-halt`는
+av-odd W1의 safe-halt 상태 정의와 중복 위험이라 **B 제외, A 이월**(W1 land 후 참조 재사용);
+T1↔approvalUnit·T4↔envelope 경계 규칙 2건을 선제 포함. 채택은 orchestrator.
+
 ## 순서·게이트 (선택 A 기준; B는 동일 순서의 부분집합)
 
 1. **TBox wave**(T1–T4 [+선택 T5–T8]) — developer 1 dispatch, shapes·registry(PREFIX_MAP은
