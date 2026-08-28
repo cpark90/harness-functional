@@ -56,3 +56,26 @@ developer 2인 증분을 커밋 2개로 나눌 때 `.claude/agent-memory/develop
 - `.claude/settings.local.json`은 사용자 전역 ignore(`~/.config/git/ignore`)로 제외 — 안전.
 - `gh` CLI 미설치, remote 없음 → 공개 repo 생성/ push는 사용자가 remote를 제공해야 가능.
 - 첫 커밋은 main에 직접(정상 — inspection=메인테이너측 git 전담).
+
+## refresh 원장 — 2026-08-28 사이클 (결과: **제거 0건**)
+전 항목 실측 판정. "approved + 적용 결과 기록"이 letter이지만, **부분 완료는 HOLD** 원칙과
+**인용 의존**을 함께 본다.
+
+| 항목 | 상태 | 판정 |
+|---|---|---|
+| annotation-backbone-architecture | ①②③ 적용, ④ webui 진행 중, A/B wave 파생 | HOLD(부분) |
+| av-odd-scenario-transfer | W1 적용·기록 완료(`75242d3`), W2~W4 미착수 | HOLD(부분) |
+| sim-hil-coding-harvest | B 적용·판정 완료, A 확장 미착수 | HOLD(부분) |
+| **b-wave-backbone-layering** | B1·B2·B3 적용+기록+커밋 = **자격 충족** | **HOLD(문서화)** — open 항목 `region-discriminator-recheck.md`가 이 항목을 근거로 인용 중. 그 항목 종결 시 제거 가능 |
+| a-wave-annotation-content | 결정만 접수, 미적용(4b는 조건 3건 미충족) | HOLD |
+| plane-editor-and-kg-content-decisions | 결정 1~4 적용, **5·6 미적용** | HOLD(부분) |
+| anchor-move-recovery-tradeoff | 브리프 초안만(`block-id-anchor-brief`) | HOLD |
+| b-wave-residual-and-doclag / envelope-render-gap / region-discriminator-recheck | 신규·open | HOLD |
+| inquiries/tool_suggestion.md | **closed지만 frontmatter에 "보존" 명시**(Phase 2~5 설계 원본) | HOLD — 함정 재확인 |
+
+★**새 함정**: `inquiries/b-wave-facet-design.md`는 **`ONTOLOGYSTYLE.md` §3(L236)이 직접 인용**한다
+(facet 판정 규칙의 근거 §3c). 규범 문서가 참조하는 조사 문서는 **refresh 제거 금지** — 지우면
+살아있는 규범에 dangling 참조가 생긴다. ⇒ 제거 전 `grep -rn "<파일명>" ONTOLOGYSTYLE.md CLAUDE.md
+docs/ tools/`로 **역참조 스캔**을 상시 스텝으로.
+★보고서 뒤처짐 점검 결과: AV verified는 이번엔 최신(“W1 적용 완료” 기록 있음) — 텍스트만 믿지
+말라는 규칙은 유지하되 이번 사이클엔 어긋남 없음.
