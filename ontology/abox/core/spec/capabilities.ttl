@@ -29,6 +29,15 @@ id:cap-traceability a ho:Capability ; skos:prefLabel "Traceability" ;
     skos:definition "Preserve a single source of truth: never delete a decision, only deprecate it with a reason and replacement, and increment identifiers without reuse." .
 id:cap-synthesis a ho:Capability ; skos:prefLabel "Synthesis" ;
     skos:definition "Converge the separate deliverables produced by multiple worker roles into one coherent, cross-checked final result -- the terminal convergence step of a multi-agent workflow, provided by a component that both reviews every contribution and compiles the integrated output." .
+# Minted for the sim/coding harvest wave (LAST-RESORT new capability, with
+# reason): no existing capability names driving a MEDIATED, resettable
+# environment -- cap-codeexec is real code/shell execution with real effects,
+# cap-fileedit real workspace writes -- and a soft reuse of either would let a
+# harness claim it can step a simulation because it can run code, which is
+# false. Provided by id:tool-env-interface; required by evaluation-simulation
+# recipes rather than by any central harness (provided-only, like cap-audit).
+id:cap-environment-interaction a ho:Capability ; skos:prefLabel "Environment interaction" ;
+    skos:definition "Drive a managed environment through a typed contract -- reset to an initial state, step with an action and receive the resulting observation, observe without acting, enumerate the available actions -- so a component can run against a world whose transitions are mediated, resettable and replayable. Distinguished from id:cap-codeexec, which runs code and shell commands whose effects are real: here the subject is a stateful environment surface built to be reset and replayed." .
 id:cap-benchmarking a ho:Capability ; skos:prefLabel "Comparative benchmarking" ;
     skos:definition "Compare a subject against external reference cases to quantify the gap between them and produce evidence-backed improvement claims, so a component can rank where the subject falls short of outside best practice rather than only describe its own state." .
 id:cap-audit a ho:Capability ; skos:prefLabel "Compliance audit" ;

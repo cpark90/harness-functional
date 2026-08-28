@@ -1111,3 +1111,15 @@ ho:maturity a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "maturity" ;
     skos:definition "Lifecycle status: draft | reviewed | stable." .
+
+# --- vocabulary backbone: Concept -> content facet --------------------
+# The facet is an ATTRIBUTE on the existing terms, never a new root layer above
+# them: skos:broader is weighted 0.5 by the projector, so hanging today's top
+# concepts under five facet nodes would halve concept-to-concept discoverability
+# and cost budget in packs that already run near their cap, buying nothing the
+# attribute does not already say. Do not "re-add the roots" in a later wave.
+ho:conceptFacet a owl:DatatypeProperty ;
+    rdfs:domain ho:Concept ;
+    rdfs:range xsd:string ;
+    rdfs:label "concept facet" ;
+    skos:definition "The content axis a vocabulary term sits on — WHICH KIND of thing the Concept is about — as one value from the closed set \"anatomy\" | \"quality\" | \"method\" | \"domain\" | \"scope\". It exists because the concept tops mixed kinds at one level (a part, a property, a practice, an area, a configuration), which left \"where does this new term hang?\" to authoring taste and let one contentless tag become a bucket holding a third of the tagged store. The value is decided by RULE, never by resemblance to a listed example. Ask what the term is the NAME OF, in this order: (1) a PART or declared structural axis of a harness's makeup — what it is assembled from or configured as => anatomy; (2) a SUBJECT AREA the work is about, saying nothing about the harness itself => domain; (3) ONLY which structural configuration a node belongs to, carrying no content of its own => scope; (4) a PROPERTY the harness as a whole is judged to hold, so \"how much of it does this harness have?\" is answerable => quality; (5) a RULE OF ACTION, restatable as an imperative addressed to the agent or author => method. The first test that fits decides, EXCEPT that when several fit and the term has a skos:broader parent whose facet is among them, the parent's facet wins — a judgment call must not split an existing branch. A term is re-parented only when it cannot satisfy its parent's facet test at all (a practice under an anatomy parent); a scope parent constrains nothing, since scope says nothing about content. REQUIRED on every central (core) Concept and optional for data-repo-local terms, which is why ho:ConceptFacetShape checks the value set but not presence. CONSUMPTION: the facet is what turns a shared tag into a shared knowledge REGION — anatomy and method tags are region evidence, scope and domain tags are not." .

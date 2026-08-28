@@ -277,6 +277,24 @@ id:role-auditor a ho:Role ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable audit checks and standard-conformance heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
 
+# Simulation stand-in role (wave-S): the role that PLAYS the human side of a
+# run under evaluation, from a hidden scenario, interacting only through the
+# mediated environment surface (id:tool-env-interface) -- prompt omniscience
+# removed by construction, which is the reliability mechanism. Hosted by
+# id:h-workspace-synthesis like the oversight pair (library placement: no
+# current harness runs an evaluation simulation; a concrete evaluation recipe
+# binds it as its counterpart lane). Its confidentiality rule is
+# id:gr-oracle-leak (also carried by that harness), scoped here via
+# ho:roleGuardrail.
+id:role-user-simulator a ho:Role ;
+    skos:prefLabel "User simulator agent" ; skos:altLabel "simulated user" , "human-side stand-in" ;
+    skos:definition "A work-performing role, dispatch-invoked only, that plays the HUMAN side of a run under evaluation from a hidden scenario -- an identity, an intent and preferences it discloses only as the subject agent asks -- and interacts with that agent solely through the tools and observation surface a real user would have, never through knowledge of the agent's internals or of the expected outcome. Choose it to exercise a conversational or task harness end to end without a live human. Distinguished from id:role-tester, which AUTHORS the checks and fixtures a later gate runs -- the simulator instead performs the counterpart side during the run itself -- and from id:role-analyst, which diagnoses material it is given: the simulator issues no findings; its deliverable is the conducted counterpart behaviour and its transcript." ;
+    ho:roleTool id:tool-env-interface ;
+    ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege, id:gr-oracle-leak ;
+    ho:tagged id:c-simulation-standin, id:c-multiagent ;
+    ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable persona-play and disclosure heuristics at session end; touches no other role's memory." ;
+    ho:maturity "draft" .
+
 #===================== D. Coordination-only peer role ==================
 # The dedicated coordinating peer of an agent team: it plans, sequences and
 # tracks the status of the team's work but performs NONE of the execution

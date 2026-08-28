@@ -201,6 +201,7 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
    `ho:hasGlobalState` → `ho:hasAssemblySection` → `ho:hasHook` →
    `ho:hasTestScenario` → `ho:hasFailurePolicy` → `ho:hasEnvelope`
 5. `ho:appliesPattern` → `ho:hasExecutionMode` → `ho:autonomyTier` →
+   `ho:environmentFidelity`(staged-rollout 환경 선언, Harness) →
    `ho:requiresCapability` / `ho:providesCapability` → `ho:constrainedBy` →
    `ho:dependsOn` → `ho:specializes` / `ho:derivedFrom` →
    `ho:alternativeOf` / `ho:overlapsWith` → `ho:hasAnchor`
@@ -211,7 +212,28 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 - **[권장]** 클래스 고유 판별 데이터 프레디킷(예: `ho:scenarioKind`·`ho:hookEvent`)은 5~6번
   뒤·7번(공통 데이터) 앞에 모아 둔다. **한 축의 read/write 짝은 붙여 쓴다** — `ho:Memory`는
   `ho:memoryReadTiming` → `ho:memoryWriteTiming`(생산 시점 라우팅) → `ho:memoryPersistence`
-  → `ho:memoryReadScope` → `ho:memoryActivationCondition` 순.
+  → `ho:memoryReadScope` → `ho:memoryActivationCondition` → `ho:retrievalPolicy`(선별 읽기의
+  랭킹 규칙, 자유문) 순. `ho:Guardrail`의 게이트 판별 짝은 `ho:attachesAt`(어느 지점에
+  걸리는가 — attachment-point 개념 참조) → `ho:approvalScope`(승인 게이트가 무엇을 덮는가 —
+  닫힌 값; tier의 `ho:approvalUnit`과 값 어휘 분리) 순으로 `ho:promptText` 앞에 붙여 쓴다.
+- **[지킴]** `ho:Concept` 블록은 SKOS 관계(`skos:broader`/`topConceptOf`/`related`) **뒤 맨 끝**에
+  `ho:conceptFacet` 하나를 둔다 — 그 term이 **무엇에 대한 축**인지 선언하는 닫힌 값
+  (`anatomy` | `quality` | `method` | `domain` | `scope`)이다. **중앙 `core` 도메인의 Concept은
+  필수**, 외부 data repo의 로컬 개념은 권장이다: shapes는 값 집합만 강제하고 **존재는 강제하지
+  않는다**(같은 shapes가 연합 CI에서 recipe 개체까지 검증하므로 minCount는 하위 repo를 깨뜨린다).
+  중앙 커버리지는 `tools/lint_uniformity.py`가 `id/core/` 스코프로 지킨다.
+- **[지킴]** facet 값은 **예시 유사성이 아니라 판정 규칙**으로 정한다. 그 term이 **무엇의
+  이름인가**를 이 순서로 묻는다: ① 하네스가 무엇으로 조립·구성되는가(부위 또는 구조 축) →
+  `anatomy`, ② 작업이 다루는 주제 분야인가 → `domain`, ③ 내용 없이 **어느 구성 형태에 속하는지만**
+  말하는가 → `scope`, ④ 하네스 전체가 갖췄다고 판정되는 성질인가("얼마나 갖췄나"를 물을 수
+  있는가) → `quality`, ⑤ 에이전트·저자에게 **명령형으로 되쓸 수 있는 행동 규칙**인가 → `method`.
+  **먼저 맞는 것이 답**이되, 여럿이 맞고 `skos:broader` 부모의 facet이 그중에 있으면 **부모 것을
+  택한다**(판단 하나가 기존 가지를 쪼개지 않게). 부모의 facet 질문을 **전혀** 만족하지 못할
+  때만 재부모화한다(anatomy 부모 아래의 실천 term이 그 경우 — 이때 원 부모와의 연관은
+  `skos:related`로 남겨 발견성을 유지한다). `scope` 부모는 내용을 말하지 않으므로 자식의 facet을
+  구속하지 않는다. **facet으로 깊이를 늘리지 않는다** — 개념 노드로 만들어 루트를 씌우면
+  `skos:broader` 검색 가중(0.5) 때문에 개념 간 발견성이 반감된다(근거:
+  `docs/feedback/inquiries/b-wave-facet-design.md` §3c).
 - **[권장]** 운용 범위(operating envelope)·자율성 등급 노드 블록은 **범위를 읽는 순서**대로
   쓴다. `ho:OperatingEnvelope`는 `ho:envelopeDefault`(닫힘 자세) → `ho:hasEnvelopeStatement`
   → `ho:hasEnvelopeRule` → `ho:onEnvelopeExit`(이탈 시 FailurePolicy) 순,

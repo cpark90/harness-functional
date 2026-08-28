@@ -39,6 +39,20 @@ id:wf-compose-harness a ho:Workflow ; skos:prefLabel "Harness composition" ;
         id:wfs-bind-capabilities, id:wfs-assemble-minimums, id:wfs-write-individuals,
         id:wfs-validate, id:wfs-coverage-audit ;
     ho:tagged id:c-composition ; ho:tokenEstimate 141 ; ho:maturity "reviewed" .
+# Wave-H HOST WORKFLOW, a deliberate discretionary addition beyond the wave's
+# part inventory: the four human-gate steps below need a Workflow to reach the
+# graph through (reachability of a WorkflowStep is the hasComponent o hasStep
+# roll-up -- there is no other non-orphan wiring for a step), and none of the
+# existing workflows honestly contains them. Bound to id:h-multiagent, whose
+# feedback pipeline factually runs this loop: elicitation until gaps close,
+# durable status-marker interrupts whose human status flip IS the resume value,
+# a verified-lane review of outputs before application, and application only
+# after explicit user approval.
+id:wf-approval-gated a ho:Workflow ; skos:prefLabel "Approval-gated delivery loop" ;
+    skos:definition "The human-gated shape of a delivery run: close the ambiguities in the request first, checkpoint and wait wherever a consequential action needs a human answer, hold the produced output at a review gate before it is delivered, and end with an explicit transfer of control back to the human. Choose when a harness's autonomy is bounded by human decision points rather than by machine gates alone -- the machine-gated counterpart of its review step is id:wf-multiagent's integrate-and-gate step." ;
+    ho:hasStep id:wfs-clarification-round, id:wfs-interrupt-resume,
+        id:wfs-output-review, id:wfs-control-transfer ;
+    ho:tagged id:c-human-in-loop ; ho:tokenEstimate 122 ; ho:maturity "draft" .
 
 #===================== Workflow steps ==================================
 # Ordered decomposition of id:wf-multiagent's control flow into part-to-part
@@ -244,6 +258,45 @@ id:wfs-coverage-audit a ho:WorkflowStep ;
     ho:stepConsumes id:dlv-validated-spec ;
     ho:stepDependsOn id:wfs-validate ;
     ho:stepOrder 8 ; ho:tokenEstimate 53 ; ho:maturity "draft" .
+
+# Ordered decomposition of id:wf-approval-gated's control flow -- the four
+# steps of the human-gated delivery loop, same part-to-part convention as the
+# steps above (role that performs, guardrail that bounds, reusing EXISTING
+# core parts by IRI; rolled up to the binding harness via the hasComponent o
+# hasStep propertyChainAxiom). Like id:wf-harness-evolution's steps they
+# declare no ho:Deliverable: adding a lone Deliverable here would leave this
+# workflow's DAG half-specified rather than more explicit -- the task-DAG
+# vocabulary stays exercised on id:wf-multiagent and id:wf-compose-harness.
+id:wfs-clarification-round a ho:WorkflowStep ;
+    skos:prefLabel "Close ambiguity markers to zero" ;
+    skos:definition "Iterate targeted clarification against the work item until its explicit ambiguity markers reach zero: each round puts the open points to the human, folds the answers in, and re-marks what is still undetermined -- the exit criterion is the marker count, not a feeling of readiness. Choose as the entry step of an approval-gated run. Distinguished from id:wfs-intent-analysis, which profiles intent and project once before a composition begins: this is a bounded loop on a drafted artifact with a machine-checkable exit." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepGuardedBy id:gr-user-elicitation ;
+    ho:stepOrder 1 ; ho:tokenEstimate 129 ; ho:maturity "draft" .
+
+id:wfs-interrupt-resume a ho:WorkflowStep ;
+    skos:prefLabel "Interrupt, checkpoint and resume" ;
+    skos:definition "Where the run needs a human answer, interrupt rather than poll: checkpoint the run state under a correlation identifier, issue the request carrying that identifier, and stop consuming resources; the human's response arrives as the return value of the interrupted step, which resumes from the checkpoint however much later. Choose for any gate whose approver is not synchronously present -- the side effects before the interruption point must be idempotent (id:gr-resume-idempotency), because resuming re-runs the interrupted unit." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepGuardedBy id:gr-resume-idempotency ;
+    ho:stepDependsOn id:wfs-clarification-round ;
+    ho:stepOrder 2 ; ho:tokenEstimate 132 ; ho:maturity "draft" .
+
+id:wfs-output-review a ho:WorkflowStep ;
+    skos:prefLabel "Review output before delivery" ;
+    skos:definition "Hold the produced output at a human review gate after it exists and before it is delivered or applied: the reviewer sees the actual artifact, approves it onward, or rejects it with reasons that seed the rework. Choose as the delivery gate of an approval-gated run. Distinguished from id:wfs-integrate-gate, whose gate is the machine validation pass: this gate is a human judgment on the finished output, covering what no automated check asserts." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepGuardedBy id:gr-rejection-feedback ;
+    ho:stepDependsOn id:wfs-interrupt-resume ;
+    ho:stepOrder 3 ; ho:tokenEstimate 111 ; ho:maturity "draft" .
+
+id:wfs-control-transfer a ho:WorkflowStep ;
+    skos:prefLabel "Transfer control explicitly" ;
+    skos:definition "End the run by transferring control explicitly rather than letting it lapse: state what was done, what remains open and what the human now holds, and hand authority over at a checkpointed, safe state -- the same explicit step whichever direction control moves, human taking over from agent or agent resuming from human. Choose so that at every moment exactly one party knowingly holds control: an implicit hand-over is how work is dropped between the two." ;
+    ho:stepByRole id:role-orchestrator ;
+    ho:stepGuardedBy id:gr-safe-halt ;
+    ho:stepDependsOn id:wfs-output-review ;
+    ho:stepOrder 4 ; ho:tokenEstimate 113 ; ho:maturity "draft" .
 
 #===================== Deliverables (task-DAG data flow) ===============
 # The named artifacts that flow between id:wf-multiagent's steps — the OUTPUT

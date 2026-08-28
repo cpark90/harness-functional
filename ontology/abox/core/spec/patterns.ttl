@@ -35,6 +35,19 @@ id:pat-knowledge-plane-separation a ho:DesignPattern ; skos:prefLabel "Knowledge
     skos:definition "Partition an agent's working context by KIND of knowledge -- comments, design rationale, schemas, interfaces, a typed knowledge graph -- because each is adjudicated differently (social resolution, argument, schema or type check, shape validation) and carries its own native stable identifier. Planes couple ONLY through a link plane of typed edges, never by quoting one inside another; views are assembled per request by query, never stored; and tools are scoped to the plane in hand -- layering the store achieves nothing if a read still returns every plane at once. Choose when one agent works across knowledge settled in incompatible ways -- otherwise checked fact and open claim carry one confidence; the link plane is the standing cost, so keep plane count and link types few. Complements id:c-bounded-context, which bounds HOW MUCH of a store enters a context: this fixes WHICH KIND enters, and its planes are knowledge kinds, not id:c-execution-mode's runtime lanes." ;
     ho:tagged id:c-bounded-context ; ho:tokenEstimate 243 ; ho:maturity "draft" .
 
+# CONNECTIVITY of the pattern below is by concept tag, not ho:appliesPattern
+# (the pat-pipeline / pat-supervisor precedent): no current harness IS the
+# control arm -- asserting appliesPattern on one would fabricate the fact --
+# and the coding recipe binds it as its comparison arm on the recipe side.
+# NOT a duplicate of the existing catalogue: id:gr-simplicity prefers the
+# simplest form INSIDE whatever is being built, and id:gr-discriminating-eval /
+# id:wfs-baseline-compare state the with-and-without comparison DISCIPLINE --
+# this is the archetype of the comparison arm itself, a whole harness kept
+# deliberately minimal so that discipline has a standing subject.
+id:pat-minimal-baseline a ho:DesignPattern ; skos:prefLabel "Minimal baseline" ; skos:altLabel "control-arm harness" ;
+    skos:definition "Keep one deliberately minimal harness configuration -- a single general-purpose tool, a linear history, no added scaffolding -- as the standing control arm every richer composition is compared against: an added part earns its place only by beating this baseline on the same requests. Minimal agents score competitively on hard coding work, so the baseline is a genuine rival, not a straw man. Choose it when composing or enriching a harness and the value of each added part must be demonstrated rather than assumed. Distinguished from id:gr-simplicity, which prefers the simplest form inside whatever is being built, and from id:gr-discriminating-eval, which states the with-and-without comparison rule: this is the archetype of the comparison arm itself." ;
+    ho:tagged id:c-agent-methodology ; ho:tokenEstimate 188 ; ho:maturity "draft" .
+
 #===================== Execution modes (runtime topology) ==============
 # The runtime coordination topology a harness runs its agents in, declared by
 # ho:hasExecutionMode -- a first-class Harness property, ORTHOGONAL to the

@@ -21,3 +21,22 @@ id:tool-websearch a ho:Tool ; skos:prefLabel "Web search tool" ;
     ho:providesCapability id:cap-websearch ; ho:tokenEstimate 35 ; ho:maturity "stable" ; ho:tagged id:c-inforetrieval .
 id:tool-retriever a ho:Tool ; skos:prefLabel "Vector retriever tool" ; skos:altLabel "RAG retriever" ;
     ho:providesCapability id:cap-retrieval ; ho:tokenEstimate 38 ; ho:maturity "stable" ; ho:tagged id:c-inforetrieval .
+
+#===================== Contract-bearing tools (sim/coding harvest) =====
+# Wave-S/C of the sim/HIL/coding harvest: two tools whose VALUE is the typed
+# contract they expose, not a new raw ability -- so each definition carries the
+# contract and says how it differs from the nearest plain tool. Neutralised
+# self-restatements (no framework vocabulary); provenance stays in the research
+# dossier, matching the B-K1 precedent of source-free restated parts.
+id:tool-env-interface a ho:Tool ;
+    skos:prefLabel "Environment interface tool" ; skos:altLabel "environment stepping contract" ;
+    skos:definition "A tool exposing the environment-interaction contract that simulated and evaluative runs converge on: reset the environment to a scenario's initial state, step it with one action and receive the resulting observation and termination signal, observe the current state without acting, and enumerate the actions currently available. Choose it when an agent -- or a simulation stand-in playing one side of a run -- must interact with a world only through a typed, resettable surface, which is what makes runs reproducible and fixtures replayable. Distinguished from id:tool-shell, which executes code and commands against the real workspace with real effects: here every transition is mediated by the contract and the state can be reset at will." ;
+    ho:providesCapability id:cap-environment-interaction ;
+    ho:tagged id:c-simulation-standin ;
+    ho:tokenEstimate 185 ; ho:maturity "draft" .
+id:tool-lint-gated-edit a ho:Tool ;
+    skos:prefLabel "Lint-gated edit tool" ; skos:altLabel "verify-or-revert editor" ;
+    skos:definition "An editing tool whose contract wraps every edit in a verification gate: apply the change, run the declared checks (syntax, lint) on the result, and on failure revert the edit automatically and return the diagnostics instead of leaving the artifact broken -- a gate measured to improve coding-agent outcomes over ungated editing. Choose it when edits land in an artifact whose well-formedness later steps depend on. Distinguished from id:tool-editor, which applies edits unconditionally and leaves checking to later steps, and from id:hook-post-tool-use, an event-triggered automation reacting AFTER a completed action: here the check and the automatic revert are inside the edit contract itself, so a failing edit never commits." ;
+    ho:providesCapability id:cap-fileedit ;
+    ho:tagged id:c-softeng ;
+    ho:tokenEstimate 182 ; ho:maturity "draft" .

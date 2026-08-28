@@ -112,6 +112,27 @@ ho:ConceptConnectivityShape a sh:NodeShape ;
     ) ;
     sh:message "Orphaned concept: tags nothing and is disconnected from the concept taxonomy." .
 
+#--- Concept facet: one value, from the closed content-axis set --------
+# VALUE-CLOSED BUT PRESENCE-OPTIONAL, deliberately. These shapes are the
+# FEDERATION gate: a data repo's CI validates its own union (central core + its
+# data) with this very file, and the recipes repo alone carries ~239 recipe-local
+# ho:Concept terms authored before this axis existed. A sh:minCount 1 here would
+# therefore fail every federated repo the moment central lands the predicate,
+# turning a central-only vocabulary change into a downstream breakage — the
+# opposite of what a shared shapes document is for. Central coverage (every
+# core Concept declares a facet) is enforced instead by tools/lint_uniformity.py,
+# which is scoped to the id/core/ namespace and does not run over federated data.
+# What MUST hold everywhere is that a declared value is one of the five and only
+# one: a term on two content axes is not a term, it is two.
+ho:ConceptFacetShape a sh:NodeShape ;
+    sh:targetClass ho:Concept ;
+    sh:property [
+        sh:path ho:conceptFacet ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "anatomy" "quality" "method" "domain" "scope" ) ;
+        sh:message "ho:conceptFacet, when declared, is exactly one value from the closed set (anatomy/quality/method/domain/scope) — one term sits on one content axis." ] .
+
 #--- Typed-edge enforcement (anti-drift) ------------------------------
 # OWL rdfs:range does not *constrain*; SHACL does. These stop an edge
 # from silently pointing at an untyped or wrong-typed node.

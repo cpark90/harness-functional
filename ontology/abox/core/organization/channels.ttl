@@ -81,3 +81,30 @@ id:chan-task-board a ho:Channel ;
     ho:involvesUser false ;
     ho:channelMedium "shared task board (claimable task items with task-update entries)" ;
     ho:maturity "draft" .
+
+#===================== Human-gate conduits (wave-H) ====================
+# The two conduit CONTRACTS of the human-in-the-loop axis: how an approval
+# request travels (durable, addressed, correlated, authorized responders,
+# structured refusal) and how a mid-run question travels (flat-schema query
+# answered accept/decline/cancel). Bound to id:h-multiagent, the harness that
+# factually puts approval requests and targeted questions to its user over
+# durable conduits (its inbox approval lane and elicitation practice); each
+# definition carries the lane distinction from id:chan-agent-user, the general
+# feedback conduit those lanes may physically ride.
+id:chan-approval a ho:Channel ;
+    skos:prefLabel "Approval channel" ; skos:altLabel "approval-request lane" ;
+    skos:definition "The dedicated conduit for approval requests: durable and addressed, each request carrying a correlation identifier that ties the eventual answer back to the interrupted work, a declared authorized-responder set whose members alone may decide, and structured response options so approval, rejection and the rejection's reason arrive machine-readable. Distinguished from id:chan-agent-user, the general agent-user feedback conduit: this is the approval lane specifically -- it may ride the same physical medium, but its items are decision requests with correlation and authorization semantics, not free-form reports." ;
+    ho:channelParticipant id:role-orchestrator ;
+    ho:tagged id:c-human-in-loop ;
+    ho:involvesUser true ;
+    ho:channelMedium "durable addressed approval requests (correlation id + authorized responders + structured response options)" ;
+    ho:maturity "draft" .
+
+id:chan-elicitation a ho:Channel ;
+    skos:prefLabel "Elicitation channel" ; skos:altLabel "structured question lane" ;
+    skos:definition "The conduit for structured mid-run questions to the human: each query is a message plus a flat schema of primitive-typed fields, so the answer comes back machine-readable, and every query terminates in exactly one of accept (with the filled content), decline or cancel. Distinguished from id:gr-user-elicitation, the policy that gaps must be asked rather than assumed -- this is the conduit contract such asking travels over; and from id:chan-approval, which carries authorization decisions on work the agent proposes: an elicitation asks for missing information, not for permission." ;
+    ho:channelParticipant id:role-orchestrator ;
+    ho:tagged id:c-human-in-loop ;
+    ho:involvesUser true ;
+    ho:channelMedium "structured query (message + flat primitive-typed schema) answered accept/decline/cancel" ;
+    ho:maturity "draft" .

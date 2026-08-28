@@ -132,6 +132,55 @@ id:fp-duplicate-claim a ho:FailurePolicy ;
     ho:recoveryStrategy "Treat the earliest claim marker on the board as the valid one and have the later instance release its claim and take an unclaimed item instead; where both already produced output, do not discard one silently -- pass the pair to the declared fan-in step, which keeps one and records the other as superseded." ;
     ho:tokenEstimate 166 ; ho:maturity "draft" .
 
+#===================== Approval-gate outcome policies ==================
+# Wave-H: the three error rows of a human approval gate, one per outcome the
+# gate can produce besides a clean approval -- no answer inside the window
+# (escalation chain), an explicit rejection (bounded, feedback-seeded retry),
+# and the exchange ending without acceptance (dismissal is retryable, decline
+# is final). Bound to id:h-multiagent, the harness that actually operates a
+# human approval gate (id:tier-per-plan-approval; its envelope even declares
+# user availability as a precondition that can lapse) -- the declaring
+# carrier, per the W1 vnv note, not a library host.
+id:fp-unanswered-approval a ho:FailurePolicy ;
+    skos:prefLabel "Approval request goes unanswered" ;
+    skos:definition "The row for an approval request that gets no answer: without it the gate degenerates into either an indefinite stall or a quiet fallback to acting unapproved. Choose it for any harness that requests human approval mid-run. Distinguished from id:fp-envelope-exit, whose handover window answers a RANGE exit -- here the request is in range and the gate itself is silent; from id:fp-refer-to-expert, where the decision exceeds the agent's remit -- here the authority exists and has simply not replied; and from id:fp-dismissal-vs-decline, which interprets the outcome once the exchange is over." ;
+    ho:failureCondition "A human approval request receives no response within its declared response window." ;
+    ho:recoveryStrategy "Escalate along a pre-declared chain, each hop with its own deadline: re-notify the approver, then address the request to the declared next approver, then buy time by tightening constraints so lower-stakes work can continue, and on exhaustion of the chain take the declared safe default -- proceed only where a safe default was pre-authorised, otherwise halt safely with the request still open." ;
+    ho:tagged id:c-human-in-loop ;
+    ho:tokenEstimate 266 ; ho:maturity "draft" .
+
+id:fp-reject-retry-feedback a ho:FailurePolicy ;
+    skos:prefLabel "Approver rejects the submission" ;
+    skos:definition "The row for a rejection at a human gate: it fixes what a 'no' costs, so a rejection neither ends the work silently nor triggers an unchanged resubmission. Choose it together with id:gr-rejection-feedback, whose contract it consumes. Distinguished from id:fp-review-critical-rework, whose finding comes from an agent reviewer role inside the team -- here the judgment is the human approver's; and from id:fp-unanswered-approval, which handles the gate saying nothing at all." ;
+    ho:failureCondition "A human approver rejects the submitted plan, action or output at an approval gate." ;
+    ho:recoveryStrategy "Re-attempt at most twice, each attempt seeded with the stated rejection reason as context; if the approver rejects again, stop that line of work and escalate with the accumulated reasons rather than resubmitting variations." ;
+    ho:tokenEstimate 194 ; ho:maturity "draft" .
+
+id:fp-dismissal-vs-decline a ho:FailurePolicy ;
+    skos:prefLabel "Dismissal is retryable, decline is final" ;
+    skos:definition "The row that keeps two different refusals from being conflated: a request that was dismissed or expired unanswered may be re-raised, while an explicit decline is a final decision. Without it a harness either nags a human who has already decided, or abandons work the human never actually refused. Distinguished from id:fp-unanswered-approval, which escalates WHILE the response window is still open -- this row fires once the exchange is over and fixes what its outcome means." ;
+    ho:failureCondition "An approval or elicitation request ends without acceptance: dismissed or expired with no explicit answer, or explicitly declined." ;
+    ho:recoveryStrategy "Treat a dismissal or expiry as retryable -- the request may be re-raised later or over another declared channel, at a bounded rate; treat an explicit decline as final -- record the decline and its reason, close that line of work, and do not resubmit the same request." ;
+    ho:tokenEstimate 218 ; ho:maturity "draft" .
+
+#===================== Oversight-efficacy fixture ======================
+# Wave-H: the fixture that tests the review GATE itself rather than the agent
+# behind it -- the empirical device against silent gate decay
+# (id:c-rubber-stamping). Bound to id:h-multiagent per the harvest plan: that
+# is the harness whose safety argument leans on a human gate, so its scenario
+# catalog is where the gate probe belongs.
+id:scn-oversight-efficacy a ho:TestScenario ;
+    skos:prefLabel "Oversight efficacy scenario" ;
+    skos:definition "The fixture that tests the GATE, not the agent: a known-defective output is injected upstream of a review gate, and the gate must catch it. Passing proves the gate still discriminates; a gate never shown to catch anything is a claim, not a control (id:c-rubber-stamping). Choose it for any harness whose safety argument leans on a review gate, and re-run it periodically -- gate decay is gradual." ;
+    ho:scenarioReferences id:wfs-output-review ;
+    ho:scenarioKind "error" ;
+    ho:scenarioPrompt "Inject a deliverable with a known, seeded defect into the flow upstream of the review gate, indistinguishable in form from ordinary work items." ;
+    ho:scenarioExpected "The gate rejects the seeded deliverable, and the rejection names the defect rather than issuing a generic refusal." ,
+        "The rejection reaches the producing side with its reason, per the declared rejection-feedback contract." ,
+        "A seeded defect that passes the gate is recorded as a failure of the GATE and triggers its recalibration, not only a fix of the defective item." ;
+    ho:tagged id:c-rubber-stamping ;
+    ho:tokenEstimate 224 ; ho:maturity "draft" .
+
 #===================== Envelope-exit policies ==========================
 # The error side of the operating-envelope axis (id:c-operating-envelope): the
 # rows an envelope's ho:onEnvelopeExit points at. Two rows because exits have

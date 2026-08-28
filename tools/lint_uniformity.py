@@ -66,6 +66,15 @@ Checks (each cites its ONTOLOGYSTYLE basis):
      thing: split it (WorkflowStep/PromptSection-style) instead of letting a
      blob grow past the point where projection stays budget-accurate.
 
+  7. conceptFacet coverage (§3) — every CENTRAL (id/core/) ho:Concept declares
+     its content axis via ho:conceptFacet. §3 makes the facet mandatory for the
+     central vocabulary and advisory for data-repo-local terms, and the shapes
+     stop at the value set on purpose (ho:ConceptFacetShape): those same shapes
+     are the FEDERATION gate, so a presence constraint there would fail every
+     downstream repo whose concepts predate the axis. This check is where the
+     central obligation has teeth, scoped to the id/core/ namespace so a
+     federated union can never produce a false positive here.
+
 Checks 4/5 overlap what SHACL already enforces and so normally report clean;
 they are included so the uniformity contract is stated and reported in ONE place
 and would catch a regression if the shapes were ever weakened. Checks 1/2/3 are
@@ -368,6 +377,31 @@ def check_text_cap(g: Graph):
     return violations
 
 
+def check_concept_facet(g: Graph):
+    """§3 — every central (id/core/) ho:Concept declares ho:conceptFacet. The
+    value set is enforced by ho:ConceptFacetShape; presence is enforced here,
+    scoped to the central namespace because the shapes are shared with federated
+    data repos whose local concepts are only advised to carry a facet. Returns
+    list of violation dicts."""
+    _print_header("conceptFacet coverage (§3, central vocabulary)")
+    violations = []
+    for n in sorted(g.subjects(RDF.type, HO.Concept), key=str):
+        if not isinstance(n, URIRef) or not str(n).startswith(str(lib.ID_CORE)):
+            continue
+        if g.value(n, HO.conceptFacet) is None:
+            violations.append({"node": str(n),
+                               "reason": "core Concept lacks ho:conceptFacet "
+                                         "(§3: anatomy/quality/method/domain/"
+                                         "scope, decided by the §3 tests)"})
+    if not violations:
+        print("✓ every central Concept declares its ho:conceptFacet content axis")
+    else:
+        print(f"✗ {len(violations)} central Concept(s) missing ho:conceptFacet (§3):")
+        for v in violations:
+            print(f"    - <{v['node']}>  {v['reason']}")
+    return violations
+
+
 def main(argv=None) -> int:
     print("Loading ontology and applying OWL RL reasoning...")
     try:
@@ -387,6 +421,7 @@ def main(argv=None) -> int:
         "maturity coverage": check_maturity(g, shapes),
         "definition (§1d)": check_definition(g, shapes),
         "text cap (§1c)": check_text_cap(g),
+        "conceptFacet (§3)": check_concept_facet(g),
     }
 
     _print_header("Summary")

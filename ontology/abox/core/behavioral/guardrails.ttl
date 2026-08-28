@@ -15,12 +15,15 @@
 
 #===================== Guardrails ======================================
 id:gr-nodestruct a ho:Guardrail ; skos:prefLabel "No destructive actions" ;
+    ho:attachesAt id:c-attach-execution-pre ; ho:approvalScope "tool-call" ;
     ho:promptText "Never run irreversible or destructive commands without explicit confirmation." ;
     ho:tokenEstimate 30 ; ho:maturity "stable" ; ho:tagged id:c-safety .
 id:gr-cite a ho:Guardrail ; skos:prefLabel "Cite sources" ; skos:altLabel "no fabrication" ;
+    ho:attachesAt id:c-attach-output ;
     ho:promptText "Every factual claim must carry a citation to a retrieved source." ;
     ho:providesCapability id:cap-citation ; ho:tokenEstimate 25 ; ho:maturity "stable" ; ho:tagged id:c-safety .
 id:gr-lang a ho:Guardrail ; skos:prefLabel "Korean/English only" ; skos:altLabel "language policy" ;
+    ho:attachesAt id:c-attach-output ;
     ho:languageCondition "Prose (documentation, comments, harness .md): Korean" ,
         "Technical terms, including in answers: English" ,
         "Code, identifiers, commit messages: English" ;
@@ -75,6 +78,7 @@ id:gr-simplicity a ho:Guardrail ; skos:prefLabel "Prefer the simplest working fo
     ho:promptText "Prefer the simplest form that works; remove branches rather than add them, and do not build speculative configuration, callbacks or generalization that nothing uses yet." ;
     ho:tagged id:c-simplicity ; ho:tokenEstimate 38 ; ho:maturity "reviewed" .
 id:gr-bounded-context a ho:Guardrail ; skos:prefLabel "Bounded context projection" ; skos:altLabel "anti-context-rot" ;
+    ho:attachesAt id:c-attach-retrieval ;
     ho:promptText "Never ingest the whole knowledge store into context; retrieve only a request-scoped, budget-capped projection and keep the working context bounded to defend against context rot." ;
     ho:tagged id:c-bounded-context ; ho:tokenEstimate 40 ; ho:maturity "reviewed" .
 id:gr-dispatch-execution a ho:Guardrail ; skos:prefLabel "Dispatch-based execution" ; skos:altLabel "no standalone workers" ;
@@ -104,6 +108,7 @@ id:gr-reuse-first a ho:Guardrail ; skos:prefLabel "Reuse-first composition" ; sk
     ho:promptText "Compose by REUSING existing typed parts first; author a new part only when none fits, and in the same change connect it (a broader parent / a tag / a provider) so it is never an orphan -- this is the anti-drift, anti-orphan discipline of composition." ;
     ho:tagged id:c-reuse-first ; ho:tokenEstimate 62 ; ho:maturity "reviewed" .
 id:gr-structured-output a ho:Guardrail ; skos:prefLabel "Structured output" ; skos:altLabel "deliverable template" ;
+    ho:attachesAt id:c-attach-output ;
     ho:promptText "Emit every deliverable in the agreed structured template for its type -- consistent sections, headings and fields -- so downstream roles and any convergence gate can consume it mechanically rather than re-parsing free-form prose." ;
     ho:tagged id:c-structured-output ; ho:tokenEstimate 40 ; ho:maturity "reviewed" .
 id:gr-scale-modes a ho:Guardrail ; skos:prefLabel "Scale execution modes" ;
@@ -215,6 +220,7 @@ id:gr-instance-isolation a ho:Guardrail ; skos:prefLabel "Disjoint write scopes 
 # gains exactly one operating-rules bullet; the other six harnesses are unchanged.
 id:gr-human-checkpoint a ho:Guardrail ; skos:prefLabel "Human approval checkpoint" ;
     skos:altLabel "phase checkpoint" , "human-in-the-loop gate" , "plan-approval gate" ;
+    ho:attachesAt id:c-attach-execution-pre ; ho:approvalScope "plan" ;
     ho:promptText "Insert an explicit human-approval checkpoint at defined milestones: present the plan or approach and obtain confirmation before proceeding with consequential or irreversible work, and surface high-impact decisions for human review early rather than executing them unattended. Distinct from id:gr-no-arbitrary-decision (which escalates a specific open question) -- this is a proactive gate placed at milestones even when nothing is contested; and from id:gr-verify-proceed (which forbids treating elapsed time as readiness) -- this requires a human sign-off, not merely any confirmed machine state." ;
     ho:tagged id:c-escalation ; ho:tokenEstimate 88 ; ho:maturity "draft" ;
     dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" , "https://github.com/wshobson/agents" ;
@@ -231,8 +237,107 @@ id:gr-human-checkpoint a ho:Guardrail ; skos:prefLabel "Human approval checkpoin
 # up-front questioning that keeps that row from firing.
 id:gr-user-elicitation a ho:Guardrail ; skos:prefLabel "Elicit intent before building" ;
     skos:altLabel "interrogate the user for gaps" , "no assumed requirements" ;
+    ho:attachesAt id:c-attach-dialog ;
     ho:promptText "Before construction begins, analyse the user's intent and the project the harness will run in; wherever that analysis lacks information the composition depends on, put targeted questions to the user and keep asking until the gaps close -- never assume the missing answers and never proceed on them silently. Distinct from id:gr-no-arbitrary-decision, which escalates one open question at the moment of decision, and from id:gr-human-checkpoint, which gates a milestone for approval: this is proactive interrogation that runs before anything is built." ;
     ho:tagged id:c-composition ; ho:tokenEstimate 138 ; ho:maturity "draft" .
+
+#===================== Human-in-the-loop approval mechanics ============
+# Wave-H of the sim/HIL harvest: the rules that make a human approval gate
+# WORK as a mechanism -- who approves (dual independence), what an approved
+# plan must contain (evidence), what a rejection must carry (reason +
+# re-injection), and what the work must guarantee so a durable interrupt can
+# resume (idempotency). Carriers are chosen by FACT, not by byte-stability:
+#   - id:h-multiagent binds gr-plan-evidence / gr-rejection-feedback /
+#     gr-resume-idempotency -- it is the harness that actually operates a
+#     per-plan human gate (id:tier-per-plan-approval, id:gr-human-checkpoint),
+#     a rejection-bearing feedback lane, and a wip->rename resumable file
+#     pipeline, so these rules bind where the discipline is really run
+#     (the W1 vnv note: prefer the declaring harness over a library carrier).
+#   - id:gr-dual-approval binds to id:h-workspace-synthesis instead: no
+#     current harness staffs two independent human approvers, so the four-eyes
+#     rule is a neutral library part hosted beside the team-review discipline
+#     (id:gr-cross-validation) it is the human-authorisation analogue of.
+# ho:approvalScope values are readable from each promptText (anti-fabrication);
+# gr-resume-idempotency carries no ho:attachesAt deliberately -- it constrains
+# how the WORK is designed, not a pipeline point where a check runs.
+id:gr-dual-approval a ho:Guardrail ; skos:prefLabel "Dual independent approval" ;
+    skos:altLabel "four-eyes approval" , "two-person rule" ;
+    ho:attachesAt id:c-attach-execution-pre ; ho:approvalScope "tool-call" ;
+    ho:promptText "For actions designated as high-consequence, require sign-off from TWO approvers who are independent of each other and of the proposing agent -- the second approver sees the same evidence, not the first approver's verdict, and either rejection blocks the action. Distinguished from id:gr-human-checkpoint, which gates a milestone on ONE human approval: this strengthens the gate with approver count and independence for actions where a single reviewer's lapse is not an acceptable failure mode; and from id:gr-cross-validation, which is peer review of a deliverable by another agent role, not a human authorisation to act." ;
+    ho:tagged id:c-human-in-loop ; ho:tokenEstimate 155 ; ho:maturity "draft" .
+id:gr-plan-evidence a ho:Guardrail ; skos:prefLabel "Evidence-backed plan approval" ;
+    skos:altLabel "plan plausibility is not correctness" ;
+    ho:attachesAt id:c-attach-execution-pre ; ho:approvalScope "plan" ;
+    ho:promptText "A plan presented for human approval must carry the evidence to judge it -- the concrete diff, dry-run result or preview of what executing it would change -- never the narrative alone: a plausible-sounding plan miscalibrates the reviewer's trust, so what is approved is the evidenced effect, and anything the evidence did not show requires re-approval before execution. Distinguished from id:gr-human-checkpoint, which requires that the plan gate EXISTS: this fixes what the gated plan must contain for the approval to mean anything." ;
+    ho:tagged id:c-automation-bias ; ho:tokenEstimate 133 ; ho:maturity "draft" .
+id:gr-rejection-feedback a ho:Guardrail ; skos:prefLabel "Reasoned rejection with feedback injection" ;
+    skos:altLabel "no bare rejection" ;
+    ho:attachesAt id:c-attach-dialog ;
+    ho:promptText "A rejection at any human gate carries the reason for it, and that reason is injected into the context of the next attempt: the agent re-approaches the work with the objection in front of it rather than resubmitting blind, and the approver is never asked to re-reject the same fault twice. Distinguished from id:gr-no-arbitrary-decision, which escalates an OPEN question to the decision authority: here the human has already decided, and the rule preserves what the decision taught." ;
+    ho:tagged id:c-meaningful-control ; ho:tokenEstimate 120 ; ho:maturity "draft" .
+id:gr-resume-idempotency a ho:Guardrail ; skos:prefLabel "Idempotent side effects before interrupt" ;
+    skos:altLabel "safe re-execution on resume" ;
+    ho:promptText "Any side effect performed before an interruption point must be idempotent, because resuming re-runs the interrupted unit from its start: design each unit so that re-execution after a pause -- however long the human response takes -- converges to the same state instead of duplicating the effect, and place at most one interruption point per unit. Distinguished from id:gr-verify-proceed, which forbids assuming readiness from elapsed time: this makes the work itself safe to replay when the resume does arrive." ;
+    ho:tagged id:c-human-in-loop ; ho:tokenEstimate 127 ; ho:maturity "draft" .
+
+#===================== Run bounding and safe halting ===================
+# The self-bounding half of the wave: what ends or throttles an autonomous
+# run when no human is watching (stopping conditions, auto-action budget) and
+# what any stop must reach before it counts as stopped (safe halt).
+#   - id:gr-stopping-condition / id:gr-auto-reply-budget bind to
+#     id:h-harness-factory beside id:gr-bounded-iteration: all three bound
+#     unattended looping, and the factory is the methodology host that carries
+#     the complexity-governance family (library placement -- no current
+#     harness declares a turn budget, so no declaring carrier exists yet).
+#   - id:gr-safe-halt binds to id:h-workspace-synthesis beside the envelope
+#     discipline and the exit rows (id:fp-envelope-exit / -severe) that
+#     PROVIDE id:cap-safe-halt -- the halt machinery it generalises lives on
+#     that carrier. Layer split, deliberate: the capability defines WHAT the
+#     safe state is, the fp rows ladder ENVELOPE exits into it, this rule
+#     makes EVERY stop trigger take that path.
+# ho:attachesAt: the turn leaf gains its first occupants (budget/stopping are
+# checked at iteration boundaries), the session leaf its first (a halt is a
+# run/session-closing obligation) -- previously vacant per the B-T wave.
+id:gr-stopping-condition a ho:Guardrail ; skos:prefLabel "Declared stopping conditions" ;
+    skos:altLabel "no unbounded run" ;
+    ho:attachesAt id:c-attach-turn ;
+    ho:promptText "Every autonomous loop declares before it starts when it stops: a maximum iteration count plus the explicit conditions -- goal reached, no progress across a bounded window, budget exhausted -- that end the run without a human having to notice it is stuck, checked at each iteration boundary. Distinguished from id:gr-bounded-iteration, which caps the rounds of a corrective review loop: this bounds the run itself, including runs no reviewer is watching." ;
+    ho:tagged id:c-human-out-loop ; ho:tokenEstimate 113 ; ho:maturity "draft" .
+id:gr-auto-reply-budget a ho:Guardrail ; skos:prefLabel "Autonomous action budget with human reset" ;
+    skos:altLabel "consecutive auto-reply cap" ;
+    ho:attachesAt id:c-attach-turn ; ho:approvalScope "turn" ;
+    ho:promptText "Cap how many consecutive turns an agent may take autonomously: when the budget is exhausted the next turn requires human input before work continues, and any human intervention resets the counter -- so sustained unattended operation is impossible by construction while an attended session is never throttled. Distinguished from id:gr-stopping-condition, which ends a run on its own declared conditions: this does not end the run, it periodically re-inserts the human; and from id:gr-bounded-iteration, which caps the rounds of one corrective loop." ;
+    ho:tagged id:c-human-on-loop ; ho:tokenEstimate 136 ; ho:maturity "draft" .
+id:gr-safe-halt a ho:Guardrail ; skos:prefLabel "Halt only at a safe state" ;
+    skos:altLabel "no mid-action abandonment" ;
+    ho:attachesAt id:c-attach-session ;
+    ho:promptText "Whatever triggers a stop -- an exhausted budget, a declined approval, a user abort, an envelope exit -- halting means REACHING the safe-halt state, not abandoning work mid-action: no irreversible operation left half-applied, in-flight work checkpointed, the halt and its cause published. Distinguished by layer from id:cap-safe-halt, which defines WHAT the safe state is, and from id:fp-envelope-exit / id:fp-envelope-exit-severe, whose ladders reach it for ENVELOPE exits specifically: this rule makes every stop, whatever its trigger, take that same disciplined path." ;
+    ho:tagged id:c-safety ; ho:tokenEstimate 142 ; ho:maturity "draft" .
+
+#===================== Simulation and interface discipline (wave-S/C) ==
+# Two rules from the sim/coding harvest, each bound where it factually runs:
+#   - id:gr-oracle-leak binds to id:h-workspace-synthesis, the library carrier
+#     that hosts the simulation stand-in parts (id:role-user-simulator,
+#     id:tool-env-interface): no current harness runs an evaluation simulation,
+#     so the discipline is hosted beside the role it governs (the same library
+#     placement as the oversight pair) and a concrete evaluation recipe binds
+#     it as declared discipline.
+#   - id:gr-aci-observation binds to id:h-coding, the harness whose shell and
+#     editor results it disciplines -- the declaring carrier (W1 note N1), so
+#     its materialized document gains this rule by intent. Its ho:attachesAt
+#     gives the post-execution leaf its FIRST occupant (vacant since B-T).
+# Neither rule gates work on human approval, so neither carries
+# ho:approvalScope (anti-fabrication).
+id:gr-oracle-leak a ho:Guardrail ; skos:prefLabel "No oracle leakage by the simulated user" ;
+    skos:altLabel "hidden-scenario confidentiality" ;
+    ho:attachesAt id:c-attach-output ;
+    ho:promptText "A stand-in playing the human side of a run under evaluation holds a hidden scenario -- an identity, an intent, preferences and the outcome the evaluation expects -- and must never disclose it beyond what the played person would say: reveal a detail only when the subject agent asks for it, stay in character, and never state the expected result, the success criteria or that a script exists at all. A leaked answer turns the evaluation into dictation -- the subject agent completes the task by transcription and the run measures nothing. Distinguished from id:gr-cite, which governs an agent's factual claims to its own consumer: this governs what the SIMULATOR may reveal to the agent it is evaluating." ;
+    ho:tagged id:c-simulation-standin ; ho:tokenEstimate 175 ; ho:maturity "draft" .
+id:gr-aci-observation a ho:Guardrail ; skos:prefLabel "Concise, informative observations" ;
+    skos:altLabel "bounded observation window" ;
+    ho:attachesAt id:c-attach-execution-post ;
+    ho:promptText "Shape every observation an agent receives back from a tool action to be concise AND informative, with a bounded window: return a summarized result carrying the salient facts rather than a raw dump, and page long content in fixed-size windows instead of whole files -- ablation evidence shows summarized results and a moderate window outperform both raw output and full-file dumps, so verbosity is a measured cost, not a safety margin. Applied to the action's result before the agent builds on it. Distinguished from id:gr-bounded-context, which caps what RETRIEVAL may bring in from the knowledge store: this disciplines what each TOOL RESULT hands back at the post-execution boundary." ;
+    ho:tagged id:c-bounded-context ; ho:tokenEstimate 171 ; ho:maturity "draft" .
 
 #===================== Lesson learning (trial and error) ===============
 # The discipline that turns a failed or corrected attempt into knowledge the
@@ -346,10 +451,12 @@ id:hook-stop a ho:Hook ;
 # byte-identical this wave (envelope rendering is a later wave).
 id:gr-envelope-check a ho:Guardrail ; skos:prefLabel "Check the envelope before accepting" ;
     skos:altLabel "range judgment before work" ;
+    ho:attachesAt id:c-attach-input ;
     ho:promptText "Before accepting a request, judge it against the harness's declared operating envelope: evaluate each envelope statement's observable for this request and accept only what the declaration includes (under a restrictive default, whatever is unstated is out). Treat a request outside the declaration as an envelope exit handled by the declared exit policy (id:fp-envelope-exit) -- never silently reinterpret it into an in-scope task and never improvise a refusal." ;
     ho:tagged id:c-operating-envelope ; ho:tokenEstimate 131 ; ho:maturity "draft" .
 id:gr-envelope-unknown a ho:Guardrail ; skos:prefLabel "Ask when an envelope attribute is unobservable" ;
     skos:altLabel "unknown attribute means ask" ;
+    ho:attachesAt id:c-attach-input ;
     ho:promptText "When an envelope statement's observable cannot be evaluated for a request -- the attribute is UNKNOWN, not merely unfavourable -- do not guess in either direction: under the restrictive default an unobservable attribute counts as outside the declaration, so put the missing observation to the approval authority as a targeted question and proceed only once the attribute is determined. Distinct from id:gr-envelope-check, which judges attributes that CAN be observed: this rule covers the ones that cannot." ;
     ho:tagged id:c-operating-envelope ; ho:tokenEstimate 146 ; ho:maturity "draft" .
 id:gr-transient-tolerance a ho:Guardrail ; skos:prefLabel "Tolerate transient envelope excursions" ;

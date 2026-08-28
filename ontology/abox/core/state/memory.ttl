@@ -59,5 +59,6 @@ id:mem-longterm a ho:Memory ;
     ho:memoryPersistence "durable" ;
     ho:memoryReadScope "selective" ;
     ho:memoryActivationCondition "A defined trigger condition is met (e.g. the current task matches the memory's applicability); only then is the relevant portion consulted and reflected." ;
+    ho:retrievalPolicy "Scored retrieval: rank the stored entries by a weighted combination of recency (decaying with time since the entry was last accessed), importance (a weight assigned when the entry is written) and relevance to the current task, and consult only the top-ranked portion within the read budget -- consumption is selective, so an entry scoring low on all three is simply not loaded." ;
     ho:tagged id:c-memory, id:c-multiagent, id:c-lesson ;
     ho:tokenEstimate 144 ; ho:maturity "draft" .

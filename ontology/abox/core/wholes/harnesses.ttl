@@ -21,15 +21,23 @@
 
 #===================== HARNESSES =======================================
 
+# CARRIER of the wave-C agent-computer-interface parts: this is the harness
+# whose tool results those parts discipline, so they bind HERE as declared
+# discipline rather than on a library carrier (the W1 vnv preference for the
+# declaring harness) -- id:tool-lint-gated-edit gates its edits behind
+# check-or-revert, and id:gr-aci-observation bounds what its shell/editor
+# results hand back. This deliberately CHANGES this harness's materialized
+# document (one added tool, one added operating rule) -- intended: the agent
+# running under this harness is the one these parts govern.
 id:h-coding a ho:Harness ;
     skos:prefLabel "Autonomous coding agent" ; skos:altLabel "coding harness" ;
     skos:definition "An autonomous agent that fixes bugs and reviews code with shell + editor tools." ;
     ho:targetsDomain id:dom-coding ;
     ho:addressesTask id:task-bugfix, id:task-codereview ;
     ho:hasSystemPrompt id:sp-coding ;
-    ho:usesTool id:tool-shell, id:tool-editor ;
+    ho:usesTool id:tool-shell, id:tool-editor, id:tool-lint-gated-edit ;
     ho:hasWorkflow id:wf-react ;
-    ho:hasGuardrail id:gr-nodestruct, id:gr-lang, id:gr-standard-terms ;
+    ho:hasGuardrail id:gr-nodestruct, id:gr-lang, id:gr-standard-terms, id:gr-aci-observation ;
     ho:usesModel id:mc-opus ;
     ho:hasEnvelope id:oe-coding ;
     ho:appliesPattern id:pat-react ;
@@ -114,6 +122,24 @@ id:h-support a ho:Harness ;
 # to a rule this harness's own agents must follow. The error side of the same
 # discipline (id:fp-repeated-mistake) is bound to id:h-harness-factory instead,
 # where the evolution loop that would have caught the repetition lives.
+#
+# CARRIER of the HUMAN-GATE MECHANICS (wave-H): this is the harness that
+# actually operates a per-plan human approval gate (id:tier-per-plan-approval,
+# id:gr-human-checkpoint, the approval-enforcing user channel), so the parts
+# that make such a gate WORK bind here as declared discipline rather than on a
+# library carrier (the W1 vnv preference for the declaring harness):
+#   - the loop that shapes its feedback pipeline (id:wf-approval-gated with the
+#     clarification / interrupt-resume / output-review / control-transfer steps),
+#   - the gate-content and rejection rules (id:gr-plan-evidence,
+#     id:gr-rejection-feedback) and the replay-safety rule its wip->rename
+#     resumable file pipeline embodies (id:gr-resume-idempotency),
+#   - the two human-gate conduit lanes (id:chan-approval, id:chan-elicitation),
+#   - the three gate-outcome error rows (id:fp-unanswered-approval,
+#     id:fp-reject-retry-feedback, id:fp-dismissal-vs-decline) and the fixture
+#     that probes the gate itself (id:scn-oversight-efficacy).
+# This deliberately CHANGES this harness's materialized document (new process,
+# channel, error-handling and test-scenario content) -- intended: these rules
+# only hold if the agents running under this template are the ones bound.
 id:h-multiagent a ho:Harness ;
     skos:prefLabel "Multi-agent orchestration harness" ; skos:altLabel "orchestrator-workers harness" ;
     skos:definition "A neutral, domain-independent harness that assembles the reusable governance parts decomposed from harness governance docs: an orchestrator plans and dispatches node-scoped briefs to specialised workers (author / verify / inspect) under least-privilege, with traceability, verify-then-proceed and escalation guardrails. Its PURPOSE is to make each role's agent perform its role clearly: it composes, per role, the role's scope of tools and guardrails (ho:roleTool / ho:roleGuardrail), its memory discipline and (where present) its user-facing stance, plus the coordination channels the roles exchange work over — so every dispatched agent has an unambiguous mandate. Use as a template for any structured, multi-agent design or authoring workflow." ;
@@ -121,18 +147,20 @@ id:h-multiagent a ho:Harness ;
     ho:addressesTask id:task-architecture, id:task-designdecision ;
     ho:hasSystemPrompt id:sp-methodical ;
     ho:usesTool id:tool-shell, id:tool-editor, id:tool-websearch, id:tool-retriever ;
-    ho:hasWorkflow id:wf-multiagent, id:wf-compose-harness ;
+    ho:hasWorkflow id:wf-multiagent, id:wf-compose-harness, id:wf-approval-gated ;
     ho:hasGuardrail id:gr-lang, id:gr-standard-terms, id:gr-verify-proceed, id:gr-design-for-loss, id:gr-traceability,
         id:gr-grounding, id:gr-no-arbitrary-decision, id:gr-least-privilege, id:gr-report-over-prompt,
         id:gr-controlled-vocabulary, id:gr-root-cause, id:gr-simplicity, id:gr-bounded-context,
         id:gr-dispatch-execution, id:gr-online-execution, id:gr-mode-fit,
         id:gr-delegated-orchestration, id:gr-execution-separation, id:gr-structural-coverage,
         id:gr-reuse-first, id:gr-human-checkpoint, id:gr-user-elicitation,
-        id:gr-lesson-capture, id:gr-lesson-reuse, id:gr-lesson-promotion ;
+        id:gr-lesson-capture, id:gr-lesson-reuse, id:gr-lesson-promotion,
+        id:gr-plan-evidence, id:gr-rejection-feedback, id:gr-resume-idempotency ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-orchestrator, id:role-inspection, id:role-implementer, id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer ;
-    ho:hasChannel id:chan-agent-user, id:chan-orchestrator-inspection, id:chan-dispatch ;
+    ho:hasChannel id:chan-agent-user, id:chan-orchestrator-inspection, id:chan-dispatch,
+        id:chan-approval, id:chan-elicitation ;
     ho:hasMemory id:mem-firmware, id:mem-cache, id:mem-longterm ;
     ho:hasAgent id:agent-orchestrator, id:agent-developer, id:agent-vnv, id:agent-inspection,
         id:agent-synthesizer ;
@@ -140,6 +168,9 @@ id:h-multiagent a ho:Harness ;
     ho:hasAssemblySection id:as-overview, id:as-persona, id:as-operating-rules, id:as-process,
         id:as-model, id:as-roles, id:as-channels, id:as-skills, id:as-execution-mode,
         id:as-data-flow, id:as-error-handling, id:as-test-scenarios, id:as-hooks ;
+    ho:hasTestScenario id:scn-oversight-efficacy ;
+    ho:hasFailurePolicy id:fp-unanswered-approval, id:fp-reject-retry-feedback,
+        id:fp-dismissal-vs-decline ;
     ho:hasEnvelope id:oe-multiagent ;
     ho:appliesPattern id:pat-orchestrator-workers, id:pat-ontology-composition ;
     ho:hasExecutionMode id:mode-sub-agents, id:mode-standing-service ;
@@ -224,26 +255,41 @@ id:h-peer-mesh a ho:Harness ;
 # leaves those harnesses' materialized documents byte-identical this wave
 # (envelope rendering is a later wave), while onEnvelopeExit stays a refinement
 # edge whose reachability this carrier's hasFailurePolicy binding supplies.
+# Wave-H adds two guardrails here: id:gr-safe-halt beside that same halt
+# machinery (the fp exit rows PROVIDE id:cap-safe-halt; the rule generalises
+# their path to every stop trigger), and id:gr-dual-approval beside the
+# team-review discipline (id:gr-cross-validation) it is the human-authorisation
+# analogue of -- a library placement, because no current harness staffs two
+# independent human approvers.
+# Wave-S adds the SIMULATION STAND-IN lane beside the worker roster it staffs
+# from: id:role-user-simulator (plays the human side of an evaluated run from
+# a hidden scenario), the mediated surface it is constrained to
+# (id:tool-env-interface, via ho:usesTool so the role's ho:roleTool scopes a
+# part this harness binds) and its confidentiality rule (id:gr-oracle-leak).
+# Library placement again: no current harness runs an evaluation simulation,
+# so the parts are hosted where the role archetypes live and a concrete
+# evaluation recipe binds them as its counterpart lane.
 id:h-workspace-synthesis a ho:Harness ;
     skos:prefLabel "Workspace-synthesis harness" ; skos:altLabel "convergence-gate library host" ;
     skos:definition "A neutral, domain-independent template that wires the recurring central-library parts a multi-agent worker team reuses: the worker archetypes a team is staffed from (analyst, author, implementer, planner, strategist, tester), which hand off deliverables over a shared file workspace (id:chan-workspace) under the recurring team disciplines -- structured output, ordinal artifact naming, declared hand-off routes, severity-triaged cross-validation, scaling to the request and graceful degradation -- with a terminal synthesizer gate (id:role-synthesizer) that cross-checks every contribution and compiles the integrated final result (providing id:cap-synthesis, which this harness requires), plus the domain-independent error rows such a team declares. It exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- it names no specific problem domain, tool or technology. Derives from id:h-multiagent and reuses central parts by IRI." ;
     ho:targetsDomain id:dom-design ;
     ho:addressesTask id:task-designdecision ;
     ho:hasSystemPrompt id:sp-methodical ;
-    ho:usesTool id:tool-editor ;
+    ho:usesTool id:tool-editor, id:tool-env-interface ;
     ho:hasWorkflow id:wf-multiagent ;
     ho:hasGuardrail id:gr-lang, id:gr-standard-terms, id:gr-structured-output, id:gr-scale-modes,
         id:gr-graceful-fallback,
         id:gr-cross-validation, id:gr-declared-routes, id:gr-sequenced-artifacts,
         id:gr-three-flow-acceptance, id:gr-execution-separation,
         id:gr-work-claim, id:gr-instance-isolation,
-        id:gr-envelope-check, id:gr-envelope-unknown, id:gr-transient-tolerance ;
+        id:gr-envelope-check, id:gr-envelope-unknown, id:gr-transient-tolerance,
+        id:gr-dual-approval, id:gr-safe-halt, id:gr-oracle-leak ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer,
         id:role-analyst, id:role-author, id:role-implementer,
         id:role-planner, id:role-strategist, id:role-tester, id:role-curator,
-        id:role-benchmarker, id:role-auditor ;
+        id:role-benchmarker, id:role-auditor, id:role-user-simulator ;
     ho:hasChannel id:chan-workspace, id:chan-task-board ;
     ho:hasFailurePolicy id:fp-agent-failure-retry, id:fp-insufficient-input,
         id:fp-review-critical-rework, id:fp-source-unavailable,
@@ -310,6 +356,11 @@ id:h-workspace-synthesis a ho:Harness ;
 # they live beside the other neutral scn-* fixtures on this methodology host
 # rather than on the declaring harnesses (whose materialized documents stay
 # byte-identical this wave).
+# Wave-H adds the two RUN-BOUNDING guardrails beside id:gr-bounded-iteration,
+# completing that family: id:gr-stopping-condition (a run's own declared end)
+# and id:gr-auto-reply-budget (a turn budget that re-inserts the human) --
+# library placement on the methodology host, because no current harness
+# declares a turn budget or run-level stop conditions of its own.
 id:h-harness-factory a ho:Harness ;
     skos:prefLabel "Harness-factory harness" ; skos:altLabel "harness-authoring methodology host" ;
     skos:definition "A neutral, domain-independent template that wires the harness-authoring methodology parts: the guardrails that bound multi-agent orchestration complexity and govern faithful authoring, verification and model selection, plus the shared task-board channel (id:chan-task-board) over which workers claim and report tasks. It is a meta-harness -- its subject is the methodology of composing, verifying and evolving harnesses themselves. Like id:h-workspace-synthesis it exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- the parts live here rather than on id:h-multiagent so binding them leaves that harness's materialized document byte-identical. It names no specific problem domain, tool or technology, derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -322,7 +373,8 @@ id:h-harness-factory a ho:Harness ;
         id:gr-bottleneck-avoidance, id:gr-flatten-hierarchy, id:gr-bounded-iteration,
         id:gr-integration-coherence, id:gr-discriminating-eval, id:gr-single-responsibility,
         id:gr-generalize-not-overfit, id:gr-absolute-paths, id:gr-well-formed-skill, id:gr-opus-required,
-        id:gr-execution-separation ;
+        id:gr-execution-separation,
+        id:gr-stopping-condition, id:gr-auto-reply-budget ;
     ho:usesModel id:mc-opus ;
     ho:hasInstruction id:ins-well-formed-skill ;
     ho:hasChannel id:chan-task-board ;
