@@ -1,5 +1,5 @@
 ---
-status: answered    # inspection 검토 완료 — orchestrator 소비 후 closed
+status: closed        # orchestrator 소비·dispatch 완료 (2026-08-28). **보존**: tool_suggestion.md는 Phase 2~5 설계 원본이므로 refresh 제거 대상 아님
 targets: [id:scheme, ho:derivedFrom, ho:constrainedBy, ho:tagged, tools/retrieve.py, tools/webui]
 related: [docs/feedback/annotation-backbone-architecture.md, docs/feedback/verified/annotation-backbone-architecture.md]
 ---

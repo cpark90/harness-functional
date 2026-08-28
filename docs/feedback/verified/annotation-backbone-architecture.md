@@ -166,3 +166,93 @@ vnv 자기보고와 별개로 워킹트리에서 재실측 — **전부 일치, 
   `MIN_AFFIX=4`가 자연어에서 약함). S1–S8 밖이라 게이트는 유효하나 "오해소 0" 정신 위반 —
   Phase 2 브리프에 (a) 블록 삭제 시나리오 S9 추가, (b) tombstone 규칙의 unresolved 확장
   (+affix 강화)을 **필수 항목**으로 넣을 것.
+
+---
+
+## 미반영 항목 실측 (inspection, 2026-08-28 — 사용자 확인 요청)
+
+사용자 지적: "annotation·anchor·42 line 규약·내용구분에 따른 layered skeleton·확률적 edge를
+온톨로지/KG/recipe에 반영해달라 했는데 왜 아직인가." 전수 실측 결과 **메커니즘은 섰고 내용은
+비어 있다**.
+
+### 실측 (중앙 그래프 + staging/recipes 전수)
+
+| 항목 | TBox | KG(ABox) | recipe | 도구 |
+|---|---|---|---|---|
+| annotation 관계(`alternativeOf`/`overlapsWith`) | 선언됨(대칭) | **0 / 0** | **0** | retrieve 선별 로직 있음 |
+| anchor(`ho:Anchor`/`hasAnchor`) | 클래스+술어+chain+shape | **0 / 0** | **0** | — |
+| 확률적 edge(`anchorConfidence`) | 선언됨(minCount 1) | **0** | **0** | — |
+| 42 line 규약 | §1c 조항 | 위반 0 | — | `check_text_cap` **260 token**(42줄→500 word 초안→260 token 확정) |
+| layered skeleton | (해당 술어 없음) | **평면**: Concept 42·top 11·broader 31·**최대 깊이 1** | — | — |
+| (참고) 기존 앵커 | `ho:tagged` | 140 엣지 / 117 개체 — **가중 없음(crisp)** | — | 랭킹 prior |
+| (참고) node 가중 | `ho:salience` | **5 노드뿐**(dom 4 + role-tester 1) | — | `prior = 0.5 + salience` |
+
+### 왜 아직인가 — 원인 4가지 (증거 포함)
+
+1. **승인된 계획 자체가 "메커니즘 3단계"였다.** ①TBox 술어 ②린터 cap ③retrieve 선별 ④편집기
+   lane — **KG에 실제 annotation/anchor/가중 엣지를 저작하는 단계가 애초에 없다.** 지연이 아니라
+   미편성이다. (`1406d87` = TBox+shapes+린터+retrieve만; abox는 `patterns.ttl` 7줄 부수 수정뿐)
+2. **의도적 무저작 — 날조 금지 준수.** 적용 기록: "abox 엣지 0(실재 대안쌍 부재 — 날조 금지
+   준수)". 실재하지 않는 대안쌍을 지어내지 않은 것은 golden rule 2 준수로 **옳은 판단**이지만,
+   그 결과 메커니즘이 빈 채로 남았고 후속 저작 단계가 뒤따르지 않았다.
+3. **진행 중인 ④가 "다른 anchor"다.** 지금 도는 `tools/plane-editor` Phase 0/1은 **편집기의
+   텍스트 앵커**(ProseMirror/Yjs 위치 앵커) 검증 프로토타입이고, 사용자가 요청한 **그래프의
+   anchor 개체**가 아니다. 진행률이 있어 보이지만 요청 항목은 전진하지 않았다.
+4. ★ **layered skeleton 요구가 판정 단계에서 소실됐다 — inspection 자신의 누락.** 이 보고서
+   §현행 대응물에서 backbone을 "`id:scheme` = taxonomy backbone 그 자체"로 **이미 있음** 처리해
+   GAP 목록에서 제외했는데, 그때 **"내용구분에 따른 계층화"** 라는 요구는 별도로 평가되지
+   않았다. 실측하면 backbone은 **깊이 1의 평면 구조**(11 top + 31 broader)라 layered라고 부를 수
+   없다. 즉 "이미 있다"는 판정이 요구의 절반만 본 것이다.
+
+### 이 상태의 실질적 결과
+
+- `retrieve.py`의 **영역당 1선별 로직은 실질 무효**다 — alternativeOf 엣지가 0이므로 어떤 팩도
+  선별을 타지 않는다(0-edge byte-identity 회귀 검사가 통과한 것도 같은 이유).
+- `anchorConfidence`는 **minCount 1**로 조여 있으나 Anchor 개체가 0이라 이 이빨은 한 번도 물지
+  않았다. 확률적 backbone은 **node 층 5개(salience)** 만 살아 있고 **edge 층은 전무**.
+- 즉 현재 그래프는 제안 이전과 **표현력만 다르고 내용은 동일**하다.
+
+### 남은 일 (미편성 wave — orchestrator 편성 필요)
+
+1. **A-wave 저작**: 실재하는 중복·대안 서술을 찾아 annotation 단위로 분해 → `ho:Anchor` 개체 +
+   `anchorConfidence` 부여 → 진짜 대안쌍에만 `alternativeOf`. **후보 탐색이 선행**(현 그래프에
+   대안쌍이 있는지부터 실측: 중복 라벨 경고·근사 정의·같은 개념에 다중 태그된 노드군).
+2. **B-wave backbone 계층화**: 내용 구분 축을 정해 `skos:broader` 2~3층으로 재구성(현 깊이 1).
+   이것은 **개념 재배치**라 파급이 크므로 별도 판정 필요 — `abox-taxonomy-reorg.md` 선례 참조.
+3. **C-wave recipe 반영**: 위 둘이 중앙에 서고 나서.
+4. 42 line 규약은 **완료**(260 token cap, 위반 0) — 추가 작업 없음.
+
+---
+
+## ④ webui/tiptap lane wave 적용 결과 (orchestrator 기록, 2026-08-28)
+
+workflow `wf_98f5ffa3-1e4` (developer 3 + vnv 4, opus). 설계 원본 `inquiries/tool_suggestion.md`
+v0.2 §8 로드맵 기준 **Phase 0 + Phase 1 + §검토 A(5번째 평면 온톨로지 반영)** 완료, Phase 2~5 미착수.
+
+- **Phase 0 (기존 lane 형식화)** — `docs/plans/plane-editor-phase0.md`. 5평면 × repo 실물 매핑,
+  평면별 재사용 경계 (a)(b)(c), webui write path 계약 C1–C8(시그니처 수준), 형식화 GAP 목록.
+  vnv `docs/verify/plane-editor-phase0-verify.md` = **pass-with-notes**: file:line 인용 136건
+  전수 대조 결과 부재·오지시·날조 **0건**, write path 계약을 샌드박스에서 재현 실증.
+- **5번째 평면 온톨로지 반영** — `id:pat-knowledge-plane-separation`(DesignPattern, 243 token,
+  `c-bounded-context` 태그, 신규 Concept **0**). vnv `docs/verify/plane-ontology-verify.md` =
+  **pass-with-notes**: "신설 0" 판단이 타당(c-bounded-context는 HOW MUCH, 이 패턴은 WHICH KIND로
+  직교), 소스 구조 요소 13개 중 11개 매핑 + 미매핑 2건은 소스 자신이 도구 층 귀속으로 명시.
+- **Phase 1 (앵커 엔진 프로토타입)** — `tools/plane-editor/` headless 스위트(Tiptap+ProseMirror+
+  Yjs pin, mark 0·Decoration만, RelativePosition+TextQuoteSelector 다중화). vnv
+  `docs/verify/plane-editor-phase1-verify.md` = **pass-with-notes**: 3회 재실행 byte-identical,
+  G1–G5 PASS, pipeline 레인 30/30·stale 28/30(93.3%), 고정 시나리오 오해소 0/138.
+  **단 적대 프로브에서 오해소 재현** — 블록 통째 삭제(unresolved가 tombstone 규칙 우회)와
+  제자리 교체(affixGuard가 1문자 겹침으로 통과).
+- **종합 판정** `docs/verify/plane-editor-wave-synthesis.md` = **pass-with-notes**(차단 결함 0):
+  Phase 2는 **조건부 GO** — 앵커를 링크 종단점으로 바인딩하는 작업만 조건 C1(S9·S10 오해소
+  0/≥12시행) 통과까지 차단, 나머지는 병행 착수 권고.
+- **후속 조치(orchestrator)**: ① **C1 해소 dispatch 진행 중**(S9/S10 정식 시나리오화 + tombstone
+  규칙의 unresolved 확장 + affixGuard 강화 + counterfactual 계측; vnv 독립 적대 재프로브 게이트).
+  ② inspection의 "미반영 항목 실측"(위 절)이 지적한 **KG 내용 공백**에 대해 A-wave 선행 실측
+  dispatch 진행 중 → `docs/verify/kg-content-candidates.md`(대안쌍·가중 anchor 후보·계층화 案).
+  ③ 사용자 결정 4건을 채널에 남김 → `docs/feedback/plane-editor-and-kg-content-decisions.md`
+  (Phase 2 착수 형태 / IRI 앵커·링크 평면 저장 위치 / verified lane 어휘 정본 / backbone 계층화).
+- **Phase 4 필수 조항(후속 브리프에 반드시 포함)**: cap 260과 영역당 1선별은 도구 층이 유일
+  정의처이므로 편집기 재구현 금지. 단 Node↔Python 프로세스 경계 때문에 직접 import가 불가하므로
+  "공유"는 값 복제가 아니라 **계약 표면(도구가 cap/클러스터를 내보내는 CLI·JSON)**으로 실현해야
+  한다. 수용 검증 = 도구 층에서만 값을 바꿨을 때 편집기 판정이 따라 바뀌는 negative control 1건.

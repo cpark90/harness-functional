@@ -1,5 +1,5 @@
 ---
-status: answered        # inspection이 작성한 dispatch-ready 초안 — orchestrator가 소비(plans/로 채택) 후 closed
+status: closed        # orchestrator 소비·dispatch 완료 (2026-08-28) — Phase 1 구현·판정 종료
 kind: dispatch-brief-draft
 consumer: orchestrator → developer (opus)
 source: docs/feedback/inquiries/tool_suggestion.md   # v0.2 §8 Phase 1
