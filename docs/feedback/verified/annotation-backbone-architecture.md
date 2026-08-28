@@ -151,3 +151,12 @@ vnv 자기보고와 별개로 워킹트리에서 재실측 — **전부 일치, 
 - 판정: ①②③ 적용 결과 기록 **완결**. 단 **refresh는 HOLD** — 적용 계획 ④(webui/tiptap lane)가
   미완(Phase 0 매핑 문서 land, Phase 1 이후 잔여)이라 이 보고가 ④의 판정·순서 anchor로 남는다.
   ④ 완료 시 항목·보고서 함께 refresh.
+
+## inspection 재검증 2 (2026-08-28, ④ Phase 1 앵커 엔진)
+- **G4(external) 충족**: repo 게이트 3종(validate·lint·determinism) inspection 직접 실행 — 전부 PASS.
+- **독립 재현**: `node run-suite.mjs` 재실행 → payload sha256 `1a99081716e08495…` **REPORT와
+  동일**(48시행 byte-identical). pipeline 레인 생존 100%(30/30)·전 레인 오해소 0·S5 orphan 6/6.
+  stale 레인 93.3%(경계 드리프트 2, 오해소 아님)는 리포트가 숨김없이 병기 — 브리프 §4의
+  "성공 케이스만 보지 말 것" 준수 확인. vnv `plane-editor-phase0-verify` pass-with-notes와 합치.
+- ④ 진행 상태: Phase 0(매핑)+Phase 1(앵커 엔진 검증) 완료, Phase 2+(산문 평면 2종·링크
+  저장소·코드 평면·툴 스코핑) 잔여 — HOLD 유지.

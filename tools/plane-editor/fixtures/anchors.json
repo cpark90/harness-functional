@@ -1,0 +1,39 @@
+[
+  {
+    "id": "a1",
+    "quote": "Alpha beta",
+    "occurrence": 0,
+    "body": "Block-head anchor: probes left-boundary bias.",
+    "note": "starts its textblock, so S3 deletes text in the preceding block"
+  },
+  {
+    "id": "a2",
+    "quote": "delta epsilon",
+    "occurrence": 0,
+    "body": "Mid-block multi-word anchor, shares its block with a1."
+  },
+  {
+    "id": "a3",
+    "quote": "standoff model",
+    "occurrence": 0,
+    "body": "Anchor whose first word repeats elsewhere in the document."
+  },
+  {
+    "id": "a4",
+    "quote": "classical weakness",
+    "occurrence": 0,
+    "body": "Plain mid-block anchor."
+  },
+  {
+    "id": "a5",
+    "quote": "Selector multiplexing",
+    "occurrence": 0,
+    "body": "Block-head anchor in a block with no other anchor."
+  },
+  {
+    "id": "a6",
+    "quote": "honest orphan",
+    "occurrence": 0,
+    "body": "Adversarial anchor: the exact quote occurs twice in the document, so quote recovery must be disambiguated by prefix/suffix or refused."
+  }
+]

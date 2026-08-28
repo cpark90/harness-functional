@@ -1,0 +1,75 @@
+{
+  "fragment": "prosemirror",
+  "yUpdateBase64": "ARYBAAcBC3Byb3NlbWlycm9yAwdoZWFkaW5nBwABAAYEAAEBFkFubm90YXRpb24gcGxhbmUgcHJvYmUoAAEABWxldmVsAX0BhwEAAwlwYXJhZ3JhcGgHAAEZBgQAARouQWxwaGEgYmV0YSBnYW1tYSBkZWx0YSBlcHNpbG9uIHpldGEgZXRhIHRoZXRhLocBGQMJcGFyYWdyYXBoBwABSQYEAAFKP1RoZSBzdGFuZG9mZiBtb2RlbCBrZWVwcyBhbm5vdGF0aW9ucyBvdXRzaWRlIHRoZSBkb2N1bWVudCBib2R5LocBSQMJcGFyYWdyYXBoBwABigEGBAABiwFAQW5jaG9yIGRyaWZ0IGlzIHRoZSBjbGFzc2ljYWwgd2Vha25lc3Mgb2YgZXZlcnkgc3RhbmRvZmYgc2NoZW1lLocBigEDCXBhcmFncmFwaAcAAcwBBgQAAc0BP1NlbGVjdG9yIG11bHRpcGxleGluZyByZWNvdmVycyBhbmNob3JzIGFmdGVyIGRlc3RydWN0aXZlIGVkaXRzLocBzAEDCXBhcmFncmFwaAcAAY0CBgQAAY4CN1dyb25nIHJlc29sdXRpb24gaXMgd29yc2UgdGhhbiBhbiBob25lc3Qgb3JwaGFuIHJlY29yZC6HAY0CAwlwYXJhZ3JhcGgHAAHGAgYEAAHHAj5LZWVwaW5nIGFuIGhvbmVzdCBvcnBoYW4gcmVjb3JkIGJlYXRzIGEgc2lsZW50IG1pcy1hdHRhY2htZW50LgA=",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 1
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Annotation plane probe"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Alpha beta gamma delta epsilon zeta eta theta."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "The standoff model keeps annotations outside the document body."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Anchor drift is the classical weakness of every standoff scheme."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Selector multiplexing recovers anchors after destructive edits."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Wrong resolution is worse than an honest orphan record."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Keeping an honest orphan record beats a silent mis-attachment."
+          }
+        ]
+      }
+    ]
+  }
+}

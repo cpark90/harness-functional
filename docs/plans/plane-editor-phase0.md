@@ -4,8 +4,9 @@ kind: formalization-map  # 신규 구현 없음: 기존 lane의 매핑 + 재사�
 author: developer (dispatch, opus)
 source: docs/feedback/inquiries/tool_suggestion.md v0.2 §8 "Phase 0 — 기존 lane 형식화" [v0.2 E]
 approved-item: docs/feedback/verified/annotation-backbone-architecture.md  # 적용 계획 ④ (webui/tiptap lane)
-measured-at: 2026-08-28   # 아래 수치는 이 시점 워킹트리 실측
-baseline: validate.py PASS · lint_uniformity.py PASS · check_determinism.py PASS (262 individuals / 6,994 triples, reasoned)
+measured-at: 2026-08-28   # 아래 수치는 이 시점 워킹트리 실측 (3회 측정 — §1.1 주의 참조)
+revalidated: 2026-08-28   # 재dispatch 시 전 인용(file:line) 재확인 — §1.1 주의 박스 참조
+baseline: validate.py PASS · lint_uniformity.py PASS · check_determinism.py PASS (측정 중 262→269 individuals / 6,994→7,134 triples — 병행 세션이 같은 워킹트리를 편집 중; 3차 측정에서 269/7,134로 안정)
 ---
 # Phase 0 — 기존 lane 형식화 (평면×자산 매핑 · 재사용 경계 · 형식화 GAP)
 
@@ -19,6 +20,10 @@ baseline: validate.py PASS · lint_uniformity.py PASS · check_determinism.py PA
 >
 > **인용 규약**: 모든 주장은 `파일:줄` 근거를 단다. 근거 없는 추정은 쓰지 않고, 확인 못 한
 > 것은 "미확인"으로 명시한다.
+>
+> **재확인 이력**: 이 문서의 `파일:줄` 인용은 2026-08-28 재dispatch 시 **전건 재실행 확인**
+> 했다(코드·TTL·규약 문서 인용 전부 지시 대상이 그대로였다). 그 사이 움직인 것은 **개수뿐**
+> 이며(아래 각 지점에 반영), 구조 주장·GAP은 하나도 뒤집히지 않았다.
 
 ---
 
@@ -38,17 +43,36 @@ v0.2 §검토 E의 논지 그대로다 — 이 repo에는 다섯 평면 각각�
 
 | 평면 (v0.2 §2.1) | repo 기존 구현 | 진리 판정 메커니즘 (실제 코드/게이트) | 원자 단위 | 안정 식별자 | 현재 저장 위치 |
 |---|---|---|---|---|---|
-| **주석** | `docs/feedback/` 채널 (inbox + `verified/` + `inquiries/`) | **기계 판정 없음.** 사람 승인 게이트 — 사용자만 `status: open`→`approved` (`docs/feedback/README.md:22-23`), inspection 판정 (`README.md:17-19`) | 항목 파일 1개 (frontmatter + 본문) | **파일 경로**(=slug). 문서 내 위치 앵커 없음 | inbox 항목 5개(+README), `verified/` 보고 24개(+README), `inquiries/` 항목 7개(+README·METHODOLOGY) |
-| **설계 결정** | `docs/DESIGN.md` + `docs/feedback/verified/**` + `docs/plans/**` + `docs/verify/**` | **논증 + 사람 승인.** verdict 3값 `apply`/`apply-with-changes`/`needs-decision` (`docs/feedback/verified/README.md:10`), 적용 3조건 게이트 (`verified/README.md:11-13`) | 문서 절(section) 단위 결정 | **없음** — 절 제목으로만 참조 (GAP B1) | `docs/DESIGN.md`, `docs/feedback/verified/`(24), `docs/plans/`(22 — 이 문서 포함), `docs/verify/`(41) |
+| **주석** | `docs/feedback/` 채널 (inbox + `verified/` + `inquiries/`) | **기계 판정 없음.** 사람 승인 게이트 — 사용자만 `status: open`→`approved` (`docs/feedback/README.md:22-23`), inspection 판정 (`README.md:17-19`) | 항목 파일 1개 (frontmatter + 본문) | **파일 경로**(=slug). 문서 내 위치 앵커 없음 | `docs/feedback/*.md`(inbox) + `verified/`(판정 보고) + `inquiries/`(조사) — 항목 수는 refresh로 변동 |
+| **설계 결정** | `docs/DESIGN.md` + `docs/feedback/verified/**` + `docs/plans/**` + `docs/verify/**` | **논증 + 사람 승인.** verdict 3값 `apply`/`apply-with-changes`/`needs-decision` (`docs/feedback/verified/README.md:10`), 적용 3조건 게이트 (`verified/README.md:11-13`) | 문서 절(section) 단위 결정 | **없음** — 절 제목으로만 참조 (GAP B1) | `docs/DESIGN.md`, `docs/feedback/verified/`, `docs/plans/`(21 + 이 문서), `docs/verify/`(42) |
 | **데이터 프로토콜** | TBox `ontology/tbox/harness.ttl` + SHACL `ontology/shapes/harness-shapes.ttl` | **결정론적.** pyshacl on reasoned graph — `validate.check_shacl` (`tools/validate.py:39-58`, `inference="none"`은 이미 추론했기 때문 `:48`) | 클래스/프로퍼티 선언 1개, `sh:NodeShape` 1개 | **IRI** `https://harness-ontology.dev/schema#…` (`docs/DESIGN.md:8-9`) | `ontology/tbox/` (46 class · 62 ObjectProperty · 44 DatatypeProperty), `ontology/shapes/` (20 NodeShape) |
 | **인터페이스** | **부분 대응만 존재** — `ho:Contract` + `tools/verify_contract.py` (ODR VERIFY 축, `verify_contract.py:2-18`), `GET /api/schema`의 domain/range 폼 구속 (`tools/webui/server.py:122-147`) | contract 종류별 판정 — `executable`(shell exit 0) / `structural`(`file-exists:` · `file-contains:` · `section:` 문법) (`verify_contract.py:20-27`), IRI 정렬 결정론 보고 (`:29-30`) | contract 1개 (`ho:capabilityContract`) | contract IRI (`ct-` 접두, `tools/lint_uniformity.py:123`) | `ontology/abox/**`, 검증기 `tools/verify_contract.py` |
 | **지식 그래프** `[v0.2 A]` | `ontology/abox/**` (18개 TTL) | **결정론적 하드 6축.** SHACL·reachability·capability·assemblyOrder·capacityFit·registryDrift AND (`tools/validate.py:326-327`, `:364-371`); duplicates는 **advisory**(`:287-289`, `:372`) | individual = TTL 노드 블록 (`tools/webui/ttl_writer.py:238-254`) | **IRI** `https://harness-ontology.dev/id/<domain>/<slug>` (`docs/DESIGN.md:12-13`, `tools/ontology_lib.py:23`) + §2 접두사표 (`ONTOLOGYSTYLE.md:150`) | `ontology/abox/`, webui 신규 저작분은 `abox/authored.ttl` (`ttl_writer.py:296`, `:316`) |
 
-측정치 근거(2026-08-28, 워킹트리):
-- 개체 262 / 트리플 6,994 (reasoned), Harness 7 — `ontology_lib.load_graph` + `instance_nodes` 직접 호출.
-- `ho:Anchor` 인스턴스 **0**, `ho:alternativeOf` 엣지 **0**, `ho:overlapsWith` 엣지 **0**, `ho:tagged` 엣지 **135** (asserted 그래프).
-- `docs/feedback` frontmatter `status:` 실측 분포 — inbox: `approved` 4 / `open` 1 (+README),
-  `verified/`: `reported` 16 / `finalized` 1 (+8 무표기), `inquiries/`: `answered` 4 / `closed` 4.
+측정치 근거(2026-08-28, 워킹트리 직접 실행):
+
+> **주의 — 이동 표적**: 이 워킹트리는 **여러 세션이 병행 편집 중**이라 개수는 측정 시점에
+> 좌우된다. 실제로 같은 세션 안 두 차례 측정에서 그래프가 262→269 individuals /
+> 6,994→7,134 triples로, 채널 항목 수가 refresh로 줄었다. **개수가 아니라 구조·위반 성격이
+> 이 문서의 주장**이며, 아래 어휘 위반 수치는 세 측정 모두에서 동일했다.
+
+- 그래프: 개체 262→269 / 트리플 6,994→7,134 (reasoned), Harness 7 —
+  `ontology_lib.load_graph` + `instance_nodes` 직접 호출. **3차 측정(재dispatch 시점)에서
+  269 / 7,134로 안정**.
+- annotation 어휘 실사용: `ho:Anchor` 인스턴스 **0**, `ho:alternativeOf` **0**,
+  `ho:overlapsWith` **0**, `ho:hasAnchor` **0** / 대조군 `ho:tagged` 135→140 (asserted 그래프).
+  `validate.py`도 같은 사실을 독립 보고한다("registered but not instantiated: Anchor…").
+- `docs/feedback` frontmatter 실측 분포(README·METHODOLOGY 제외, 3차 측정 = 22 verified 항목):
+  - inbox `status:` — 전부 `approved`(규약 2값 `open`/`approved` 안).
+  - `inquiries/` `status:` — `answered`만 관측(이전 측정의 `closed` 항목은 refresh로 빠졌다).
+    관측된 값은 규약 3값 안이다(`docs/feedback/inquiries/README.md:7`).
+  - `verified/` `status:` — `reported` **16** / `finalized` **1** / 키 없음 5.
+    `verified/README.md`는 이 lane에 `status:` 키를 **정의하지 않는다**(`:8-15`).
+  - `verified/` `verdict:` — `done` **13** / `apply-with-changes` **4** / `apply` **3** /
+    `apply-plan-ready` **1** / 키 없음 1. 규약이 정의한 값은 3개뿐
+    (`apply` · `apply-with-changes` · `needs-decision`, `verified/README.md:10`) — 즉
+    **최빈값 `done`을 포함해 실사용 22건 중 14건이 미정의 값**이다(GAP A3). 이 비율은
+    항목 refresh를 거친 세 차례 측정에서 모두 유지됐다 — 개수가 아니라 **정착된 성질**이다.
 
 ### 1.2 평면별 근거 주석 (표가 압축한 사실)
 
@@ -64,7 +88,7 @@ v0.2 §검토 E의 논지 그대로다 — 이 repo에는 다섯 평면 각각�
 **설계 결정 평면.** 결정이 실제로 기록되는 형태는 세 가지다 — (1) 원칙 산문
 (`docs/DESIGN.md:14-20`의 `ontology/` rename 기각 결정처럼 근거까지 적힌 것),
 (2) 판정 보고(`docs/feedback/verified/**`, verdict + 적용 계획 + **적용 결과 기록란**),
-(3) 계획·이슈(`docs/plans/**`, `docs/verify/**` 42건). 승인 게이트는 세 조건 AND —
+(3) 계획·이슈(`docs/plans/` 21개 + 이 문서, `docs/verify/` 42개 보고). 승인 게이트는 세 조건 AND —
 inbox 항목 `status: approved` + verdict가 apply류 + 보고 rename 완료
 (`docs/feedback/verified/README.md:11-13`).
 
@@ -118,17 +142,19 @@ v0.2 §8 Phase 0이 함께 지목한 두 자산은 평면이 아니라 **투영 
   차용할 수 있다.
 - **(b) 감싸서**: 상태 어휘. Phase 1 브리프가 정한 annotation 레코드 status는
   `open|resolved` 2값인데(`docs/feedback/inquiries/tool_suggestion-phase1-brief.md:31`),
-  repo 실사용 어휘는 lane마다 3종이다(§1.1 측정치). **어댑터 지점**: lane별 상태값 →
-  `{open, resolved}` 사영 함수 1개. 역방향(도구→문서)은 손실이 있으므로 단방향으로 둔다.
+  repo 실사용 어휘는 lane마다 다르고 규약 밖 값까지 섞여 있다(§1.1 측정치). **어댑터 지점**:
+  lane별 상태값 → `{open, resolved}` 사영 함수 1개 — 단, GAP A3가 남아 있는 한 사영의 정의역이
+  확정되지 않으므로 **A3 해소가 선행**이다. 역방향(도구→문서)은 손실이 있으므로 단방향으로 둔다.
 - **(c) 새로**: 문서 **내부 위치 앵커**. 현재 주석의 대상 표기는 frontmatter `targets:`
   자유 리스트뿐이고, 값 어휘가 섞여 있다 — IRI(`id:scheme`), TBox 접두 조각(`tbox:ho:`),
   파일 경로(`tools/retrieve.py`)가 한 리스트에 공존한다
   (`docs/feedback/verified/annotation-backbone-architecture.md:4`). 줄·범위 selector는 없다.
 
 ### 2.2 설계 결정 평면
-- **(a) 그대로**: verdict 3값 + 3조건 승인 게이트(`verified/README.md:10-13`).
-  v0.2 §4.2 I3 [v0.2 D]가 요구한 "**판정 기록 존재**"는 이 lane이 이미 파일로 구현한다 —
-  보고서 존재 자체가 판정 기록이다.
+- **(a) 그대로**: **3조건 승인 게이트**(`verified/README.md:11-13`)와 규약상 verdict 3값
+  (`:10`). v0.2 §4.2 I3 [v0.2 D]가 요구한 "**판정 기록 존재**"는 이 lane이 이미 파일로
+  구현한다 — 보고서 존재 자체가 판정 기록이다. (단 실사용 verdict 값은 규약을 벗어나 있다 —
+  GAP A3.)
 - **(b) 감싸서**: 적용 결과 기록란. 승인 보고서는 적용 후 "적용 결과" 절을 채우는 규약을
   가진다(`docs/feedback/README.md:27-28`; 실제 기록 예:
   `verified/annotation-backbone-architecture.md:105-136`). 이것이 사실상 결정의 **상태 전이
@@ -202,7 +228,7 @@ def abox_files() -> list[str]:                                   # :221-230
   `1e-6`(`ttl_writer.py:287-293`). basename 키를 쓰면 그룹 디렉토리의 동명 파일이 잠금 슬롯을
   공유해 동시 편집을 가린다(`server.py:112-116` 주석). → Phase 2 어댑터도 **relpath 키**를 써야 한다.
 - **C4. 검증은 호출자 책임이다.** `ttl_writer`는 "persistence here is purely textual"
-  (`:20-22`). 즉 `plan_upsert` 자체는 **어떤 의미 검사도 하지 않는다** — 게이트는 쓰기 **후**
+  (`ttl_writer.py:20-21`). 즉 `plan_upsert` 자체는 **어떤 의미 검사도 하지 않는다** — 게이트는 쓰기 **후**
   `validator.run_structured()`이고 실패 시 `restore` 롤백이다(`server.py:207-213`).
 - **C5. 게이트 분류(무엇이 거부되고 무엇이 조용히 통과하는가).**
   - **거부(롤백)**: 하드 6축 중 하나라도 실패 — SHACL·reachability·capability·assemblyOrder·
@@ -237,7 +263,7 @@ def abox_files() -> list[str]:                                   # :221-230
 |---|---|---|---|---|---|
 | **A1** | 주석 | status 전이가 **문서 규약일 뿐 기계 강제가 아니다** — 어떤 도구도 `docs/feedback`을 읽지 않는다 | `tools/*.py`에 `feedback` 참조 0건; `ontology_lib.py:27` (`ONT_DIR`=ontology만); `docs/feedback/README.md:4-5` | 도구 | Phase 2 |
 | **A2** | 주석 | 대상 표기 `targets:`가 **자유 형식·미검증**이며 어휘가 섞여 있다(IRI·TBox 조각·파일 경로) | `verified/annotation-backbone-architecture.md:4` (`tbox:ho:` 포함), `docs/feedback/sim-hil-coding-harvest.md:3` | 도구 (+그래프 어휘는 기존) | Phase 2/3 |
-| **A3** | 주석 | 해소 상태 **어휘가 lane마다 다르고, 실사용 값이 규약에 정의돼 있지 않다** — `verified/`의 `reported`(16건)·`finalized`(1건)는 `verified/README.md:1-17` 어디에도 정의가 없다(README는 verdict 3값만 정의 `:10`) | 실측 분포 §1.1; `docs/feedback/inquiries/README.md:7` (별도 3값) | 문서 | Phase 0 후속(문서 정정) |
+| **A3** | 주석 | 해소 상태 **어휘가 lane마다 다르고, 실사용 값 상당수가 규약에 정의돼 있지 않다** — `verified/`의 `status: reported`(16)·`finalized`(1)는 README에 키조차 없고, `verdict: done`(13)·`apply-plan-ready`(1)는 정의된 3값 밖이다 | 실측 분포 §1.1; `docs/feedback/verified/README.md:10`(정의 3값)·`:8-15`(status 키 미정의); `docs/feedback/inquiries/README.md:7`(또 다른 3값) | 문서 | Phase 0 후속(문서 정정) |
 | **B1** | 설계결정 | **결정 ID 부재** — v0.2 §2.1이 요구한 안정 식별자가 없어 결정은 절 제목으로만 참조된다 | `docs/DESIGN.md`(절 제목만), `verified/annotation-backbone-architecture.md:62` ("사용자 결정 (2026-08-27…)") | 문서 (+도구) | Phase 2 |
 | **B2** | 설계결정 | **supersedes 저장소 부재** — 대체 이력은 git 커밋과 산문에만 있다 | v0.2 §4.3 표(`tool_suggestion.md:154`)가 "설계결정 평면 한정"으로 명문화; 그래프 재도입은 B9 결정으로 금지 | 도구 | Phase 2 |
 | **B3** | 설계결정 | I3의 커밋 조건 "**판정 기록 존재**"를 확인하는 기계 검사가 없다(A1과 동일 뿌리) | `tool_suggestion.md:140` (I3 [v0.2 D]); write 게이트는 `ontology/`만 본다 | 도구 | Phase 5 |
@@ -265,9 +291,23 @@ def abox_files() -> list[str]:                                   # :221-230
 
 ### 4.1 경계 — Phase 1은 이 lane들과 **연결하지 않는다**
 
-Phase 1 프로토타입의 파일 경계는 **신규 디렉토리 `tools/plane-editor/` 하위뿐**이며
-(`docs/feedback/inquiries/tool_suggestion-phase1-brief.md:19-20`), 현재 그 디렉토리는
-**존재하지 않는다**(실측: `tools/` 목록에 없음). 비범위는 브리프 §6이 명시한다 — 링크 평면·
+Phase 1 프로토타입의 파일 경계는 **신규 디렉토리 `tools/plane-editor/` 하위뿐**이다
+(`docs/feedback/inquiries/tool_suggestion-phase1-brief.md:19-20`).
+
+> **관측 사실(2026-08-28, 2회 갱신)**: 이 dispatch 시작 시점에 `tools/plane-editor/`는
+> 존재하지 않았으나, 작성 도중 **병행 세션이 해당 디렉토리를 생성**했고(관측 1:
+> `package.json` · `probe.mjs` · `src/{annotation-plane,anchors,store,text-index,dom}.mjs` ·
+> `fixtures/{document,anchors}.json`), 재확인 시점에는 브리프 `:37-39`가 요구한 헤드리스
+> 진입점까지 갖춘 상태였다(관측 2: `run-suite.mjs` · `suite-result.json` ·
+> `schema-dump.json` · `REPORT.md` · `src/{scenarios,schema,session,report,reload-child}.mjs` ·
+> `sample-state/`; 의존성은 `@tiptap/*` 3.30.5 · `yjs` 13.6.32 · `y-prosemirror` 1.3.7 ·
+> `jsdom` 30.0.1 — `package.json`). 즉 Phase 1은 이 lane 형식화와 **동시 진행 중**이다.
+> 이 문서는 그 구현 내용을 판정하지 않는다(vnv 소관) — 아래 계약은 브리프에서 읽은 **경계**일
+> 뿐이며, 실제 산출물과의 대조는 Phase 1 vnv 게이트가 한다. **경계 자체는 관측과 일치한다**:
+> 그 트리는 전부 `tools/plane-editor/` 하위이고 `.mjs`/JSON뿐이라 `ontology/`·기존 `tools/*.py`를
+> 건드리지 않는다.
+
+비범위는 브리프 §6이 명시한다 — 링크 평면·
 설계결정 평면·**IRI 앵커(지식 그래프 연결)**·툴 스코핑·cap/영역당 1선별·webui 통합·TBox 술어
 (`tool_suggestion-phase1-brief.md:66-68`).
 
@@ -310,16 +350,23 @@ Phase 1 프로토타입의 파일 경계는 **신규 디렉토리 `tools/plane-e
 | `tools/lint_uniformity.py` | **PASS** — 6검사 위반 0 (tokenEstimate·naming prefix·language·maturity·definition·text cap) |
 | `tools/check_determinism.py` | **PASS** — 4 요청 × {md, json} × 4 run, 요청당 1 distinct pack |
 
-이 dispatch는 `docs/plans/plane-editor-phase0.md` **한 파일만 추가**했고 `ontology/`·`tools/`·
-기존 문서를 수정하지 않았으므로, 세 게이트는 구조적으로 무영향이다(위 실행은 확인용).
+세 게이트 모두 **재dispatch 시점(269 individuals 그래프)에 다시 실행해 PASS를 재확인**했다 —
+직전 실행이 그래프 편집 이전이었던 `check_determinism.py`도 포함이다(4 요청 × md/json × 4 run,
+요청당 1 distinct pack). 그 사이의 그래프 변화는 병행 세션 몫이며 이 dispatch가 기여한 변경은
+없다(§1.1 주의).
+
+이 lane 작업은 `docs/plans/plane-editor-phase0.md` **한 파일만 추가·갱신**했고 `ontology/`·
+`tools/`·기존 문서를 수정하지 않았으므로, 세 게이트는 구조적으로 무영향이다(위 실행은 확인용).
 
 ---
 
 ## 6. 후속 (이 문서가 넘기는 것)
 
-- **문서 층 즉시 처리 후보**: GAP **A3**(verified lane의 `reported`/`finalized` 어휘 미정의).
-  `docs/feedback/verified/README.md` 소관이므로 이 dispatch의 담당 경로 밖 — orchestrator가
-  별도 micro dispatch로 처리할 사안이다.
+- **문서 층 즉시 처리 후보**: GAP **A3**(verified lane의 `status: reported|finalized`와
+  `verdict: done|apply-plan-ready`가 규약에 없음 — 실사용 값 상당수가 미정의). 정정 대상은
+  `docs/feedback/verified/README.md`이고 이 dispatch의 담당 경로 밖이므로, orchestrator가
+  별도 micro dispatch로 처리할 사안이다(규약을 실사용에 맞출지, 실사용을 규약에 맞출지는
+  설계 결정).
 - **Phase 1 착수 시**: §4.1의 계약 4개를 브리프에 그대로 승계하고, §4.2 접점은 **열지 않는다**.
 - **Phase 2 설계 시**: §2.6 계약과 §4.2 표를 입력으로 쓰고, 시작점은 P1·P2(단방향) 두 개로 제한.
 - **Phase 4 설계 시**: cap(§2.5(a))과 영역당 1선별(§1.3)은 **이미 구현이 있다** — 재구현 금지,

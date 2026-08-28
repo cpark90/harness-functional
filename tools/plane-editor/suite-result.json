@@ -1,0 +1,4113 @@
+{
+  "suite": "plane-editor phase 1 anchor probe",
+  "source": "docs/feedback/inquiries/tool_suggestion-phase1-brief.md",
+  "fragment": "prosemirror",
+  "environment": {
+    "tiptap": "3.30.5",
+    "tiptapPm": "3.30.5",
+    "starterKit": "3.30.5",
+    "yjs": "13.6.32",
+    "yProsemirror": "1.3.7",
+    "jsdom": "30.0.1"
+  },
+  "fixture": {
+    "blocks": 7,
+    "docChars": 381,
+    "anchors": 6,
+    "anchorIds": [
+      "a1",
+      "a2",
+      "a3",
+      "a4",
+      "a5",
+      "a6"
+    ]
+  },
+  "lanes": {
+    "live": "편집이 일어난 세션 안의 ProseMirror Decoration (플러그인 상태)",
+    "pipeline": "저장 시 재캡처(또는 orphan이면 원 selector 보존) → 재로드 후 해소",
+    "stale": "편집 전 캡처한 레코드를 편집 후 문서에 그대로 들이댐 (최악 경로)"
+  },
+  "totals": {
+    "live": {
+      "lane": "live",
+      "trials": 48,
+      "measured": 42,
+      "pass": 30,
+      "driftChars": 0,
+      "survived": 24,
+      "recovered": 0,
+      "drifted": 0,
+      "orphaned": 18,
+      "wrong": 0
+    },
+    "pipeline": {
+      "lane": "pipeline",
+      "trials": 48,
+      "measured": 48,
+      "pass": 48,
+      "driftChars": 0,
+      "survived": 36,
+      "recovered": 6,
+      "drifted": 0,
+      "orphaned": 6,
+      "wrong": 0
+    },
+    "stale": {
+      "lane": "stale",
+      "trials": 48,
+      "measured": 48,
+      "pass": 46,
+      "driftChars": 2,
+      "survived": 34,
+      "recovered": 6,
+      "drifted": 2,
+      "orphaned": 6,
+      "wrong": 0
+    }
+  },
+  "policy": {
+    "tombstoneSkips": 12,
+    "counterfactualMisResolves": 2,
+    "quoteUniqueOneAffix": 4,
+    "counterfactualTrials": [
+      {
+        "scenario": "S5",
+        "anchorId": "a6",
+        "lane": "pipeline",
+        "wouldAttachTo": "honest orphan"
+      },
+      {
+        "scenario": "S5",
+        "anchorId": "a6",
+        "lane": "stale",
+        "wouldAttachTo": "honest orphan"
+      }
+    ]
+  },
+  "bystanders": {
+    "total": 210,
+    "ok": 209,
+    "residual": 1,
+    "orphaned": 0,
+    "wrong": 0
+  },
+  "gates": {
+    "G1": {
+      "pass": true,
+      "fingerprintIdentical": true,
+      "annotationNamedTypes": [],
+      "documentUnchanged": true,
+      "yStateUnchanged": true,
+      "planeRecords": 6,
+      "planeDecorations": 6,
+      "markCount": 6,
+      "nodeCount": 11
+    },
+    "G2": {
+      "pass": true,
+      "gatingLane": "pipeline",
+      "laneNote": "pipeline = 브리프 §3의 저장 경로(편집 후 살아있는 앵커를 저장 시 재캡처 → 재로드 후 해소). stale = 편집 전 레코드를 편집 후 문서에 들이대는 최악 경로. 두 값을 모두 싣는다.",
+      "pipeline": {
+        "lane": "pipeline",
+        "scenarios": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S8"
+        ],
+        "trials": 30,
+        "measured": 30,
+        "survived": 30,
+        "recovered": 0,
+        "resolvedAsExpected": 30,
+        "drifted": 0,
+        "orphaned": 0,
+        "wrong": 0,
+        "pass": 30,
+        "survivalRate": 1,
+        "passRate": 1
+      },
+      "stale": {
+        "lane": "stale",
+        "scenarios": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S8"
+        ],
+        "trials": 30,
+        "measured": 30,
+        "survived": 28,
+        "recovered": 0,
+        "resolvedAsExpected": 28,
+        "drifted": 2,
+        "orphaned": 0,
+        "wrong": 0,
+        "pass": 28,
+        "survivalRate": 0.9333333333333333,
+        "passRate": 0.9333333333333333
+      },
+      "staleMeetsTarget": false,
+      "s5": {
+        "pipeline": {
+          "trials": 6,
+          "orphaned": 6,
+          "wrong": 0
+        },
+        "stale": {
+          "trials": 6,
+          "orphaned": 6,
+          "wrong": 0
+        }
+      },
+      "wrongTotalAllLanes": 0,
+      "counterfactualMisResolves": 2
+    },
+    "G3": {
+      "pass": true,
+      "deterministic": true,
+      "repeats": 2,
+      "payloadSha256": "1a99081716e084951988c762409eed57620b82c878fa29967e5911c6d2379ddc",
+      "command": "node run-suite.mjs",
+      "interactive": false,
+      "browser": false
+    },
+    "G4": {
+      "status": "external",
+      "note": "이 디렉토리는 순수 추가라 `ontology/`·기존 `tools/*.py` 경로를 건드리지 않는다. `/usr/bin/python3 tools/{validate,check_determinism,lint_uniformity}.py`를 repo root에서 별도 실행해 회귀를 확인한다."
+    },
+    "G5": {
+      "pass": true,
+      "status": "checked",
+      "filesScanned": 17,
+      "asciiChars": 81772,
+      "hangulChars": 3966,
+      "violations": [],
+      "note": "산문 한글 / 용어·식별자·문서 fixture 영어. 손으로 쓴 파일 전수를 스캔해 ASCII·한글·명시 허용 기호 밖의 문자가 0인지 기계적으로 확인한다 (gr-lang: Korean/English only)."
+    }
+  },
+  "scenarios": [
+    {
+      "id": "S1",
+      "title": "앵커 앞에 텍스트 삽입",
+      "target": "생존 100%",
+      "gating": true,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S1",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "text",
+            "text": "Alpha beta"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Alpha beta",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 31,
+              "to": 41,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 31,
+              "to": 41,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\n[PRE] Alpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S1",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "text",
+            "text": "delta epsilon"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "delta epsilon",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 48,
+              "to": 61,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 48,
+              "to": 61,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma [PRE] delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S1",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "text",
+            "text": "standoff model"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "standoff model",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 83,
+              "to": 97,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 83,
+              "to": 97,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe [PRE] standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S1",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "text",
+            "text": "classical weakness"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "classical weakness",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 164,
+              "to": 182,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 164,
+              "to": 182,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the [PRE] classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S1",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "text",
+            "text": "Selector multiplexing"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Selector multiplexing",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 210,
+              "to": 231,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 210,
+              "to": 231,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\n[PRE] Selector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S1",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "text",
+            "text": "honest orphan"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "honest orphan",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 309,
+              "to": 322,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 309,
+              "to": 322,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an [PRE] honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "앵커 범위 안에 삽입",
+      "target": "범위 확장 생존",
+      "gating": true,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S2",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "text",
+            "text": "Alpha[IN] beta"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Alpha[IN] beta",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha[IN] beta",
+              "from": 25,
+              "to": 39,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha[IN] beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha[IN] beta",
+              "from": 25,
+              "to": 39,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha[IN] beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha[IN] beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S2",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "text",
+            "text": "delta [IN]epsilon"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "delta [IN]epsilon",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta [IN]epsilon",
+              "from": 42,
+              "to": 59,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta [IN]epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta [IN]epsilon",
+              "from": 42,
+              "to": 59,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta [IN]epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta [IN]epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S2",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "text",
+            "text": "standof[IN]f model"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "standof[IN]f model",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standof[IN]f model",
+              "from": 77,
+              "to": 95,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standof[IN]f model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standof[IN]f model",
+              "from": 77,
+              "to": 95,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standof[IN]f model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standof[IN]f model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S2",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "text",
+            "text": "classical[IN] weakness"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "classical[IN] weakness",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical[IN] weakness",
+              "from": 158,
+              "to": 180,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical[IN] weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical[IN] weakness",
+              "from": 158,
+              "to": 180,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical[IN] weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical[IN] weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S2",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "text",
+            "text": "Selector m[IN]ultiplexing"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Selector m[IN]ultiplexing",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector m[IN]ultiplexing",
+              "from": 204,
+              "to": 229,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector m[IN]ultiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector m[IN]ultiplexing",
+              "from": 204,
+              "to": 229,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector m[IN]ultiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector m[IN]ultiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S2",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "text",
+            "text": "honest[IN] orphan"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "honest[IN] orphan",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest[IN] orphan",
+              "from": 303,
+              "to": 320,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest[IN] orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest[IN] orphan",
+              "from": 303,
+              "to": 320,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest[IN] orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest[IN] orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        }
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "앵커 앞 텍스트 삭제",
+      "target": "생존 100%",
+      "gating": true,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S3",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "text",
+            "text": "Alpha beta"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Alpha beta",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 20,
+              "to": 30,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 20,
+              "to": 30,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "ation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S3",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "text",
+            "text": "delta epsilon"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "delta epsilon",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 34,
+              "to": 47,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 34,
+              "to": 47,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 4,
+            "residual": 1,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": [
+              {
+                "id": "a1",
+                "outcome": "residual",
+                "text": "Alpha bet"
+              }
+            ]
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha betdelta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S3",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "text",
+            "text": "standoff model"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "standoff model",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 73,
+              "to": 87,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 73,
+              "to": 87,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nstandoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S3",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "text",
+            "text": "classical weakness"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "classical weakness",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 150,
+              "to": 168,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 150,
+              "to": 168,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor driftclassical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S3",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "text",
+            "text": "Selector multiplexing"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Selector multiplexing",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 199,
+              "to": 220,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 199,
+              "to": 220,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nr drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S3",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "text",
+            "text": "honest orphan"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "honest orphan",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 295,
+              "to": 308,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 295,
+              "to": 308,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        }
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "앵커 범위 일부 겹쳐 삭제",
+      "target": "잔여 범위로 축소 생존",
+      "gating": true,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 4,
+          "driftChars": 2,
+          "survived": 4,
+          "recovered": 0,
+          "drifted": 2,
+          "orphaned": 0,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S4",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "text",
+            "text": "Alpha"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Alpha",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha",
+              "from": 25,
+              "to": 30,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "drifted",
+              "pass": false,
+              "method": "relative-position",
+              "text": "Alpha ",
+              "from": 25,
+              "to": 31,
+              "driftChars": 1,
+              "rawStatus": "resolved",
+              "rawText": "Alpha ",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S4",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "text",
+            "text": "delta "
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "delta ",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta ",
+              "from": 42,
+              "to": 48,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta ",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "drifted",
+              "pass": false,
+              "method": "relative-position",
+              "text": "delta e",
+              "from": 42,
+              "to": 49,
+              "driftChars": 1,
+              "rawStatus": "resolved",
+              "rawText": "delta e",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S4",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "text",
+            "text": "standof"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "standof",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standof",
+              "from": 77,
+              "to": 84,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standof",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standof",
+              "from": 77,
+              "to": 84,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standof",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standof annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S4",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "text",
+            "text": "classical"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "classical",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical",
+              "from": 158,
+              "to": 167,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical",
+              "from": 158,
+              "to": 167,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classicalery standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S4",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "text",
+            "text": "Selector m"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "Selector m",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector m",
+              "from": 204,
+              "to": 214,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector m",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector m",
+              "from": 204,
+              "to": 214,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector m",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector mers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S4",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "text",
+            "text": "honest"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "text": "honest",
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest",
+              "from": 303,
+              "to": 309,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "recaptured"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest",
+              "from": 303,
+              "to": 309,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honestd.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        }
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "앵커 범위 전체 삭제",
+      "target": "orphaned 판정 (오해소 0)",
+      "gating": true,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 6,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 6,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 6,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S5",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "orphan",
+            "text": null
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\n gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S5",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "orphan",
+            "text": null
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma  zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S5",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "orphan",
+            "text": null
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe  keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S5",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "orphan",
+            "text": null
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the  of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S5",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "orphan",
+            "text": null
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 0,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "no-candidate",
+                "candidates": 0,
+                "text": null,
+                "wouldMisResolve": false
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\n recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S5",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "orphan",
+            "text": null
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 1,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "resolved",
+                "candidates": 1,
+                "text": "honest orphan",
+                "wouldMisResolve": true
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": true,
+              "method": "orphaned",
+              "text": null,
+              "from": null,
+              "to": null,
+              "driftChars": 0,
+              "rawStatus": "collapsed",
+              "rawText": "",
+              "guardAccepted": false,
+              "quoteStatus": "skipped-tombstone",
+              "quoteCandidates": 1,
+              "quoteAcceptance": null,
+              "counterfactualQuote": {
+                "status": "resolved",
+                "candidates": 1,
+                "text": "honest orphan",
+                "wouldMisResolve": true
+              },
+              "reason": "collapsed/tombstone-evidence",
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an  record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        }
+      ]
+    },
+    {
+      "id": "S6",
+      "title": "앵커 담은 블록 이동 (cut+paste)",
+      "target": "실측 보고 (quote 복구 포함)",
+      "gating": false,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 6,
+          "pass": 0,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 6,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 6,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 6,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S6",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "text",
+            "text": "Alpha beta"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "Alpha beta",
+              "from": 342,
+              "to": 352,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "unique-one-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "Alpha beta",
+              "from": 342,
+              "to": 352,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "unique-one-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment.\nAlpha beta gamma delta epsilon zeta eta theta."
+          }
+        },
+        {
+          "scenario": "S6",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "text",
+            "text": "delta epsilon"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "delta epsilon",
+              "from": 359,
+              "to": 372,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "delta epsilon",
+              "from": 359,
+              "to": 372,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment.\nAlpha beta gamma delta epsilon zeta eta theta."
+          }
+        },
+        {
+          "scenario": "S6",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "text",
+            "text": "standoff model"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "standoff model",
+              "from": 329,
+              "to": 343,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "standoff model",
+              "from": 329,
+              "to": 343,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment.\nThe standoff model keeps annotations outside the document body."
+          }
+        },
+        {
+          "scenario": "S6",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "text",
+            "text": "classical weakness"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "classical weakness",
+              "from": 344,
+              "to": 362,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "classical weakness",
+              "from": 344,
+              "to": 362,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment.\nAnchor drift is the classical weakness of every standoff scheme."
+          }
+        },
+        {
+          "scenario": "S6",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "text",
+            "text": "Selector multiplexing"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "Selector multiplexing",
+              "from": 325,
+              "to": 346,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "unique-one-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "Selector multiplexing",
+              "from": 325,
+              "to": 346,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 1,
+              "quoteAcceptance": "unique-one-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment.\nSelector multiplexing recovers anchors after destructive edits."
+          }
+        },
+        {
+          "scenario": "S6",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "text",
+            "text": "honest orphan"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "honest orphan",
+              "from": 367,
+              "to": 380,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 2,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "recovered",
+              "pass": true,
+              "method": "text-quote",
+              "text": "honest orphan",
+              "from": 367,
+              "to": 380,
+              "driftChars": 0,
+              "rawStatus": "unresolved",
+              "rawText": null,
+              "guardAccepted": false,
+              "quoteStatus": "resolved",
+              "quoteCandidates": 2,
+              "quoteAcceptance": "both-affix",
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nKeeping an honest orphan record beats a silent mis-attachment.\nWrong resolution is worse than an honest orphan record."
+          }
+        }
+      ]
+    },
+    {
+      "id": "S7",
+      "title": "Yjs 동시 편집 병합",
+      "target": "실측 보고 (RelativePosition 생존율)",
+      "gating": false,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 6,
+          "pass": 0,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 6,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S7",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "text",
+            "text": "Alpha beta"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 29,
+              "to": 39,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 29,
+              "to": 39,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "converged": true,
+            "docTextAfterEdit": "Annotation plane probe\n[A] Alpha beta gamma delta epsilon zeta eta theta. [B]\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S7",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "text",
+            "text": "delta epsilon"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 46,
+              "to": 59,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 46,
+              "to": 59,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "converged": true,
+            "docTextAfterEdit": "Annotation plane probe\n[A] Alpha beta gamma delta epsilon zeta eta theta. [B]\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S7",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "text",
+            "text": "standoff model"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 81,
+              "to": 95,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 81,
+              "to": 95,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "converged": true,
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\n[A] The standoff model keeps annotations outside the document body. [B]\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S7",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "text",
+            "text": "classical weakness"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 162,
+              "to": 180,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 162,
+              "to": 180,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "converged": true,
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\n[A] Anchor drift is the classical weakness of every standoff scheme. [B]\nSelector multiplexing recovers anchors after destructive edits.\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S7",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "text",
+            "text": "Selector multiplexing"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 208,
+              "to": 229,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 208,
+              "to": 229,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "converged": true,
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\n[A] Selector multiplexing recovers anchors after destructive edits. [B]\nWrong resolution is worse than an honest orphan record.\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        },
+        {
+          "scenario": "S7",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "text",
+            "text": "honest orphan"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": true,
+              "outcome": "orphaned",
+              "pass": false,
+              "text": null,
+              "driftChars": 0
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 307,
+              "to": 320,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "preserved"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 307,
+              "to": 320,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "as-attached"
+            }
+          },
+          "bystanders": {
+            "total": 5,
+            "ok": 5,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "converged": true,
+            "docTextAfterEdit": "Annotation plane probe\nAlpha beta gamma delta epsilon zeta eta theta.\nThe standoff model keeps annotations outside the document body.\nAnchor drift is the classical weakness of every standoff scheme.\nSelector multiplexing recovers anchors after destructive edits.\n[A] Wrong resolution is worse than an honest orphan record. [B]\nKeeping an honest orphan record beats a silent mis-attachment."
+          }
+        }
+      ]
+    },
+    {
+      "id": "S8",
+      "title": "저장 → 프로세스 재시작 → 재로드",
+      "target": "전 앵커 복원",
+      "gating": true,
+      "lanes": {
+        "live": {
+          "lane": "live",
+          "trials": 6,
+          "measured": 0,
+          "pass": 0,
+          "driftChars": 0,
+          "survived": 0,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "pipeline": {
+          "lane": "pipeline",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        },
+        "stale": {
+          "lane": "stale",
+          "trials": 6,
+          "measured": 6,
+          "pass": 6,
+          "driftChars": 0,
+          "survived": 6,
+          "recovered": 0,
+          "drifted": 0,
+          "orphaned": 0,
+          "wrong": 0
+        }
+      },
+      "trials": [
+        {
+          "scenario": "S8",
+          "anchorId": "a1",
+          "anchorQuote": "Alpha beta",
+          "expected": {
+            "kind": "text",
+            "text": "Alpha beta"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": false
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 25,
+              "to": 35,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Alpha beta",
+              "from": 25,
+              "to": 35,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Alpha beta",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            }
+          },
+          "bystanders": {
+            "total": 0,
+            "ok": 0,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "separateProcess": true,
+            "storeVersion": 1,
+            "childPlaneRecords": 6
+          }
+        },
+        {
+          "scenario": "S8",
+          "anchorId": "a2",
+          "anchorQuote": "delta epsilon",
+          "expected": {
+            "kind": "text",
+            "text": "delta epsilon"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": false
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 42,
+              "to": 55,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "delta epsilon",
+              "from": 42,
+              "to": 55,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "delta epsilon",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            }
+          },
+          "bystanders": {
+            "total": 0,
+            "ok": 0,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "separateProcess": true,
+            "storeVersion": 1,
+            "childPlaneRecords": 6
+          }
+        },
+        {
+          "scenario": "S8",
+          "anchorId": "a3",
+          "anchorQuote": "standoff model",
+          "expected": {
+            "kind": "text",
+            "text": "standoff model"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": false
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 77,
+              "to": 91,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "standoff model",
+              "from": 77,
+              "to": 91,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "standoff model",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            }
+          },
+          "bystanders": {
+            "total": 0,
+            "ok": 0,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "separateProcess": true,
+            "storeVersion": 1,
+            "childPlaneRecords": 6
+          }
+        },
+        {
+          "scenario": "S8",
+          "anchorId": "a4",
+          "anchorQuote": "classical weakness",
+          "expected": {
+            "kind": "text",
+            "text": "classical weakness"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": false
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 158,
+              "to": 176,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "classical weakness",
+              "from": 158,
+              "to": 176,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "classical weakness",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            }
+          },
+          "bystanders": {
+            "total": 0,
+            "ok": 0,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "separateProcess": true,
+            "storeVersion": 1,
+            "childPlaneRecords": 6
+          }
+        },
+        {
+          "scenario": "S8",
+          "anchorId": "a5",
+          "anchorQuote": "Selector multiplexing",
+          "expected": {
+            "kind": "text",
+            "text": "Selector multiplexing"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": false
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 204,
+              "to": 225,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "Selector multiplexing",
+              "from": 204,
+              "to": 225,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "Selector multiplexing",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            }
+          },
+          "bystanders": {
+            "total": 0,
+            "ok": 0,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "separateProcess": true,
+            "storeVersion": 1,
+            "childPlaneRecords": 6
+          }
+        },
+        {
+          "scenario": "S8",
+          "anchorId": "a6",
+          "anchorQuote": "honest orphan",
+          "expected": {
+            "kind": "text",
+            "text": "honest orphan"
+          },
+          "lanes": {
+            "live": {
+              "lane": "live",
+              "measured": false
+            },
+            "pipeline": {
+              "lane": "pipeline",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 303,
+              "to": 316,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            },
+            "stale": {
+              "lane": "stale",
+              "measured": true,
+              "outcome": "survived",
+              "pass": true,
+              "method": "relative-position",
+              "text": "honest orphan",
+              "from": 303,
+              "to": 316,
+              "driftChars": 0,
+              "rawStatus": "resolved",
+              "rawText": "honest orphan",
+              "guardAccepted": true,
+              "quoteStatus": null,
+              "quoteCandidates": null,
+              "quoteAcceptance": null,
+              "counterfactualQuote": null,
+              "reason": null,
+              "mode": "round-trip"
+            }
+          },
+          "bystanders": {
+            "total": 0,
+            "ok": 0,
+            "residual": 0,
+            "orphaned": 0,
+            "wrong": 0,
+            "notes": []
+          },
+          "extra": {
+            "separateProcess": true,
+            "storeVersion": 1,
+            "childPlaneRecords": 6
+          }
+        }
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "D1",
+      "title": "앵커 끝 경계에 삽입 (비게이팅 진단)",
+      "question": "RelativePosition과 Decoration이 끝 경계 삽입을 같은 쪽으로 흡수하는가?",
+      "rows": [
+        {
+          "anchorId": "a1",
+          "exact": "Alpha beta",
+          "liveText": "Alpha beta",
+          "staleText": "Alpha beta[END]",
+          "liveKeptExact": true,
+          "staleKeptExact": false,
+          "lanesAgree": false
+        },
+        {
+          "anchorId": "a2",
+          "exact": "delta epsilon",
+          "liveText": "delta epsilon",
+          "staleText": "delta epsilon[END]",
+          "liveKeptExact": true,
+          "staleKeptExact": false,
+          "lanesAgree": false
+        },
+        {
+          "anchorId": "a3",
+          "exact": "standoff model",
+          "liveText": "standoff model",
+          "staleText": "standoff model[END]",
+          "liveKeptExact": true,
+          "staleKeptExact": false,
+          "lanesAgree": false
+        },
+        {
+          "anchorId": "a4",
+          "exact": "classical weakness",
+          "liveText": "classical weakness",
+          "staleText": "classical weakness[END]",
+          "liveKeptExact": true,
+          "staleKeptExact": false,
+          "lanesAgree": false
+        },
+        {
+          "anchorId": "a5",
+          "exact": "Selector multiplexing",
+          "liveText": "Selector multiplexing",
+          "staleText": "Selector multiplexing[END]",
+          "liveKeptExact": true,
+          "staleKeptExact": false,
+          "lanesAgree": false
+        },
+        {
+          "anchorId": "a6",
+          "exact": "honest orphan",
+          "liveText": "honest orphan",
+          "staleText": "honest orphan[END]",
+          "liveKeptExact": true,
+          "staleKeptExact": false,
+          "lanesAgree": false
+        }
+      ],
+      "lanesAgree": false
+    },
+    {
+      "id": "D2",
+      "title": "삭제 정렬 어긋남 (PM Step 대 y-prosemirror diff)",
+      "question": "PM이 지운 범위와 y-prosemirror가 Yjs에 기록한 삭제 범위가 같은 자리인가?",
+      "rows": [
+        {
+          "anchorId": "a1",
+          "exact": "Alpha beta",
+          "pmDeleteStart": 28,
+          "yjsDeleteStart": 29,
+          "shift": 1,
+          "deletedChars": 11
+        },
+        {
+          "anchorId": "a2",
+          "exact": "delta epsilon",
+          "pmDeleteStart": 46,
+          "yjsDeleteStart": 47,
+          "shift": 1,
+          "deletedChars": 13
+        },
+        {
+          "anchorId": "a3",
+          "exact": "standoff model",
+          "pmDeleteStart": 81,
+          "yjsDeleteStart": 81,
+          "shift": 0,
+          "deletedChars": 13
+        },
+        {
+          "anchorId": "a4",
+          "exact": "classical weakness",
+          "pmDeleteStart": 163,
+          "yjsDeleteStart": 163,
+          "shift": 0,
+          "deletedChars": 15
+        },
+        {
+          "anchorId": "a5",
+          "exact": "Selector multiplexing",
+          "pmDeleteStart": 209,
+          "yjsDeleteStart": 209,
+          "shift": 0,
+          "deletedChars": 17
+        },
+        {
+          "anchorId": "a6",
+          "exact": "honest orphan",
+          "pmDeleteStart": 303,
+          "yjsDeleteStart": 303,
+          "shift": 0,
+          "deletedChars": 13
+        }
+      ],
+      "aligned": false
+    }
+  ],
+  "findings": [
+    "G2 대상(S1–S4·S8) 30건 — pipeline 레인(저장 시 재캡처 → 재로드) 생존 30 (100.0%), 드리프트 0, orphan 0, 오해소 0. 같은 시행을 stale 레인(편집 전 레코드를 편집 후 문서에 들이댐)으로 재면 생존 28 (93.3%), 드리프트 2, 오해소 0.",
+    "S4(범위 일부 겹쳐 삭제): pipeline 생존 6/6, stale 생존 4/6 + 드리프트 2건(총 2자). 드리프트는 \"다른 곳에 붙음\"이 아니라 삭제 경계가 한 칸 밀린 것이다 — 원인은 D2 참조.",
+    "S5(범위 전체 삭제) 6건: orphaned 6, 오해소 0. tombstone evidence 규칙으로 quote 복구를 막은 건수 12건이고, 그 규칙이 없었다면(naive fallback) 오해소가 2건 났다 — a6은 같은 문자열이 문서에 두 번 나오는 함정 앵커다.",
+    "S6(블록 cut+paste) 6건: 주앵커 생존 0, quote 복구 6, orphan 0, 오해소 0. live 레인은 생존 0/6 — PM이 블록을 지웠다 새로 넣으면 Decoration은 전부 사라지고, Yjs RelativePosition도 null을 돌려주므로 복구 부담이 전부 quote selector로 간다.",
+    "S7(오프라인 동시 편집 후 병합) 6건: 저장 앵커 생존 6, 복구 0, orphan 0, 오해소 0, 두 복제본 수렴 6/6. 반면 병합을 받은 세션의 live 레인은 생존 0/6 (orphan 6) — y-prosemirror는 원격 업데이트를 PM step으로 옮기지 않고 문서 전체를 replace하므로(`sync-plugin.js` `_typeChanged`: `tr.replace(0, doc.content.size, …)`) Decoration이 전부 날아간다. Phase 2 필수 요구: 원격 업데이트(isChangeOrigin) 후에는 저장 앵커로 평면을 재수화(rehydrate)해야 한다.",
+    "quote 복구 채택 정책: 양쪽 affix 일치가 원칙이고, exact가 문서에 유일할 때만 한쪽 affix로 채택했다(4건). 이 완화가 없으면 S6의 블록-머리 앵커는 앞 문맥이 통째로 바뀌어 전부 orphan이 된다.",
+    "pipeline 레인에서 기대와 어긋난 시행은 없다.",
+    "stale 레인에서 기대와 어긋난 시행 2건: S4/a1=drifted, S4/a2=drifted.",
+    "bystander(같은 문서의 나머지 앵커) 210건 중 exact 그대로 209, 편집에 걸려 잔여 범위 1, orphan 0, 오해소 0 — 앵커 다수를 한 평면에 얹어도 서로를 밀어내지 않는지 확인한 값이다."
+  ]
+}

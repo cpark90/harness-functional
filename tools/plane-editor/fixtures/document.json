@@ -1,0 +1,34 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 1 },
+      "content": [{ "type": "text", "text": "Annotation plane probe" }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Alpha beta gamma delta epsilon zeta eta theta." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "The standoff model keeps annotations outside the document body." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Anchor drift is the classical weakness of every standoff scheme." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Selector multiplexing recovers anchors after destructive edits." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Wrong resolution is worse than an honest orphan record." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Keeping an honest orphan record beats a silent mis-attachment." }]
+    }
+  ]
+}

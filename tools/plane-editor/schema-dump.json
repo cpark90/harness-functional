@@ -1,0 +1,154 @@
+{
+  "topNode": "doc",
+  "nodes": [
+    {
+      "name": "blockquote",
+      "group": "block",
+      "content": "block+",
+      "inline": false,
+      "attrs": []
+    },
+    {
+      "name": "bulletList",
+      "group": "block list",
+      "content": "listItem+",
+      "inline": false,
+      "attrs": []
+    },
+    {
+      "name": "codeBlock",
+      "group": "block",
+      "content": "text*",
+      "inline": false,
+      "attrs": [
+        {
+          "name": "language",
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "doc",
+      "group": null,
+      "content": "block+",
+      "inline": false,
+      "attrs": []
+    },
+    {
+      "name": "hardBreak",
+      "group": "inline",
+      "content": null,
+      "inline": true,
+      "attrs": []
+    },
+    {
+      "name": "heading",
+      "group": "block",
+      "content": "inline*",
+      "inline": false,
+      "attrs": [
+        {
+          "name": "level",
+          "default": 1
+        }
+      ]
+    },
+    {
+      "name": "horizontalRule",
+      "group": "block",
+      "content": null,
+      "inline": false,
+      "attrs": []
+    },
+    {
+      "name": "listItem",
+      "group": null,
+      "content": "paragraph block*",
+      "inline": false,
+      "attrs": []
+    },
+    {
+      "name": "orderedList",
+      "group": "block list",
+      "content": "listItem+",
+      "inline": false,
+      "attrs": [
+        {
+          "name": "start",
+          "default": 1
+        },
+        {
+          "name": "type",
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "paragraph",
+      "group": "block",
+      "content": "inline*",
+      "inline": false,
+      "attrs": []
+    },
+    {
+      "name": "text",
+      "group": "inline",
+      "content": null,
+      "inline": true,
+      "attrs": []
+    }
+  ],
+  "marks": [
+    {
+      "name": "bold",
+      "group": null,
+      "attrs": []
+    },
+    {
+      "name": "code",
+      "group": null,
+      "attrs": []
+    },
+    {
+      "name": "italic",
+      "group": null,
+      "attrs": []
+    },
+    {
+      "name": "link",
+      "group": null,
+      "attrs": [
+        {
+          "name": "class",
+          "default": null
+        },
+        {
+          "name": "href",
+          "default": null
+        },
+        {
+          "name": "rel",
+          "default": "noopener noreferrer nofollow"
+        },
+        {
+          "name": "target",
+          "default": "_blank"
+        },
+        {
+          "name": "title",
+          "default": null
+        }
+      ]
+    },
+    {
+      "name": "strike",
+      "group": null,
+      "attrs": []
+    },
+    {
+      "name": "underline",
+      "group": null,
+      "attrs": []
+    }
+  ]
+}

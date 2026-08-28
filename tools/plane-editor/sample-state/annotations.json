@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "document": "document.json",
+  "annotations": [
+    {
+      "id": "a1",
+      "anchors": {
+        "relativePosition": {
+          "start": "AAEbAA==",
+          "end": "AAElAA=="
+        },
+        "textQuote": {
+          "exact": "Alpha beta",
+          "prefix": "Annotation plane probe\n",
+          "suffix": " gamma delta epsilon zeta eta th"
+        }
+      },
+      "body": "Block-head anchor: probes left-boundary bias.",
+      "status": "open"
+    },
+    {
+      "id": "a2",
+      "anchors": {
+        "relativePosition": {
+          "start": "AAEsAA==",
+          "end": "AAE5AA=="
+        },
+        "textQuote": {
+          "exact": "delta epsilon",
+          "prefix": "on plane probe\nAlpha beta gamma ",
+          "suffix": " zeta eta theta.\nThe standoff mo"
+        }
+      },
+      "body": "Mid-block multi-word anchor, shares its block with a1.",
+      "status": "open"
+    },
+    {
+      "id": "a3",
+      "anchors": {
+        "relativePosition": {
+          "start": "AAFPAA==",
+          "end": "AAFdAA=="
+        },
+        "textQuote": {
+          "exact": "standoff model",
+          "prefix": "lta epsilon zeta eta theta.\nThe ",
+          "suffix": " keeps annotations outside the d"
+        }
+      },
+      "body": "Anchor whose first word repeats elsewhere in the document.",
+      "status": "open"
+    },
+    {
+      "id": "a4",
+      "anchors": {
+        "relativePosition": {
+          "start": "AAGgAQA=",
+          "end": "AAGyAQA="
+        },
+        "textQuote": {
+          "exact": "classical weakness",
+          "prefix": "ument body.\nAnchor drift is the ",
+          "suffix": " of every standoff scheme.\nSelec"
+        }
+      },
+      "body": "Plain mid-block anchor.",
+      "status": "open"
+    },
+    {
+      "id": "a5",
+      "anchors": {
+        "relativePosition": {
+          "start": "AAHOAQA=",
+          "end": "AAHjAQA="
+        },
+        "textQuote": {
+          "exact": "Selector multiplexing",
+          "prefix": "kness of every standoff scheme.\n",
+          "suffix": " recovers anchors after destruct"
+        }
+      },
+      "body": "Block-head anchor in a block with no other anchor.",
+      "status": "open"
+    },
+    {
+      "id": "a6",
+      "anchors": {
+        "relativePosition": {
+          "start": "AAGxAgA=",
+          "end": "AAG+AgA="
+        },
+        "textQuote": {
+          "exact": "honest orphan",
+          "prefix": "ong resolution is worse than an ",
+          "suffix": " record.\nKeeping an honest orpha"
+        }
+      },
+      "body": "Adversarial anchor: the exact quote occurs twice in the document, so quote recovery must be disambiguated by prefix/suffix or refused.",
+      "status": "open"
+    }
+  ]
+}
