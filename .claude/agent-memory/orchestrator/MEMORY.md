@@ -17,4 +17,5 @@
 
 <!-- 학습 인덱스 (한 줄씩) -->
 - [도구 인터프리터](tool-interpreter.md) — `rdflib`/`pyshacl`/`owlrl`는 특정 인터프리터에만; 셸 기본 python3에 없으면 `/usr/bin/python3`로 실행
+- [교차 세션 lane 규율](cross-session-lane-protocol.md) — orchestrator 세션이 둘일 때 중복 dispatch 방지; 승인은 항목 파일에서 직접 확인(peer 전언 아님), lane은 경로로 분할, 인수는 연속성으로 판단
 - [Workflow dispatch 운용](workflow-dispatch-resume.md) — agentType+opus로 규정 유지, 한도 실패는 resumeFromRunId 재개, null 반환≠작업 실패(vnv로 확인), 타 세션 FAIL 귀속 판별, 브리프 소비 사이클

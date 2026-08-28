@@ -149,3 +149,137 @@ T1↔approvalUnit·T4↔envelope 경계 규칙 2건을 선제 포함. 채택은 
   (validate duplicate-label)·§8 dedup 표가 방어선. 정의는 전부 자기 문장 재기술(무라이선스
   소스의 verbatim 금지 — dossier §7 게이트).
 - TestScenario 확장(T6)은 스키마 파급이 가장 넓어 **단계적**(oracleKind 개념부터) 권고.
+
+## 적용 결과 (orchestrator 기록란 — 적용 후 채움)
+
+사용자 결정 "(B) → (A)"의 B 부분집합을 순차 웨이브로 적용 중. dispatch 모델은 opus 세션
+한도(4:40am 리셋)로 대체 상위 모델 사용 — 그 사실을 각 판정 리포트에 기록.
+
+**B-T (TBox wave T1–T4) — 완료 2026-08-28.** 그래프 **323 → 332**(+9 = 부착지점 개념 스킴),
+`validate.py`·`lint_uniformity.py`·`check_determinism.py` 전부 PASS, negative control **8/8**
+(scratch 전용·디스크 무오염), materialize h-coding·h-multiagent **byte-identical**(변화는
+lock의 individualCount뿐), dangling `id:` 0.
+
+- **T1 `ho:approvalScope`**(domain Guardrail, 닫힌 값 7종) + 신규 `ho:ApprovalScopeShape`
+  (`sh:targetSubjectsOf` + `sh:in`; blanket GuardrailShape 신설 회피). repeatable(한 게이트가
+  복수 대상을 덮을 수 있음).
+- **T2 `ho:attachesAt`**(range `ho:Concept`) + 부착지점 개념 스킴 **flat 9**
+  (`c-guardrail-attachment` + leaf 8: input/dialog/retrieval/execution-pre/execution-post/
+  output/session/turn). tool-call 경계는 별도 leaf 없이 pre/post 쌍이 담당(정의·주석 명시).
+  facet 재부모화 비용 0이 되도록 의도적으로 1단 flat.
+- **T3 `ho:retrievalPolicy`**(domain Memory, 자유문) — 이번 웨이브 사용처 0(값 저작은 B-K).
+- **T4 `ho:environmentFidelity`**(닫힌 값 5종) — **domain은 `ho:Harness`**. EnvironmentSpace를
+  기각한 사유: 이 repo의 `id:env-space`는 "실재 전체"를 뜻하는 무한 singleton이라 fidelity가
+  vacuous해지고, mock/replica 표현에 개체 신설이 필요해 모델 의미와 충돌. `ho:autonomyTier`
+  배치와 대칭. EnvelopeStatement가 값을 참조하는 것은 가능(중복 아님).
+- **술어 경계 명문화(inspection 지침 이행)**: approvalScope↔approvalUnit(게이트 입도 vs tier
+  cadence, 값 어휘 의도적 disjoint)·attachesAt↔hookEvent(항시 규칙의 위치 vs 이벤트 구동)·
+  environmentFidelity↔envelope(어떤 환경 vs 감당 범위, promotion은 동반될 뿐 함의 아님)·
+  retrievalPolicy↔readTiming/readScope/activationCondition을 각 정의문에 기재.
+- **첫 사용처**: 기존 guardrail 9곳에 사실 근거(promptText 직독)로 부여 — gr-nodestruct
+  (execution-pre + tool-call), gr-human-checkpoint(execution-pre + plan), gr-cite/gr-lang/
+  gr-structured-output(output), gr-bounded-context(retrieval), gr-user-elicitation(dialog),
+  gr-envelope-check/-unknown(input). 참이 아닌 곳에는 부여하지 않음(날조 금지 준수).
+- registry: 신규 클래스·접두사 0이라 PREFIX_MAP·INSTANCE_CLASSES 무변경(registryDrift ✓).
+  `ONTOLOGYSTYLE.md` §3에 위치·판별자 항목 추가.
+
+**B-K1 (ABox wave-H: HIL 부품군 ~20개체) — dispatch 진행 중.** 인벤토리는 orchestrator가
+확정한 B 부분집합(Guardrail 7 / FailurePolicy 3 / WorkflowStep 4 / Channel 2 / Concept 6 /
+TestScenario 1). 나머지 1티어 fp 3종·wave-S·wave-C·recipe는 후속 웨이브.
+
+**동시 세션 조율**: 다른 orchestrator 세션(harness-ontology-2f)이 `tools/plane-editor/` 앵커
+lane을 병행 중. 레인 분담 — 이 세션이 sim-hil B-wave 전체(B-T→B-K→B-R)와 AV 잔여를 보유.
+
+**B-K1 (ABox wave-H: HIL 부품군) — 완료 2026-08-28.** 그래프 **332 → 356**(+24, 전부 신설,
+maturity draft). 게이트 3종 PASS.
+
+- Guardrail 7(`gr-dual-approval`·`gr-plan-evidence`·`gr-rejection-feedback`·
+  `gr-resume-idempotency`·`gr-stopping-condition`·`gr-auto-reply-budget`·`gr-safe-halt`),
+  FailurePolicy 3(`fp-unanswered-approval`·`fp-reject-retry-feedback`·`fp-dismissal-vs-decline`),
+  WorkflowStep 4(`wfs-interrupt-resume`·`wfs-output-review`·`wfs-control-transfer`·
+  `wfs-clarification-round`), Channel 2(`chan-approval`·`chan-elicitation`),
+  Concept 6(`c-human-in-loop`/`-on-loop`/`-out-loop`·`c-automation-bias`·`c-rubber-stamping`·
+  `c-meaningful-control`), TestScenario 1(`scn-oversight-efficacy`).
+- **재량 신설 1건**: `wf-approval-gated` Workflow — WorkflowStep의 도달성이 `hasComponent∘hasStep`
+  롤업뿐인데 기존 workflow 어느 것도 이 4단계를 정직하게 담지 못해 최소 host를 신설. vnv가
+  독립 판정해 **타당**(기존 workflow 편입은 제어흐름 왜곡)으로 확인.
+- **carrier 배선(W1 note N1 반영)**: 이 repo가 실제 운영하는 규율은 `h-multiagent`에 **직접**
+  결합(승인 워크플로·계획 증거·거부 피드백·재개 멱등성·승인/문의 채널·fp 3행·oversight fixture)
+  → 운영 문서 +45줄(삭제 0). 실제 운영하지 않는 2인 독립 승인·안전중단은
+  `h-workspace-synthesis`, 반복 상한 계열은 `h-harness-factory`(bounded-iteration 가족).
+- **B-T 술어 첫 사용처 확대**: `approvalScope` tool-call/plan/turn, `attachesAt`의 turn·session
+  leaf 첫 점유. `gr-resume-idempotency`는 부착 지점이 사실이 아니라 의도적 미부여.
+
+**vnv 판정 (B-T + B-K1) = PASS-with-notes** (차단 0 / 비차단 5) —
+`docs/verify/sim-hil-b-wave-verify.md`. HEAD 핀 worktree 대조로 delta **+33이 인벤토리와 1:1
+일치, 삭제 0**; negative control 8/8(첫 실행의 네임스페이스 오기로 인한 전건 위양성을 잡아
+재실행 확정 — vacuous-pass 배제); dedup 기계 스캔 clean(정의 Jaccard ≥0.30은 의도된 pre/post
+거울쌍 1건뿐); 지정 7쌍 변별이 **emit 텍스트 안에서** 확인; carrier·술어 부여 20+곳 전수 사실
+대조 통과; materialize 비-carrier byte-identical·carrier 순수 추가·dangling 0; 발견성 5/5 최상위.
+
+- 비차단 note: N1 FailurePolicy 판별절이 materialize Error-handling 표에 미emit(표가
+  condition/strategy만 실음), N2 `attachesAt` range 이빨이 ConceptConnectivityShape 경유 간접,
+  N3 `gr-safe-halt` 스코프가 inspection 브리프 대비 확장(이월 전제 충족·채택 권한 정당),
+  N4 `retrievalPolicy`·`environmentFidelity` 실사용 0(계획대로 — 이빨은 주입으로 비-vacuous
+  증명), N5 altLabel 어휘 인접(cosmetic).
+
+**B-K2 (wave-S/C 축소분: recipe 3종이 bind하는 7개체 + `mem-longterm` retrievalPolicy 값)** —
+dispatch 진행 중.
+
+**B-K2 (ABox wave-S/C 축소분) — 완료 2026-08-28.** 그래프 **356 → 364**(+8). 게이트 3종 PASS.
+
+- 신설 7: `role-user-simulator`(숨긴 시나리오로 상대역 연기, tool-constrained) ·
+  `gr-oracle-leak`(정답 유출 금지) · `tool-env-interface`(reset/step/observe/enumerate 계약) ·
+  `c-simulation-standin`(topConcept, 중간층 0) · `gr-aci-observation`(관측의 간결·정보성·창
+  제한) · `tool-lint-gated-edit`(편집→검사→실패 시 자동 원복) · `pat-minimal-baseline`(대조군
+  아키타입). 인벤토리 외 신설 1: `cap-environment-interaction`(기존 cap 빈자리 —
+  `cap-codeexec` 재사용은 "코드 실행 가능 = 시뮬레이션 step 가능"이라는 **거짓 capability
+  충족**을 만들어 기각; provided-only cap은 `cap-audit` 선례).
+- 보강 1(계획이 지정한 유일한 Memory 변경): `mem-longterm`에 `ho:retrievalPolicy` =
+  recency 감쇠 · 기록 시 부여된 중요도 · 현재 과업 관련성의 가중 결합으로 순위를 매겨 read
+  budget 내 상위만 소비. **T3 술어의 첫 실사용**(직전 판정 note N4 해소).
+- carrier: `h-coding` 직접(lint-gated 편집 도구·관측 규율 — 이 하네스가 실제로 규율하는 것,
+  cap-fileedit 재사용) / `h-workspace-synthesis` 라이브러리(시뮬 역할·정답 유출 금지·환경 도구
+  — 운영 하네스 부재). `pat-minimal-baseline`은 현재 control arm인 하네스가 없어
+  `appliesPattern` 단언 없이 태그로만 연결(날조 회피; recipe가 bind할 몫).
+- B-T 술어 확대: `attachesAt`의 **execution-post leaf 첫 점유**(gr-aci-observation — 직전 판정
+  note의 공석 해소) · output(gr-oracle-leak). 승인 게이트가 아니므로 `approvalScope`는 미부여.
+- materialize: 비-carrier 5종 byte-identical(lock 카운트만), carrier 2종 순수 추가(신규 role
+  파일 1개 포함), dangling `id:` 0.
+
+**B-K2 판정은 `docs/verify/sim-hil-bk2-verify.md`** — 진행 중. 그 판정에 "recipe 3종이 참조할
+부품이 모두 그래프에 있는지"(계획 §3층 표 대조) 결론을 포함하도록 지시했고, 이것이 **B-R 진입
+조건**이다.
+
+**B-R (recipe 3종: hil-approval / eval-user-sim / coding-swe)** — 병행 세션
+(harness-ontology-2f)에 인수 의사를 확인 중. 인수 시 `recipes/**` 레인은 그 세션이 가져가고,
+미인수 시 이 세션이 이어서 dispatch한다. 어느 쪽이든 land는 레인 규약대로 inspection 소관
+(staging→published clone, catalog/CI 매트릭스, federate 게이트).
+
+**B-K2 vnv 판정 = PASS-with-notes** (차단 0 / 비차단 5) — `docs/verify/sim-hil-bk2-verify.md`.
+delta +8이 브리프와 1:1(삭제 0, `mem-longterm`은 정확히 1 triple 증가), 8개 부착지점 leaf
+전점유 그래프 검산, materialize는 역적용 overlay로 중간점 356을 재현한 뒤 격리 비교 —
+비-carrier 5종 산문 byte-identical·carrier 2종 순수 추가(신규 role 파일 포함, tokenEstimate
+delta가 신규 선언값 합과 정확 일치), 발견성 5/5 최상위. `cap-environment-interaction` 신설의
+최후수단 사유도 독립 판정으로 성립(soft-reuse 시 `requires` 3곳에서 거짓 충족이 실제 성립,
+provided-only 선례 3건).
+
+- 비차단 note: N1 `retrievalPolicy`가 renderer에 참조 0줄이라 산출 문서에 미렌더,
+  N2 `pat-minimal-baseline`↔`wfs-baseline-compare` 변별이 TTL 주석에만(이종 층이라 비차단),
+  N3 slug의 약어 cosmetic(emit 값은 전부 중립어), N4 tool↔cap 정의 거울(구조 쌍, drift 아님),
+  N5 eval-user-sim이 쓰는 "양면 oracle·pass^k"가 중앙에 부재.
+- **recipe 진입 판정**: hil-approval·coding-swe는 무조건 진입 가능, eval-user-sim은 핵심 3부품
+  실재하되 양면 oracle·pass^k가 T6 2티어 이월이라 **recipe-local 표현 조건부**.
+
+**B-R (recipe 3종) — dispatch 진행 중.** 병행 세션이 인수를 거절(맥락 연속성 사유)해 이 세션이
+수행. staging 저작까지만이고 published clone push·커밋은 레인 규약대로 inspection 소관.
+브리프에 vnv의 조건부 제약(양면 oracle·pass^k는 recipe-local, 중앙 신설 금지)과 중앙 무수정
+(개체수 364 불변 확인)을 명시. `hil-approval`에는 W1의 `autonomyTier`·`hasEnvelope`를, 시뮬·
+코딩 recipe에는 T4 `environmentFidelity`를 **사실인 경우** 선언하도록 지시 — W1 판정의 비차단
+note N1(선언 하네스 문서에 envelope 규율 미출현)을 실물로 해소하는 경로다.
+
+**동시 세션 상태(2026-08-28)**: 사용자가 `b-wave-backbone-layering.md`(답 "(B) → (A)")와
+`plane-editor-and-kg-content-decisions.md`(**결정 1~4만** (a); 5·6은 미응답)를 승인. facet B1과
+plane-editor 결정 1·2·4는 병행 세션 lane, 결정 3(verified lane 어휘 승격)은 inspection 조사
+lane(`inquiries/verified-lane-vocabulary-promotion.md`)으로 이관됨. 미응답 5·6은 어느 세션도
+착수하지 않는다.

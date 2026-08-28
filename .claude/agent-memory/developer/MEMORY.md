@@ -6,6 +6,10 @@
 - **반복 핵심**: (1) 중간노드 도달성=hasComponent propertyChain(직접sub=Harness mistype). (2) 2클래스 공용술어=domain 생략+definition 명시. (3) ⊑HarnessComponent=harness 배선/rollup 필수. (4) bound 노드 prefLabel/definition 수정=byte-id 깨짐(2run cmp). (5) recipe closure=HARNESS_ROOT_ONTOLOGY. (6) 신규 leaf·클래스=`lib.INSTANCE_CLASSES` 등록(미등록=개체 증발).
 
 <!-- 학습 인덱스 (한 줄씩, 상세는 토픽 파일) -->
+- [recipe-br-w1-declare-and-local-standin](recipe-br-w1-declare-and-local-standin.md) — recipe-side W1 선언(중앙 c-envelope-* 재사용·onEnvelopeExit는 포인팅만). 2-harness 대조군(첫 appliesPattern=진짜 arm만). 이월 어휘=recipe-local+승격금지 배너. tokenEstimate 클래스별 측정식+줄번호 sed.
+- [sim-hil-bk2-sim-coding-parts](sim-hil-bk2-sim-coding-parts.md) — carrier 이분법(선언=h-coding/라이브러리=h-ws, role+tool+gr 동일 carrier). cap mint 최후수단 사유 패턴(provided-only 합법). pat 연결=참 아니면 tagged. baseline=편집 전 스냅샷. materialize=bare slug, Tool/retrievalPolicy 미렌더.
+- [sim-hil-wave-h-hil-parts](sim-hil-wave-h-hil-parts.md) — step 배정에 host workflow 없으면 재량 신설+보고(도달성=hasStep 롤업뿐). 선언 하네스 carrier=산출물 변화를 의도로(주석 명시). 승인 게이트 결과=3행 분해(무응답/거부/종결해석). 공석 leaf 채우면 B-T 주석 동갱신.
+- [sim-hil-bt-gate-vocab-four-predicates](sim-hil-bt-gate-vocab-four-predicates.md) — shape 없는 클래스의 optional 닫힌 값=targetSubjectsOf 미니 shape. 경계 명문화는 양방향(기존 정의에도 역문장). per-deployment "환경" 술어 domain=Harness(EnvironmentSpace는 실재 singleton). 병행 uncommitted wave 공존 시 byte-id=scratch 역적용 baseline.
 - [av-w1-envelope-tier-authoring](av-w1-envelope-tier-authoring.md) — sub-property 경유 rollup은 2-link chain(브리프의 3-link 표기=죽은 chain). byte-id는 carrier 분리로, MANIFEST 증분은 필연. sh:declare에 id: 추가하면 shape가 ABox IRI 참조 가능. 배정분이 이미 디스크에 있으면 재작성 말고 감사→결손만(Concept은 tokenEstimate/maturity 미부여가 관용, tier 라벨에 루프위치 어휘 금지).
 - [new-class-three-point-registry](new-class-three-point-registry.md) — 신규 클래스=INSTANCE_CLASSES+PREFIX_MAP+§2표 3점 등록(미인스턴스도 선등록). 병행 dispatch 충돌은 git diff 먼저·재작성 금지.
 - [lesson-learning-axis-no-tbox](lesson-learning-axis-no-tbox.md) — 개별 lesson=인스턴스라 ho:Lesson 신설 금지(Concept+Guardrail+WorkflowStep). stepGuardedBy는 롤업 없음.
@@ -119,6 +123,9 @@
 - [retrieve-alternative-one-per-region](retrieve-alternative-one-per-region.md) — 클러스터당 1 admit(traverse pop 직후), 탈락은 `done` 마킹.
 - [design-principle-as-designpattern-node](design-principle-as-designpattern-node.md) — 원리 1건=DesignPattern 1+기존 tag. 재dispatch 방어=`git grep HEAD` 선확인.
 - [plane-formalization-phase0-map](plane-formalization-phase0-map.md) — 코드 매핑 문서=칸마다 file:line 재확인. 병행 트리에선 개수를 척추로 쓰지 말 것(2회 측정).
+- [plane-editor-anchor-identity-c1b](plane-editor-anchor-identity-c1b.md) — 이동은 CRDT에 없다(이동≡재타이핑, 업데이트 byte 동일). 복구는 item 정체성만·텍스트는 보조, unknown 출처=거절(완전일치 예외+범위 전체 출처), 저장버전 bump=신뢰수준 변경, 반사실은 blocked+forgone 양방향.
 - [plane-editor-phase1-anchor-engine](plane-editor-phase1-anchor-engine.md) — standoff 앵커 실측. 오해소 0은 문자열(affix) 아닌 **CRDT 증거**로: 블록 정체성(state vector)+문자 출처, 삭제증거면 복구금지, 정책 대조군 반사실 계측, "0"은 범위 한정 서술.
+- [plane-editor-phase2-link-planes](plane-editor-phase2-link-planes.md) — ontology/ 밖 스토어. 도구 상수는 복제 말고 `--emit-contract` 계약 표면으로(추정기 N은 probe로 역산), 판정은 한 언어에만(JS=직렬화·Python=판정). 어휘 재사용은 rdfs:range까지, 고아는 양쪽 미해소일 때만, negative control은 control에서 한 곳만 변형+위반 1건.
 - [annotation-tbox-symmetric-anchor](annotation-tbox-symmetric-anchor.md) — 대칭술어+n-ary Anchor(⊑HC assert), sh:sparql은 sh:prefixes 필수.
 - [envelope-shape-teeth-and-dead-vocab](envelope-shape-teeth-and-dead-vocab.md) — 셰이프 이빨=control 1+negative 4(메시지 키워드 필터). 행 종류 둘이면 롤업 체인도 둘. 근사 동의어=domain 축소.
+- [concept-facet-axis-b1](concept-facet-axis-b1.md) — 계층=노드 말고 닫힌값 속성(broader 0.5=발견성 반감). 판정은 순서테스트+부모 타이브레이크. **shapes=연합 불변식(값/개수)·린터=중앙 coverage(ID_CORE 스코프)** — minCount는 recipe repo를 깨뜨림(239 Concept). 팩은 datatype 선언엔 불변, 엣지 변경에만 움직임(재부모화 시 옛 부모=skos:related로 델타 최소).
