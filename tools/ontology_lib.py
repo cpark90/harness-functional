@@ -82,8 +82,9 @@ INSTANCE_CLASSES = {
     HO.Capability, HO.Domain, HO.Task,
     HO.EnvironmentSpace, HO.GlobalState,
     HO.ObservationSpace, HO.AreaOfInterest, HO.AreaOfObservation,
-    HO.DesignPattern, HO.ExecutionMode, HO.Constraint, HO.Concept,
-    HO.Anchor,
+    HO.DesignPattern, HO.ExecutionMode, HO.AutonomyTier, HO.Constraint,
+    HO.Concept, HO.Anchor,
+    HO.OperatingEnvelope, HO.EnvelopeStatement, HO.EnvelopeRule,
 }
 
 

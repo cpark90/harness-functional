@@ -178,4 +178,47 @@ logical→concrete 사다리, SOTIF 4영역의 LLM 이식. 이 둘은 "선행 �
 제시해야 한다(출처 표기 시 주의).
 
 ## 적용 결과 (orchestrator 기록란 — 적용 후 채움)
-(미기록 — W1 브리프 채택·dispatch 대기)
+
+**W1 적용 완료 2026-08-28** — 사용자 결정 "(B) 우선"에 따라 W1(운용 범위 + 자율성 등급 +
+범위이탈 정책)만 적용. W2~W5는 미착수. `docs/feedback/inquiries/av-w1-envelope-brief.md`를
+orchestrator가 정식 채택해 developer dispatch로 수행(모델: opus 세션 한도로 대체 상위 모델).
+
+- **그래프 269 → 323 individuals**, `validate.py`·`lint_uniformity.py`·`check_determinism.py`
+  **전부 PASS**(orchestrator 직접 재확인).
+- **TBox**: `ho:OperatingEnvelope`/`ho:EnvelopeStatement`/`ho:EnvelopeRule`(HarnessComponent
+  직속 leaf) + `ho:AutonomyTier`(⊑ `ho:SpecConcept`), 객체 술어 6 + datatype 13,
+  `failureCondition` 값 어휘에 envelope-exit 추가.
+- **shapes 5종**: OperatingEnvelope / EnvelopeStatement(observable 필수) / EnvelopeRule /
+  AutonomyTier(닫힌 5값) / HarnessAutonomy(maxCount 1 + SPARQL 3: bounded⇒envelope,
+  harness-fallback⇒cap-safe-halt 제공, receptive-user⇒involvesUser 채널).
+- **ABox**: 개념 스킴 `id:c-operating-envelope` + 5축 + 하위 20(총 26), tier 6종
+  (advisory/per-action/per-plan/bounded/monitored/unbounded), guardrail 3
+  (`gr-envelope-check`/`gr-envelope-unknown`/`gr-transient-tolerance`), FailurePolicy 2
+  (`fp-envelope-exit`/`fp-envelope-exit-severe`), 실선언 하네스 2종(`oe-coding` +
+  `tier-bounded-autonomy`, `oe-multiagent` + `tier-per-plan-approval`, statement 각 6),
+  `cap-safe-halt`, fixture 2(`scn-envelope-in-range`/`scn-envelope-exit`).
+- **registry 3중 + 문서**: PREFIX_MAP(`lint_uniformity.py`) · INSTANCE_CLASSES
+  (`tools/ontology_lib.py` — 브리프의 validate.py 지목은 소비자 쪽 오기) · ONTOLOGYSTYLE §2 표
+  4행 + §3 술어 블록. 죽은 어휘 정리: `triggerPhrase`/`outOfScope`에 `rdfs:domain ho:Instruction`.
+- **브리프 명세와의 편차 3건**(developer 보고, vnv 독립 판정 대상): ① propertyChain을 3-link가
+  아니라 2-link `( hasComponent hasEnvelopeStatement )`로 저작(3-link는 주어가 Harness라 발화
+  불가 — `hasSection` twin 선례), ② INSTANCE_CLASSES 실위치 정정, ③ 개체 증가 +54(게이트 문구
+  "~40"은 §4d 고정 명세의 산술 최솟값 50과 애초에 양립 불가 — 조정하지 않고 보고로 남김).
+- **회귀 없음**: baseline 대비 h-coding·h-multiagent 렌더 산출물 byte-identical, dangling
+  `id:` 토큰 0. MANIFEST/lock 차이는 `hasEnvelope ⊑ hasComponent`의 구조적 필연.
+- **vnv 판정 = PASS-with-notes** (차단 0 / 비차단 5) — `docs/verify/av-w1-envelope-verify.md`.
+  게이트 3종 재실행 PASS(323 reachable), negative control **13/13**(요구 9 + anti-vacuous
+  twin 4, in-memory 주입·디스크 무오염), materialize baseline 대비 CLAUDE.md byte-identical·
+  dangling 0, 드리프트 0(도메인 약어·서열 라벨 0, capability≠authorization 4중 명시),
+  registry 3중 중복·유실 행 0. 위 편차 3건은 **전부 정당** 판정(3-link chain은 치환 실험에서
+  발화 0 → 2-link가 교정, INSTANCE_CLASSES 실위치, +54는 브리프 내부 모순).
+- **후속 필요(비차단 N1)**: envelope를 선언한 하네스의 materialized 문서에 envelope 규율이
+  아직 출현하지 않는다 — byte-identity 게이트를 지키려 gr/fp를 library-carrier에 바인딩한
+  과도기 상태. **W2+ 렌더 웨이브에서 규율 바인딩 재배치를 결정**해야 한다.
+- **refresh는 HOLD** — 이 보고가 W2~W5의 순서 anchor로 남는다(W5까지 완료 시 항목·보고서
+  함께 refresh).
+
+**동시 세션 조율(2026-08-28)**: 같은 repo에서 다른 orchestrator 세션(harness-ontology-2f)이
+`tools/plane-editor/` 앵커 lane을 병행 중이다. 레인 분담 합의 — 이 세션이 AV W1/W2~ 잔여와
+sim-hil B-wave(B-T→B-K→B-R) 전체를, 상대 세션이 plane-editor lane을 가진다. 상대의 W1 vnv
+게이트는 중복이라 중단됐고 이 판정이 정본이다.

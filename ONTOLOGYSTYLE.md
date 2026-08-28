@@ -150,6 +150,7 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 | Anchor | `anchor-` | `id:anchor-…` |
 | DesignPattern | `pat-` | `id:pat-react` |
 | ExecutionMode | `mode-` | `id:mode-sub-agents` |
+| AutonomyTier | `tier-` | `id:tier-bounded-autonomy` |
 | Constraint | `con-` | `id:con-lowlatency` |
 | ModelConfig | `mc-` | `id:mc-opus` |
 | Tool | `tool-` | `id:tool-shell` |
@@ -174,6 +175,9 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 | ObservationSpace | `os-` | `id:os-orchestrator` |
 | AreaOfInterest | `aoi-` | `id:aoi-orchestrator` |
 | AreaOfObservation | `oa-` | `id:oa-orchestrator-external` |
+| OperatingEnvelope | `oe-` | `id:oe-coding` |
+| EnvelopeStatement | `es-` | `id:es-coding-write-scope` |
+| EnvelopeRule | `er-` | `id:er-…` |
 | EnvironmentSpace / GlobalState / ConceptScheme | (singleton, no prefix) | `id:env-space` · `id:global-state` · `id:scheme` |
 
 - **[지킴]** slug은 **의미가 드러나는 full word**. 자체 약어를 만들지 않는다(코드 식별자
@@ -195,11 +199,11 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
    `ho:hasInstruction` → `ho:hasExample` →
    `ho:hasRole` → `ho:hasChannel` → `ho:hasMemory` → `ho:hasAgent` →
    `ho:hasGlobalState` → `ho:hasAssemblySection` → `ho:hasHook` →
-   `ho:hasTestScenario` → `ho:hasFailurePolicy`
-5. `ho:appliesPattern` → `ho:hasExecutionMode` → `ho:requiresCapability` /
-   `ho:providesCapability` → `ho:constrainedBy` → `ho:dependsOn` →
-   `ho:specializes` / `ho:derivedFrom` → `ho:alternativeOf` / `ho:overlapsWith`
-   → `ho:hasAnchor`
+   `ho:hasTestScenario` → `ho:hasFailurePolicy` → `ho:hasEnvelope`
+5. `ho:appliesPattern` → `ho:hasExecutionMode` → `ho:autonomyTier` →
+   `ho:requiresCapability` / `ho:providesCapability` → `ho:constrainedBy` →
+   `ho:dependsOn` → `ho:specializes` / `ho:derivedFrom` →
+   `ho:alternativeOf` / `ho:overlapsWith` → `ho:hasAnchor`
 6. `ho:tagged`
 7. 데이터: `ho:promptText` → `ho:observedTokenVolume` → `ho:tokenEstimate` →
    `ho:salience` → `ho:maturity`
@@ -208,6 +212,17 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
   뒤·7번(공통 데이터) 앞에 모아 둔다. **한 축의 read/write 짝은 붙여 쓴다** — `ho:Memory`는
   `ho:memoryReadTiming` → `ho:memoryWriteTiming`(생산 시점 라우팅) → `ho:memoryPersistence`
   → `ho:memoryReadScope` → `ho:memoryActivationCondition` 순.
+- **[권장]** 운용 범위(operating envelope)·자율성 등급 노드 블록은 **범위를 읽는 순서**대로
+  쓴다. `ho:OperatingEnvelope`는 `ho:envelopeDefault`(닫힘 자세) → `ho:hasEnvelopeStatement`
+  → `ho:hasEnvelopeRule` → `ho:onEnvelopeExit`(이탈 시 FailurePolicy) 순,
+  `ho:EnvelopeStatement`는 `ho:envelopeAttribute`(무엇을) → `ho:envelopeVerdict` →
+  `ho:envelopeClosure` → `ho:envelopeValueType` → `ho:envelopeThreshold` →
+  `ho:envelopeObservable`(**무엇으로 판정하는가** — 필수) 순, `ho:EnvelopeRule`은
+  `ho:ruleCondition` → `ho:ruleEffect` 순. `ho:AutonomyTier`의 다섯 슬롯은 책임 배분 순서
+  `ho:executionOwner` → `ho:oversightOwner` → `ho:fallbackOwner` → `ho:envelopeBinding`
+  → `ho:approvalUnit`로 고정한다(누가 실행/감독/인계하고, 범위에 어떻게 묶이며, 승인 단위는
+  무엇인가). 범위 선언은 **권한**이지 **능력**이 아니므로 `ho:requiresCapability`/
+  `ho:providesCapability`로 대신 표현하지 않는다.
 - **[권장]** 같은 프레디킷의 여러 값은 콤마로 한 줄에(`ho:usesTool id:a, id:b`), 길면
   콤마 뒤 줄바꿈해 정렬.
 - **[지킴]** **`ho:tokenEstimate`와 `ho:observedTokenVolume`을 섞지 않는다.**

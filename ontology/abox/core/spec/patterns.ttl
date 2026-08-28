@@ -79,3 +79,54 @@ id:pat-blackboard a ho:DesignPattern ; skos:prefLabel "Blackboard coordination" 
     skos:definition "Agents coordinate INDIRECTLY through a shared, durable external artifact store -- files, a state record, a plan document -- that is the single source of truth, rather than through a central orchestrator's in-context dispatch (id:pat-orchestrator-workers) or direct peer messages (id:pat-peer-mesh): each step reads the prior steps' outputs from the store and writes its own back, so no step depends on conversation or context-window memory. Choose when the run must be stateless, resumable and checkpointable across steps or sessions -- work can halt and restart from the store -- or when several contributors must converge on one evolving artifact. Distinct from id:pat-pipeline, which fixes an ordered forward flow: blackboard constrains the coordination MEDIUM (a shared store held as source of truth), not the ordering, and steps may read and write the store outside a strict sequence." ;
     ho:tagged id:c-pattern-taxonomy ; ho:tokenEstimate 200 ; ho:maturity "draft" ;
     dct:source "https://github.com/wshobson/agents" ; dct:license "MIT" .
+
+#===================== Autonomy tiers (responsibility allocation) ======
+# The named allocations of responsibility between user and harness, declared
+# by ho:autonomyTier -- a first-class Harness property co-located here for the
+# same reason as the execution modes above (a spec axis read side by side with
+# the patterns; a new federation unit would cost root + catalog entries for six
+# leaf individuals). The set is a ladder only in the informal sense: the
+# DISCRIMINATOR is the approval unit (how coarse a grain of work one human
+# approval covers), and the slots are data so ho:HarnessAutonomyShape can check
+# the usage implications. What each tier fixes is who DECIDES and who ACTS at
+# that grain (ho:executionOwner / ho:oversightOwner, with ho:fallbackOwner for
+# the exit), so every label names an allocation of responsibility -- never an
+# ordinal rank, which would impose a false total order on what is a choice of
+# approval grain. Two neighbouring vocabularies are DELIBERATELY LEFT OUT of
+# these labels and slots (explicit out-of-model exclusion, per the
+# coverage-audit convention): where a human sits relative to the run loop, and
+# WHY a human is in it at all (correcting, legitimating, being accountable).
+# Both are orthogonal -- one loop position spans several tiers and one tier
+# admits several reasons -- so folding either into a tier label would lose
+# information; each enters, if ever, as its own axis. Extensible by INDIVIDUAL,
+# like the modes.
+id:tier-advisory a ho:AutonomyTier ; skos:prefLabel "Advisory tier" ; skos:altLabel "recommend-only allocation" ;
+    skos:definition "The harness only recommends and the user does everything: analysis and proposals flow out, but no action is executed by the harness at all, so no range needs declaring and no approvals are exchanged. A REAL allocation, not a degenerate one -- starting the tier set at the first executing tier would lose the configuration many review- and advice-harnesses actually run in." ;
+    ho:executionOwner "user" ; ho:oversightOwner "user" ; ho:fallbackOwner "user" ;
+    ho:envelopeBinding "none" ; ho:approvalUnit "none" ;
+    ho:tagged id:c-autonomy ; ho:tokenEstimate 108 ; ho:maturity "draft" .
+id:tier-per-action-approval a ho:AutonomyTier ; skos:prefLabel "Per-action approval tier" ; skos:altLabel "every action confirmed" ;
+    skos:definition "The harness acts, but every action passes through the user before it runs: the finest approval unit, with the user inline for each step. Choose when actions are individually consequential and the user is present throughout; the cost is that the user's attention is the throughput bound. Distinguished from id:tier-per-plan-approval, where one approval covers a whole plan." ;
+    ho:executionOwner "user-and-harness" ; ho:oversightOwner "user" ; ho:fallbackOwner "user" ;
+    ho:envelopeBinding "bounded" ; ho:approvalUnit "per-action" ;
+    ho:tagged id:c-autonomy ; ho:tokenEstimate 116 ; ho:maturity "draft" .
+id:tier-per-plan-approval a ho:AutonomyTier ; skos:prefLabel "Per-plan approval tier" ; skos:altLabel "plan approved, execution autonomous" ;
+    skos:definition "The user approves a plan up front and the harness executes it autonomously within the declared envelope; mid-run the user is reached over a declared user channel when the range is exited, so the fallback owner is a RECEPTIVE user who must respond within a window. Choose for milestone-gated work (present the plan, get sign-off, run). Distinguished from id:tier-per-action-approval by the coarser approval unit, and from id:tier-bounded-autonomy, where no plan is pre-approved and only exceptions escalate." ;
+    ho:executionOwner "harness" ; ho:oversightOwner "user" ; ho:fallbackOwner "receptive-user" ;
+    ho:envelopeBinding "bounded" ; ho:approvalUnit "per-plan" ;
+    ho:tagged id:c-autonomy ; ho:tokenEstimate 152 ; ho:maturity "draft" .
+id:tier-bounded-autonomy a ho:AutonomyTier ; skos:prefLabel "Bounded autonomy tier" ; skos:altLabel "exception-escalation allocation" ;
+    skos:definition "The harness works autonomously inside its declared envelope and brings the user in only for exceptions -- range exits, irreversible steps, open decisions -- while the user, present in the interactive loop, owns the fallback directly. The default allocation for an interactive working agent. Distinguished from id:tier-per-plan-approval by having no up-front plan gate, and from id:tier-monitored-autonomy by the user being in the loop rather than reading reports after the fact." ;
+    ho:executionOwner "harness" ; ho:oversightOwner "user" ; ho:fallbackOwner "user" ;
+    ho:envelopeBinding "bounded" ; ho:approvalUnit "per-exception" ;
+    ho:tagged id:c-autonomy ; ho:tokenEstimate 142 ; ho:maturity "draft" .
+id:tier-monitored-autonomy a ho:AutonomyTier ; skos:prefLabel "Monitored autonomy tier" ; skos:altLabel "post-hoc reporting allocation" ;
+    skos:definition "The harness runs unattended inside its declared envelope and reports after the fact; no human is assumed reachable during the run, so on a range exit the harness itself must reach the safe-halt state (ho:HarnessAutonomyShape requires it to provide the safe-halt capability). Choose for standing or scheduled lanes where requests arrive while no one watches. Distinguished from id:tier-bounded-autonomy by the fallback owner: there the user is in the loop, here the harness halts itself and the user learns from the report." ;
+    ho:executionOwner "harness" ; ho:oversightOwner "harness" ; ho:fallbackOwner "harness" ;
+    ho:envelopeBinding "bounded" ; ho:approvalUnit "post-hoc" ;
+    ho:tagged id:c-autonomy ; ho:tokenEstimate 153 ; ho:maturity "draft" .
+id:tier-unbounded a ho:AutonomyTier ; skos:prefLabel "Unbounded tier" ; skos:altLabel "declared rangeless allocation" ;
+    skos:definition "The boundary tier: the harness executes, oversees and owns its own fallback with NO declared envelope -- explicitly rangeless, which is a state to flag in review, never a default to drift into. It exists so that the absence of a range is a deliberate, visible declaration rather than an omission; a harness that means to run unattended within a range wants id:tier-monitored-autonomy instead." ;
+    ho:executionOwner "harness" ; ho:oversightOwner "harness" ; ho:fallbackOwner "harness" ;
+    ho:envelopeBinding "unbounded" ; ho:approvalUnit "none" ;
+    ho:tagged id:c-autonomy ; ho:tokenEstimate 118 ; ho:maturity "draft" .

@@ -207,6 +207,21 @@ ho:Anchor a owl:Class ;
     rdfs:label "Anchor" ;
     skos:definition "A weighted annotation link made first-class: the n-ary reification of \"this node describes THAT knowledge region, with THIS confidence\" — one ho:anchorTarget (the ho:Concept naming the region) plus one ho:anchorConfidence (0..1), hung off the annotated node by ho:hasAnchor. Choose it ONLY when the weight itself carries information; the crisp, unweighted ho:tagged edge stays the DEFAULT and is unchanged by this class (an Anchor without a confidence would be a tag with extra steps). Its purpose is to let several nodes that describe the same region be RANKED rather than merged: ho:alternativeOf declares WHICH descriptions are alternatives of one another, and the confidence says how strongly each one fits the region. CONSUMPTION: those values are consumed by the projection layer's per-region selection (the read projection admitting ONE description per region into a bounded context pack), which lands in a later stage — until then this mechanism is DECLARED BUT DORMANT BY DESIGN, so zero instances is the expected state rather than evidence of dead vocabulary. An Anchor is bound to the node it annotates by ho:hasAnchor and rolled up to the binding harness by the ho:hasComponent propertyChainAxiom (hasComponent o hasAnchor), so it is a reachable, orphan-free component without a bespoke connectivity shape (mirroring ho:Candidate and ho:Contract) — which also means an Anchor belongs on a component the harness already binds, not on the harness node itself. It sits DIRECTLY under ho:HarnessComponent rather than inside one of the MAS-facet intermediates (behavioural / observational / operational / …) because it is annotation ABOUT a component, not a facet of the agent tuple, and a single-leaf intermediate would be vocabulary for its own sake." .
 
+ho:OperatingEnvelope a owl:Class ;
+    rdfs:subClassOf ho:HarnessComponent ;
+    rdfs:label "Operating Envelope" ;
+    skos:definition "The declared operating range of a harness made machine-readable data: the set of EnvelopeStatements (one row per attribute, via ho:hasEnvelopeStatement) stating which requests and run states the harness undertakes to handle, closed by ho:envelopeDefault (restrictive: whatever the statements do not include is OUT of range), plus the FailurePolicy that handles a range exit (ho:onEnvelopeExit) and optional cross-attribute EnvelopeRules (ho:hasEnvelopeRule). Declaring a range is DISTINCT from being able to serve it: the envelope states what the harness MAY take on (an undertaking/authorization), while ho:requiresCapability / ho:providesCapability state what it CAN do — neither is derived from the other (capability is not authorization). Bound to its harness by ho:hasEnvelope — a Harness→OperatingEnvelope sub-property of ho:hasComponent (like ho:hasTestScenario, since the subject IS the Harness) — so it is a reachable, orphan-free component covered by ho:ComponentConnectivityShape without a bespoke connectivity shape. It sits DIRECTLY under ho:HarnessComponent rather than inside one of the MAS-facet intermediates because it is the harness's own declared range, not a facet of the agent tuple, and a single-leaf intermediate would be vocabulary for its own sake (the ho:Anchor precedent)." .
+
+ho:EnvelopeStatement a owl:Class ;
+    rdfs:subClassOf ho:HarnessComponent ;
+    rdfs:label "Envelope Statement" ;
+    skos:definition "One row of an OperatingEnvelope: a declaration about exactly ONE envelope attribute (ho:envelopeAttribute, a Concept from the envelope attribute scheme) — whether requests holding that attribute are inside the range (ho:envelopeVerdict), how the attribute's value space is typed (ho:envelopeValueType), the boundary value where applicable (ho:envelopeThreshold), and — mandatorily — WHAT observation decides the attribute at request time (ho:envelopeObservable, enforced by ho:EnvelopeStatementShape: a range declared over an unobservable attribute cannot be judged, so it would be plausible-sounding prose with no teeth). Under a restrictive envelope default only include-rows need stating — everything unstated is already out — which keeps envelopes small. Bound to its envelope by ho:hasEnvelopeStatement and rolled up to the declaring harness by the ho:hasComponent propertyChainAxiom (hasComponent o hasEnvelopeStatement — the first link holds because ho:hasEnvelope is a sub-property of hasComponent), so it is a reachable, orphan-free component without a bespoke shape (mirroring ho:PromptSection). A direct ho:HarnessComponent leaf for the same reason as its envelope host." .
+
+ho:EnvelopeRule a owl:Class ;
+    rdfs:subClassOf ho:HarnessComponent ;
+    rdfs:label "Envelope Rule" ;
+    skos:definition "A conditional cross-attribute rule of an OperatingEnvelope, for boundaries a single per-attribute statement cannot express: WHEN the condition over several attributes holds (ho:ruleCondition, an IF clause kept human-checkable — at most two levels of AND/OR), the rule includes or excludes the matching cases (ho:ruleEffect), refining the per-attribute rows. Prefer a plain EnvelopeStatement whenever one attribute suffices — rules are the exception, not the norm. Bound to its envelope by ho:hasEnvelopeRule and rolled up to the declaring harness by the ho:hasComponent propertyChainAxiom (hasComponent o hasEnvelopeRule), symmetrically with ho:EnvelopeStatement, so a rule is a reachable, orphan-free component typed exactly like a statement (no rollup asymmetry). A direct ho:HarnessComponent leaf for the same reason as its envelope host." .
+
 # Non-component concepts
 
 # Non-component intermediate superclasses (top-level, NOT ho:HarnessComponent).
@@ -216,7 +231,7 @@ ho:Anchor a owl:Class ;
 
 ho:SpecConcept a owl:Class ;
     rdfs:label "Spec Concept" ;
-    skos:definition "An abstract specification a harness relates to but does not itself contain as a component — the abilities it REQUIRES/PROVIDES, the domain it TARGETS, the use-cases it ADDRESSES, the patterns it APPLIES, the runtime topology it RUNS IN and the non-functional limits that CONSTRAIN it. Its leaves are ho:Capability, ho:Task, ho:Domain, ho:DesignPattern, ho:ExecutionMode and ho:Constraint. A top-level taxonomy layer (NOT a ho:HarnessComponent, so no ho:hasComponent wiring and no ho:ComponentConnectivityShape coverage) with no direct instances." .
+    skos:definition "An abstract specification a harness relates to but does not itself contain as a component — the abilities it REQUIRES/PROVIDES, the domain it TARGETS, the use-cases it ADDRESSES, the patterns it APPLIES, the runtime topology it RUNS IN, the responsibility allocation it OPERATES UNDER and the non-functional limits that CONSTRAIN it. Its leaves are ho:Capability, ho:Task, ho:Domain, ho:DesignPattern, ho:ExecutionMode, ho:AutonomyTier and ho:Constraint. A top-level taxonomy layer (NOT a ho:HarnessComponent, so no ho:hasComponent wiring and no ho:ComponentConnectivityShape coverage) with no direct instances." .
 
 ho:InformationSpace a owl:Class ;
     rdfs:label "Information Space" ;
@@ -257,6 +272,11 @@ ho:ExecutionMode a owl:Class ;
     rdfs:label "Execution Mode" ;
     skos:definition "The runtime coordination topology a harness runs its agents in — how agents come into being and coordinate while the harness runs (a persistent peer team, a lead spawning and reclaiming short-lived sub-agents, or a phase-varying mixture). A harness declares one via ho:hasExecutionMode. This axis is ORTHOGONAL to ho:DesignPattern: a pattern names how work is architecturally shaped and flows (pipeline, fan-out/fan-in, orchestrator-workers), an ExecutionMode names the runtime topology that shape is executed in, so the same pattern can run in different modes and the two must not be conflated on ho:appliesPattern. EXTENSIBILITY: modes are enumerated as INDIVIDUALS, so a new execution mode is added by authoring one more ho:ExecutionMode individual — no class, property or shape change (deliberately not a closed string enum). Extension point (not yet modelled, add only when a consumer exists): a per-phase/per-step refinement of a hybrid mode." .
 
+ho:AutonomyTier a owl:Class ;
+    rdfs:subClassOf ho:SpecConcept ;
+    rdfs:label "Autonomy Tier" ;
+    skos:definition "A named allocation of responsibility between the user and the harness: who executes the work, who oversees the run, who owns the fallback when the declared operating envelope is exited, how the tier binds to an envelope, and at what unit human approval is granted — the five closed-value slots ho:executionOwner / ho:oversightOwner / ho:fallbackOwner / ho:envelopeBinding / ho:approvalUnit. The discriminating slot is the APPROVAL UNIT (how coarse a grain of work one human approval covers), not a ranked level: tiers are enumerated as INDIVIDUALS (tier-*), like ho:ExecutionMode, and a harness declares at most one via ho:autonomyTier. A tier states what the harness MAY do on its own (authorization), never what it CAN do — it is deliberately NOT derived from the requires/providesCapability graph (capability is not authorization). Its usage implications are enforced by ho:HarnessAutonomyShape: a bounded tier demands a declared envelope, a harness-owned fallback demands providing the safe-halt capability, and a receptive-user fallback demands a bound user channel." .
+
 ho:Constraint a owl:Class ;
     rdfs:subClassOf ho:SpecConcept ;
     rdfs:label "Constraint" ;
@@ -287,7 +307,9 @@ ho:hasComponent a owl:ObjectProperty ;
     owl:propertyChainAxiom ( ho:hasComponent ho:agentObservation ho:hasAreaOfInterest ) ;
     owl:propertyChainAxiom ( ho:hasComponent ho:agentObservation ho:hasAreaOfObservation ) ;
     owl:propertyChainAxiom ( ho:hasComponent ho:hasAnchor ) ;
-    skos:definition "General composition edge. Specialised sub-properties below carry the component type. The first propertyChainAxiom rolls a Tool's implementation Candidates up to the harness that binds the Tool (harness hasComponent tool + tool implementationCandidate cand => harness hasComponent cand), so a Candidate is a reachable, orphan-free HarnessComponent WITHOUT making implementationCandidate a direct sub-property of hasComponent — a direct sub-property would (via rdfs:domain ho:Harness) mistype the Tool subject as a Harness and trip HarnessShape. The second propertyChainAxiom rolls a Capability's verification Contracts up the same way (harness hasComponent component + component providesCapability cap + cap capabilityContract contract => harness hasComponent contract), so a Contract is a reachable, orphan-free HarnessComponent. The third propertyChainAxiom rolls a Workflow's WorkflowSteps up the same way (harness hasComponent workflow + workflow hasStep step => harness hasComponent step), so a WorkflowStep is a reachable, orphan-free HarnessComponent without making ho:hasStep a direct sub-property of hasComponent (which would mistype the Workflow subject as a Harness). The fourth propertyChainAxiom rolls a SystemPrompt's PromptSections up the same way (harness hasComponent systemPrompt + systemPrompt hasSection section => harness hasComponent section) — the first link holds because ho:hasSystemPrompt is a sub-property of hasComponent — so a PromptSection is a reachable, orphan-free HarnessComponent without making ho:hasSection a direct sub-property of hasComponent (which would mistype the SystemPrompt subject as a Harness). The fifth propertyChainAxiom rolls a WorkflowStep's produced Deliverables up the same way (harness hasComponent workflow + workflow hasStep step + step stepProduces deliverable => harness hasComponent deliverable), so a Deliverable is a reachable, orphan-free HarnessComponent without making ho:stepProduces a direct sub-property of hasComponent (which would mistype the WorkflowStep subject as a Harness). The sixth propertyChainAxiom rolls an Agent's ObservationSpace up the same way (harness hasComponent agent + agent agentObservation space => harness hasComponent space) — the first link holds because ho:hasAgent is a sub-property of hasComponent — so an ObservationSpace is a reachable, orphan-free HarnessComponent without making ho:agentObservation a direct sub-property of hasComponent (which would mistype the Agent subject as a Harness). The seventh and eighth propertyChainAxioms extend that one hop further to roll the ObservationSpace's AreasOfInterest and AreasOfObservation up to the harness (harness hasComponent agent + agent agentObservation space + space hasAreaOfInterest aoi => harness hasComponent aoi; likewise for hasAreaOfObservation), so each AreaOfInterest and AreaOfObservation is a reachable, orphan-free HarnessComponent without making ho:hasAreaOfInterest / ho:hasAreaOfObservation direct sub-properties of hasComponent (which would mistype the ObservationSpace subject as a Harness) — mirroring the fifth chain (hasComponent o hasStep o stepProduces). The ninth propertyChainAxiom rolls a component's weighted annotation Anchors up the same way (harness hasComponent component + component hasAnchor anchor => harness hasComponent anchor), so an ho:Anchor is a reachable, orphan-free HarnessComponent without making ho:hasAnchor a direct sub-property of hasComponent — a direct sub-property would (via rdfs:domain ho:Harness) mistype EVERY annotated node as a Harness, and ho:hasAnchor deliberately carries no rdfs:domain precisely because any described node may be annotated. Each chain is prefixed with hasComponent so the inferred subject is always the Harness, not the intermediate component — a chain starting one link in (e.g. providesCapability capabilityContract) would instead conclude 'component hasComponent object' and (via rdfs:domain ho:Harness) mistype that intermediate component as a Harness. Multiple propertyChainAxiom values coexist on this property (OWL RL prp-spo2 applies each independently)." .
+    owl:propertyChainAxiom ( ho:hasComponent ho:hasEnvelopeStatement ) ;
+    owl:propertyChainAxiom ( ho:hasComponent ho:hasEnvelopeRule ) ;
+    skos:definition "General composition edge. Specialised sub-properties below carry the component type. The first propertyChainAxiom rolls a Tool's implementation Candidates up to the harness that binds the Tool (harness hasComponent tool + tool implementationCandidate cand => harness hasComponent cand), so a Candidate is a reachable, orphan-free HarnessComponent WITHOUT making implementationCandidate a direct sub-property of hasComponent — a direct sub-property would (via rdfs:domain ho:Harness) mistype the Tool subject as a Harness and trip HarnessShape. The second propertyChainAxiom rolls a Capability's verification Contracts up the same way (harness hasComponent component + component providesCapability cap + cap capabilityContract contract => harness hasComponent contract), so a Contract is a reachable, orphan-free HarnessComponent. The third propertyChainAxiom rolls a Workflow's WorkflowSteps up the same way (harness hasComponent workflow + workflow hasStep step => harness hasComponent step), so a WorkflowStep is a reachable, orphan-free HarnessComponent without making ho:hasStep a direct sub-property of hasComponent (which would mistype the Workflow subject as a Harness). The fourth propertyChainAxiom rolls a SystemPrompt's PromptSections up the same way (harness hasComponent systemPrompt + systemPrompt hasSection section => harness hasComponent section) — the first link holds because ho:hasSystemPrompt is a sub-property of hasComponent — so a PromptSection is a reachable, orphan-free HarnessComponent without making ho:hasSection a direct sub-property of hasComponent (which would mistype the SystemPrompt subject as a Harness). The fifth propertyChainAxiom rolls a WorkflowStep's produced Deliverables up the same way (harness hasComponent workflow + workflow hasStep step + step stepProduces deliverable => harness hasComponent deliverable), so a Deliverable is a reachable, orphan-free HarnessComponent without making ho:stepProduces a direct sub-property of hasComponent (which would mistype the WorkflowStep subject as a Harness). The sixth propertyChainAxiom rolls an Agent's ObservationSpace up the same way (harness hasComponent agent + agent agentObservation space => harness hasComponent space) — the first link holds because ho:hasAgent is a sub-property of hasComponent — so an ObservationSpace is a reachable, orphan-free HarnessComponent without making ho:agentObservation a direct sub-property of hasComponent (which would mistype the Agent subject as a Harness). The seventh and eighth propertyChainAxioms extend that one hop further to roll the ObservationSpace's AreasOfInterest and AreasOfObservation up to the harness (harness hasComponent agent + agent agentObservation space + space hasAreaOfInterest aoi => harness hasComponent aoi; likewise for hasAreaOfObservation), so each AreaOfInterest and AreaOfObservation is a reachable, orphan-free HarnessComponent without making ho:hasAreaOfInterest / ho:hasAreaOfObservation direct sub-properties of hasComponent (which would mistype the ObservationSpace subject as a Harness) — mirroring the fifth chain (hasComponent o hasStep o stepProduces). The ninth propertyChainAxiom rolls a component's weighted annotation Anchors up the same way (harness hasComponent component + component hasAnchor anchor => harness hasComponent anchor), so an ho:Anchor is a reachable, orphan-free HarnessComponent without making ho:hasAnchor a direct sub-property of hasComponent — a direct sub-property would (via rdfs:domain ho:Harness) mistype EVERY annotated node as a Harness, and ho:hasAnchor deliberately carries no rdfs:domain precisely because any described node may be annotated. The tenth and eleventh propertyChainAxioms roll an OperatingEnvelope's EnvelopeStatements and EnvelopeRules up the same way (harness hasComponent envelope + envelope hasEnvelopeStatement row => harness hasComponent row; likewise for hasEnvelopeRule) — the first link holds because ho:hasEnvelope is a sub-property of hasComponent, so harness hasComponent envelope is already inferred — making each row a reachable, orphan-free HarnessComponent without making ho:hasEnvelopeStatement / ho:hasEnvelopeRule direct sub-properties of hasComponent (which would mistype the OperatingEnvelope subject as a Harness); the two chains are deliberately symmetric so statement and rule are typed and rolled up alike (no rollup asymmetry between an envelope's row kinds), mirroring the fourth chain (hasComponent o hasSection). Each chain is prefixed with hasComponent so the inferred subject is always the Harness, not the intermediate component — a chain starting one link in (e.g. providesCapability capabilityContract) would instead conclude 'component hasComponent object' and (via rdfs:domain ho:Harness) mistype that intermediate component as a Harness. Multiple propertyChainAxiom values coexist on this property (OWL RL prp-spo2 applies each independently)." .
 
 ho:componentOf a owl:ObjectProperty ;
     rdfs:label "component of" ;
@@ -387,6 +409,38 @@ ho:hasAgent a owl:ObjectProperty ;
     rdfs:range ho:Agent ;
     rdfs:label "has agent" ;
     skos:definition "Binds an Agent (the partially-observed distributed node a harness compiles from a Role) to the harness (Harness→Agent). A sub-property of ho:hasComponent, so bound agents are reachable, orphan-free components covered by ho:ComponentConnectivityShape (mirroring ho:hasRole and ho:hasMemory, since the subject IS the Harness). Because it is a sub-property of hasComponent, harness hasComponent agent is inferred, which lets the ho:hasComponent propertyChainAxiom (hasComponent o agentObservation) roll the agent's ObservationSpace up to the harness too — and the two-hop extensions roll its AreasOfInterest and AreasOfObservation up as well." .
+
+# --- declared range: Harness -> OperatingEnvelope -> statements/rules -
+ho:hasEnvelope a owl:ObjectProperty ;
+    rdfs:subPropertyOf ho:hasComponent ;
+    rdfs:domain ho:Harness ;
+    rdfs:range ho:OperatingEnvelope ;
+    rdfs:label "has envelope" ;
+    skos:definition "Binds a harness's declared OperatingEnvelope to the harness (Harness→OperatingEnvelope). A sub-property of ho:hasComponent, so a bound envelope is a reachable, orphan-free component covered by ho:ComponentConnectivityShape (mirroring ho:hasTestScenario, since the subject IS the Harness). Because of this sub-property, harness hasComponent envelope is inferred, which lets the ho:hasComponent propertyChainAxioms (hasComponent o hasEnvelopeStatement / o hasEnvelopeRule) roll the envelope's rows up to the harness. Optional in general, but ho:HarnessAutonomyShape requires one as soon as the harness declares a bounded autonomy tier: a tier that operates inside a range is unusable without the range being declared." .
+
+ho:hasEnvelopeStatement a owl:ObjectProperty ;
+    rdfs:domain ho:OperatingEnvelope ;
+    rdfs:range ho:EnvelopeStatement ;
+    rdfs:label "has envelope statement" ;
+    skos:definition "Associates an OperatingEnvelope with one EnvelopeStatement row. NOT a sub-property of hasComponent (that would, via hasComponent's rdfs:domain ho:Harness, mistype the OperatingEnvelope subject as a Harness); instead the ho:hasComponent propertyChainAxiom (hasComponent o hasEnvelopeStatement) rolls each row up to the declaring harness — which holds because ho:hasEnvelope is a sub-property of hasComponent — so a statement is a reachable, SHACL-valid component without a bespoke shape (mirroring ho:hasSection)." .
+
+ho:hasEnvelopeRule a owl:ObjectProperty ;
+    rdfs:domain ho:OperatingEnvelope ;
+    rdfs:range ho:EnvelopeRule ;
+    rdfs:label "has envelope rule" ;
+    skos:definition "Associates an OperatingEnvelope with one conditional cross-attribute EnvelopeRule. NOT a sub-property of hasComponent (same mistyping hazard as ho:hasEnvelopeStatement); instead the ho:hasComponent propertyChainAxiom (hasComponent o hasEnvelopeRule) rolls each rule up to the declaring harness, symmetrically with the statement chain, so rules and statements are typed and reached alike." .
+
+ho:onEnvelopeExit a owl:ObjectProperty ;
+    rdfs:domain ho:OperatingEnvelope ;
+    rdfs:range ho:FailurePolicy ;
+    rdfs:label "on envelope exit" ;
+    skos:definition "The FailurePolicy that handles an exit from this envelope — the edge that makes leaving the declared range a FIRST-CLASS failure condition with a pre-decided recovery ladder (handover request, response window, safe-halt) instead of an improvised refusal. Points at a FailurePolicy row whose reachability is carried by a ho:hasFailurePolicy binding (the central error-row catalog carrier, or the declaring harness itself); like ho:stepConsumes, this is a refinement edge, not a reachability edge, and NOT a sub-property of hasComponent (the subject is the envelope, not a Harness). The row's ho:failureCondition is the envelope-exit condition, the range counterpart of the internal-fault rows." .
+
+ho:envelopeAttribute a owl:ObjectProperty ;
+    rdfs:domain ho:EnvelopeStatement ;
+    rdfs:range ho:Concept ;
+    rdfs:label "envelope attribute" ;
+    skos:definition "The envelope attribute this statement declares over — a ho:Concept from the envelope attribute scheme (the five axes under the operating-envelope concept: domain, task, stakeholder, surface, asset). Range is the controlled vocabulary, so attribute names cannot drift into free text: the concept names WHAT is judged, while the statement's ho:envelopeObservable says HOW it is judged at request time." .
 
 ho:channelParticipant a owl:ObjectProperty ;
     rdfs:domain ho:Channel ;
@@ -612,6 +666,12 @@ ho:hasExecutionMode a owl:ObjectProperty ;
     rdfs:label "has execution mode" ;
     skos:definition "The runtime coordination topology this harness runs its agents in — a first-class, directly queryable property of the harness rather than something recovered by joining ho:appliesPattern with a concept tag. Optional: single-agent harnesses declare none. NOT a sub-property of ho:hasComponent (an ExecutionMode is a spec concept, not a component the harness contains)." .
 
+ho:autonomyTier a owl:ObjectProperty ;
+    rdfs:domain ho:Harness ;
+    rdfs:range ho:AutonomyTier ;
+    rdfs:label "autonomy tier" ;
+    skos:definition "The AutonomyTier a harness declares — the responsibility allocation it operates under. At most one (ho:HarnessAutonomyShape): a harness runs under one allocation at a time. NOT a sub-property of ho:hasComponent (an AutonomyTier is a spec concept, not a component the harness contains — mirroring ho:hasExecutionMode). Declaring a tier pulls the usage implications ho:HarnessAutonomyShape enforces: a bounded tier requires ho:hasEnvelope, a harness-owned fallback requires a component providing the safe-halt capability, and a receptive-user fallback requires a bound channel that involves the user." .
+
 ho:constrainedBy a owl:ObjectProperty ;
     rdfs:range ho:Constraint ;
     rdfs:label "constrained by" .
@@ -646,6 +706,13 @@ ho:tagged a owl:ObjectProperty ;
     rdfs:label "tagged" ;
     skos:definition "Associates any node with a controlled-vocabulary concept. Primary retrieval entry edge." .
 
+# --- guardrail placement: Guardrail -> attachment-point Concept ------
+ho:attachesAt a owl:ObjectProperty ;
+    rdfs:domain ho:Guardrail ;
+    rdfs:range ho:Concept ;
+    rdfs:label "attaches at" ;
+    skos:definition "The point at which this Guardrail is enforced — WHERE in the agent's processing pipeline or run lifecycle the rule bites, said nothing else. Values are the attachment-point concepts under id:c-guardrail-attachment: the guarded pipeline stages (input / dialog / retrieval / pre-execution / post-execution / output) plus the session- and turn-boundary points; repeatable for a rule enforced at more than one point. The flat leaf set cross-validates two independent framework axes — staged guarded processing and runtime lifecycle hooks — which meet at the tool-call boundary: its blocking and reacting sides ARE the pre-/post-execution points, so no separate tool-call value exists. BOUNDARIES: distinct from ho:hookEvent, which names the runtime event that FIRES a Hook automation (a Guardrail carrying an attachment point remains an always-in-force rule — the point locates where it is checked, it does not make the rule event-driven); from ho:approvalScope, which names WHAT an approval-gating guardrail covers, not where it runs; and from the ho:OperatingEnvelope vocabulary, which declares WHICH requests and run states a harness undertakes to handle — an envelope says nothing about where a rule attaches, and an attachment point says nothing about declared range. Refinement edge over ho:tagged-style concept linking: reachability of the target Concept is carried by the concept taxonomy, this adds the placement fact." .
+
 # --- weighted annotation: node -> Anchor -> Concept (n-ary) ----------
 ho:hasAnchor a owl:ObjectProperty ;
     rdfs:range ho:Anchor ;
@@ -672,6 +739,12 @@ ho:languageCondition a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "language condition" ;
     skos:definition "A specific language rule the guardrail enforces — which language applies to which artifact class (prose vs terms vs code/identifiers/commits). One item per artifact class; enriches a language guardrail without splitting it into separate nodes." .
+
+ho:approvalScope a owl:DatatypeProperty ;
+    rdfs:domain ho:Guardrail ;
+    rdfs:range xsd:string ;
+    rdfs:label "approval scope" ;
+    skos:definition "For a Guardrail that gates work on human approval: the KIND OF OBJECT one approval decision covers — the granularity of the gate — from a closed set: \"tool-call\" (a single pending tool invocation), \"tool-call-arg-pattern\" (tool invocations whose arguments match a declared pattern, e.g. a command class or path set), \"task-output\" (a finished deliverable before it is handed on), \"plan\" (a proposed plan before its execution starts), \"turn\" (a whole agent turn before it is committed), \"run-termination\" (the decision to end or abort a run) or \"session-mode\" (a change of the session's standing operating mode, e.g. entering an auto-approve mode). Carried ONLY by guardrails whose rule actually requires an approval; repeatable when one gate covers several object kinds. BOUNDARIES: distinct from ho:approvalUnit, the AutonomyTier slot — the unit states how coarse a grain of work one approval covers under a tier's whole responsibility allocation (the harness-level approval cadence), whereas this names what one specific gate guardrail intercepts; a tier says nothing about which gates exist, a gate says nothing about who owns execution or fallback, and the two value sets are deliberately disjoint. Also distinct from ho:attachesAt, which locates WHERE a guardrail is enforced without saying anything about approval. Enforced by ho:ApprovalScopeShape (sh:in)." .
 
 ho:artifactTemplate a owl:DatatypeProperty ;
     rdfs:domain ho:HarnessComponent ;
@@ -774,6 +847,12 @@ ho:memoryActivationCondition a owl:DatatypeProperty ;
     rdfs:label "memory activation condition" ;
     skos:definition "For a conditional (long-term) memory, the trigger under which the agent consults and reflects the relevant portion; absent for memories read unconditionally." .
 
+ho:retrievalPolicy a owl:DatatypeProperty ;
+    rdfs:domain ho:Memory ;
+    rdfs:range xsd:string ;
+    rdfs:label "retrieval policy" ;
+    skos:definition "HOW entries are chosen and ranked when this Memory is consulted and the store holds more than one read can carry — the selection discipline, as one free-text sentence (e.g. score each entry by a weighted combination of recency, importance and relevance with time decay, and read the top slice). Completes the tier axis the other discriminators leave open: ho:memoryReadTiming says WHEN a read happens, ho:memoryReadScope says HOW MUCH is read, ho:memoryActivationCondition says WHAT TRIGGER opens a conditional read — none of them says which entries win the selective read; that ranking rule leaked into free-text role policy before this predicate carried it (the same gap-shape ho:memoryWriteTiming closed on the write side). Free text by design: no tool consumes a retrieval grammar yet, so a closed value set or structured weights would be speculative structure. BOUNDARY: a property of the memory TIER's consultation discipline, not of any single query or run." .
+
 # --- agent capacity + observation fields ----------------------------
 ho:cognitiveCapacity a owl:DatatypeProperty ;
     rdfs:domain ho:Agent ;
@@ -788,10 +867,10 @@ ho:observedTokenVolume a owl:DatatypeProperty ;
     skos:definition "The realized size (approx. tokens) of the input an AreaOfObservation actually contributes to ONE inference at run time — the quantity summed against the agent's ho:cognitiveCapacity for the loss-free capacity fit. Deliberately SEPARATE from ho:tokenEstimate: tokenEstimate is the projector's cost of a node's own text (how expensive it is to place this node in a context pack, a value bounded by retrieve.py's budget), whereas this is a property OF THE RUNTIME OBSERVATION the node describes and is routinely far larger than any pack budget. Holding both meanings on ho:tokenEstimate made observation volumes act as projection costs, so an area could never be admitted to a pack and truncated the pack it appeared in; splitting the predicate keeps each number readable by exactly one consumer (budgeted projection vs capacity-fit review)." .
 
 # No rdfs:domain: ho:observationKind applies to BOTH ho:AreaOfInterest and
-# ho:AreaOfObservation (each an area has a kind), mirroring how ho:triggerPhrase
-# omits rdfs:domain to serve two classes — a single domain would, via prp-dom,
-# mistype a subject of the other class. No owl:unionOf domain is used anywhere
-# in this ontology, so the applicability is stated here instead.
+# ho:AreaOfObservation (each an area has a kind), mirroring how
+# ho:implementationRef omits rdfs:domain to serve two classes — a single domain
+# would, via prp-dom, mistype a subject of the other class. No owl:unionOf
+# domain is used anywhere in this ontology, so applicability is stated here.
 ho:observationKind a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "observation kind" ;
@@ -805,9 +884,9 @@ ho:observedFileScope a owl:DatatypeProperty ;
 
 # No rdfs:domain: ho:unobserved applies to BOTH ho:ObservationSpace (what the
 # whole envelope excludes) and ho:AreaOfObservation (what a realized observation
-# deliberately does not see), mirroring how ho:observationKind / ho:triggerPhrase
-# omit rdfs:domain to serve two classes — a single domain would, via prp-dom,
-# mistype a subject of the other class.
+# deliberately does not see), mirroring how ho:observationKind /
+# ho:implementationRef omit rdfs:domain to serve two classes — a single domain
+# would, via prp-dom, mistype a subject of the other class.
 ho:unobserved a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:label "unobserved" ;
@@ -855,13 +934,107 @@ ho:failureCondition a owl:DatatypeProperty ;
     rdfs:domain ho:FailurePolicy ;
     rdfs:range xsd:string ;
     rdfs:label "failure condition" ;
-    skos:definition "The failure situation this FailurePolicy row addresses (e.g. a worker times out, a required input is missing, a downstream check fails) — the left column of the error-handling table." .
+    skos:definition "The failure situation this FailurePolicy row addresses (e.g. a worker times out, a required input is missing, a downstream check fails) — the left column of the error-handling table. A request or run state leaving the harness's declared operating envelope is such a condition too (the envelope-exit condition, named by ho:onEnvelopeExit): a range exit sits in this table as a first-class row alongside the internal-fault rows, not as an improvised refusal." .
 
 ho:recoveryStrategy a owl:DatatypeProperty ;
     rdfs:domain ho:FailurePolicy ;
     rdfs:range xsd:string ;
     rdfs:label "recovery strategy" ;
     skos:definition "The recovery/handling strategy paired with this FailurePolicy's condition (e.g. retry with backoff, escalate to the user, fall back to a degraded path) — the right column of the error-handling table." .
+
+# --- operating-envelope fields: OperatingEnvelope / EnvelopeStatement / EnvelopeRule ---
+ho:envelopeDefault a owl:DatatypeProperty ;
+    rdfs:domain ho:OperatingEnvelope ;
+    rdfs:range xsd:string ;
+    rdfs:label "envelope default" ;
+    skos:definition "How this envelope treats an attribute no statement covers, from a closed set: \"restrictive\" (unstated means OUT of range — the default posture, which keeps envelopes small because only include-rows need writing) or \"permissive\" (unstated means in). A per-statement ho:envelopeClosure may override this for one attribute's remaining value space. Enforced by ho:OperatingEnvelopeShape (sh:in)." .
+
+ho:envelopeVerdict a owl:DatatypeProperty ;
+    rdfs:domain ho:EnvelopeStatement ;
+    rdfs:range xsd:string ;
+    rdfs:label "envelope verdict" ;
+    skos:definition "Whether cases matching this statement's boundary are inside the declared range, from a closed set: \"include\" or \"exclude\". Under a restrictive envelope default most authored rows are \"include\" (exclusion is already the default); an explicit \"exclude\" is reserved for a load-bearing boundary worth stating. Enforced by ho:EnvelopeStatementShape (sh:in)." .
+
+ho:envelopeClosure a owl:DatatypeProperty ;
+    rdfs:domain ho:EnvelopeStatement ;
+    rdfs:range xsd:string ;
+    rdfs:label "envelope closure" ;
+    skos:definition "Optional per-attribute override of the envelope's ho:envelopeDefault, from the same closed set: how the REST of this attribute's value space — beyond the stated boundary — is treated, \"restrictive\" (the rest is out) or \"permissive\" (the rest is in). Absent means the envelope-level default applies." .
+
+ho:envelopeValueType a owl:DatatypeProperty ;
+    rdfs:domain ho:EnvelopeStatement ;
+    rdfs:range xsd:string ;
+    rdfs:label "envelope value type" ;
+    skos:definition "How this statement's attribute is valued, from a closed set: \"boolean\" (the attribute holds or does not), \"categorical\" (one of an enumerable set) or \"numeric\" (a quantity compared against a threshold). Declared so a reader knows how to interpret ho:envelopeThreshold and what shape of answer the observable yields. Enforced by ho:EnvelopeStatementShape (sh:in)." .
+
+ho:envelopeThreshold a owl:DatatypeProperty ;
+    rdfs:domain ho:EnvelopeStatement ;
+    rdfs:range xsd:string ;
+    rdfs:label "envelope threshold" ;
+    skos:definition "The boundary value of this statement, as a string interpreted per ho:envelopeValueType: the category set a categorical attribute must fall in, or the limit a numeric attribute is compared against. Recommended for categorical/numeric statements; meaningless for boolean ones (the verdict alone carries a boolean row)." .
+
+ho:envelopeObservable a owl:DatatypeProperty ;
+    rdfs:domain ho:EnvelopeStatement ;
+    rdfs:range xsd:string ;
+    rdfs:label "envelope observable" ;
+    skos:definition "WHAT decides this statement's attribute at request time, as one short sentence naming the observation (e.g. \"whether every path the request names resolves inside the repository root\"). MANDATORY (ho:EnvelopeStatementShape): a statement whose attribute cannot be observed cannot be judged, so requiring the observable is what separates a testable range declaration from range-sounding prose. Deliberately a plain string in this wave; a later wave may promote it to an AreaOfObservation / Tool reference once observation individuals exist at that granularity — do not point it at IRIs yet." .
+
+ho:ruleCondition a owl:DatatypeProperty ;
+    rdfs:domain ho:EnvelopeRule ;
+    rdfs:range xsd:string ;
+    rdfs:label "rule condition" ;
+    skos:definition "The IF clause of an EnvelopeRule: a condition over several envelope attributes, written so a human can read and verify it (at most two levels of AND/OR). Free text by design in this wave — no tool consumes a rule grammar yet, and inventing one without a consumer would be speculative structure." .
+
+ho:ruleEffect a owl:DatatypeProperty ;
+    rdfs:domain ho:EnvelopeRule ;
+    rdfs:range xsd:string ;
+    rdfs:label "rule effect" ;
+    skos:definition "What the rule concludes for cases matching its ho:ruleCondition, from a closed set: \"include\" or \"exclude\" — refining the per-attribute statements for the matched cases. Enforced by ho:EnvelopeRuleShape (sh:in)." .
+
+# --- autonomy-tier slots: AutonomyTier -> responsibility allocation --
+ho:executionOwner a owl:DatatypeProperty ;
+    rdfs:domain ho:AutonomyTier ;
+    rdfs:range xsd:string ;
+    rdfs:label "execution owner" ;
+    skos:definition "Who performs the work under this tier, from a closed set: \"user\" (the harness only advises; the user acts), \"user-and-harness\" (the harness acts but every action passes through the user) or \"harness\" (the harness executes on its own). Enforced by ho:AutonomyTierShape (sh:in)." .
+
+ho:oversightOwner a owl:DatatypeProperty ;
+    rdfs:domain ho:AutonomyTier ;
+    rdfs:range xsd:string ;
+    rdfs:label "oversight owner" ;
+    skos:definition "Who watches the run while it happens and judges whether it stays acceptable, from a closed set: \"user\" or \"harness\". Distinct from ho:fallbackOwner, which names who takes over once the declared envelope is exited — oversight is the standing watch, fallback is the takeover. Enforced by ho:AutonomyTierShape (sh:in)." .
+
+ho:fallbackOwner a owl:DatatypeProperty ;
+    rdfs:domain ho:AutonomyTier ;
+    rdfs:range xsd:string ;
+    rdfs:label "fallback owner" ;
+    skos:definition "Who owns the fallback when the declared envelope is exited, from a closed set: \"user\" (the user is already in the loop and takes over directly), \"receptive-user\" (a user must be REACHED and must respond within a window — ho:HarnessAutonomyShape then requires a bound channel that involves the user) or \"harness\" (no human is assumed reachable; the harness must itself reach the safe-halt state — the shape then requires a component providing the safe-halt capability). Enforced by ho:AutonomyTierShape (sh:in)." .
+
+ho:envelopeBinding a owl:DatatypeProperty ;
+    rdfs:domain ho:AutonomyTier ;
+    rdfs:range xsd:string ;
+    rdfs:label "envelope binding" ;
+    skos:definition "How this tier relates to a declared operating envelope, from a closed set: \"bounded\" (the tier operates inside one — ho:HarnessAutonomyShape requires the declaring harness to carry ho:hasEnvelope), \"none\" (an advisory tier executes nothing, so no range needs declaring) or \"unbounded\" (explicitly declared rangeless — a boundary state worth flagging, never a default). Enforced by ho:AutonomyTierShape (sh:in)." .
+
+ho:approvalUnit a owl:DatatypeProperty ;
+    rdfs:domain ho:AutonomyTier ;
+    rdfs:range xsd:string ;
+    rdfs:label "approval unit" ;
+    skos:definition "The grain of work one human approval covers under this tier — the discriminating slot of the tier set — from a closed set: \"none\" (no approvals are exchanged), \"per-action\" (every action is approved), \"per-plan\" (a plan is approved up front, then executed), \"per-exception\" (only escalated exceptions are approved) or \"post-hoc\" (the run is reported after the fact). Enforced by ho:AutonomyTierShape (sh:in). BOUNDARY: a tier-level cadence over the whole responsibility allocation — NOT the per-gate granularity a single approval guardrail declares via ho:approvalScope (a Guardrail predicate with its own, deliberately disjoint value set)." .
+
+# --- staged-rollout environment declaration: Harness --------------------
+# Domain is ho:Harness, NOT ho:EnvironmentSpace: in this store EnvironmentSpace
+# is the single unbounded-reality node at the top of the observation projection
+# chain (one instance, id:env-space), not a per-deployment environment — a
+# fidelity rung of "all reality" is vacuous, and minting mock/replica
+# EnvironmentSpace individuals would contradict that modeling. What varies per
+# deployment is WHICH stand-in for reality a harness's actions land on, so the
+# declaring harness carries the value (mirroring ho:autonomyTier's placement).
+ho:environmentFidelity a owl:DatatypeProperty ;
+    rdfs:domain ho:Harness ;
+    rdfs:range xsd:string ;
+    rdfs:label "environment fidelity" ;
+    skos:definition "The fidelity rung of the environment this harness is declared to run against — where on the staged-rollout ladder its actions currently land — from a closed set, ordered from least to most real: \"mock\" (hand-stubbed responses; no real system behind them), \"cassette\" (recorded real interactions replayed deterministically), \"replica\" (a live non-production copy such as a staging or sandbox instance), \"digital-twin\" (a modelled simulation of the production system's dynamics) or \"production\" (the real system; actions have real effect). At most one at a time: promotion along the ladder is a change of THIS value. BOUNDARIES: distinct from the ho:OperatingEnvelope vocabulary — an envelope declares WHICH requests and run states the harness undertakes to handle and says nothing about how real the surrounding environment is, while a fidelity rung says nothing about which requests are in range (an EnvelopeStatement MAY cite this value as an environment-assumption observable, which is reference, not duplication); and from ho:autonomyTier — who approves, and at what unit, is orthogonal to how real the environment is, so a promotion is typically ACCOMPANIED by, never implied by, a tier or envelope change. Optional: a harness that declares nothing makes no fidelity claim. Enforced by ho:HarnessShape (sh:in)." .
 
 # --- lifecycle-hook fields: Hook -> trigger event / action ----------
 ho:hookEvent a owl:DatatypeProperty ;
@@ -895,22 +1068,23 @@ ho:reinvocationKeywords a owl:DatatypeProperty ;
     rdfs:label "reinvocation keywords" ;
     skos:definition "Follow-up / re-run trigger keywords the harness's description should carry so the harness is re-discoverable and not dead code (e.g. words that should route a later request back to this harness). Comma-separated; carried on the Harness." .
 
-# --- trigger + scope, shared by Harness and Instruction -------------
-# No rdfs:domain: these apply to BOTH ho:Harness and ho:Instruction
-# (a skill's description trigger, and a harness's), mirroring how
-# ho:implementationRef / ho:selectionPolicy / ho:scaffold omit rdfs:domain
-# to serve two classes — a single domain would, via prp-dom, mistype a
-# subject of the other class. No owl:unionOf domain is used anywhere in
-# this ontology, so the applicability is stated here instead.
+# --- skill activation trigger + scope: Instruction only -------------
+# Domain NARROWED from (Harness + Instruction) to ho:Instruction: the free-text
+# harness-side range declaration these once also served is superseded by the
+# machine-readable ho:OperatingEnvelope / ho:EnvelopeStatement — keeping both
+# would leave two near-synonym vocabularies for one meaning (golden rule 2).
+# The skill-side activation-trigger use remains valid and keeps the predicates.
 ho:triggerPhrase a owl:DatatypeProperty ;
+    rdfs:domain ho:Instruction ;
     rdfs:range xsd:string ;
     rdfs:label "trigger phrase" ;
-    skos:definition "A phrase in the description that SHOULD activate this node (GAP-3). Domain: Harness + Instruction — a skill's description trigger or a harness's activation cue. Repeatable; used together with ho:outOfScope to draw the trigger boundary." .
+    skos:definition "A phrase in a skill's description that SHOULD activate the skill (GAP-3). Repeatable; used together with ho:outOfScope to draw the trigger boundary. NOT for harness range declaration: a harness's declared operating range is stated as machine-readable data by ho:hasEnvelope / ho:EnvelopeStatement, not by free-text phrases (which is why the domain is Instruction only)." .
 
 ho:outOfScope a owl:DatatypeProperty ;
+    rdfs:domain ho:Instruction ;
     rdfs:range xsd:string ;
     rdfs:label "out of scope" ;
-    skos:definition "An explicitly EXCLUDED case that should NOT activate this node — the negative side of the trigger boundary (near-miss requests to reject). Domain: Harness + Instruction. Repeatable; complements ho:triggerPhrase so a skill/harness does not over-trigger." .
+    skos:definition "An explicitly EXCLUDED case that should NOT activate this skill — the negative side of the trigger boundary (near-miss requests to reject). Repeatable; complements ho:triggerPhrase so a skill does not over-trigger. NOT for harness range declaration: a harness's exclusions are the restrictive default and exclude-rows of its ho:OperatingEnvelope (which is why the domain is Instruction only)." .
 
 ho:scaffold a owl:DatatypeProperty ;
     rdfs:range xsd:string ;

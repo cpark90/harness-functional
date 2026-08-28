@@ -122,7 +122,8 @@ PREFIX_MAP = {
     HO.Domain: "dom-", HO.Task: "task-", HO.Capability: "cap-",
     HO.Contract: "ct-", HO.Concept: "c-", HO.Anchor: "anchor-",
     HO.DesignPattern: "pat-",
-    HO.ExecutionMode: "mode-", HO.Constraint: "con-", HO.ModelConfig: "mc-",
+    HO.ExecutionMode: "mode-", HO.AutonomyTier: "tier-",
+    HO.Constraint: "con-", HO.ModelConfig: "mc-",
     HO.Tool: "tool-", HO.Candidate: "cand-", HO.Workflow: "wf-",
     HO.WorkflowStep: "wfs-", HO.Deliverable: "dlv-", HO.Guardrail: "gr-",
     HO.Hook: "hook-", HO.SystemPrompt: "sp-", HO.PromptSection: "ps-",
@@ -131,6 +132,8 @@ PREFIX_MAP = {
     HO.FailurePolicy: "fp-", HO.AssemblySection: "as-", HO.Harness: "h-",
     HO.Agent: "agent-", HO.ObservationSpace: "os-", HO.AreaOfInterest: "aoi-",
     HO.AreaOfObservation: "oa-",
+    HO.OperatingEnvelope: "oe-", HO.EnvelopeStatement: "es-",
+    HO.EnvelopeRule: "er-",
 }
 # §2 singletons carry no prefix — they have one fixed local name each.
 SINGLETON_NAMES = {

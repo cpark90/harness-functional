@@ -34,6 +34,13 @@ id:cap-benchmarking a ho:Capability ; skos:prefLabel "Comparative benchmarking" 
 id:cap-audit a ho:Capability ; skos:prefLabel "Compliance audit" ;
     skos:definition "Audit an artifact and an agent's operation against a declared standard or charter and produce compliance findings, so a component can surface where behaviour or output has drifted from the rules it is bound by rather than only assess quality in the abstract." .
 
+# The safe-halt capability: what a harness must SHIP when its autonomy tier
+# names the harness itself as fallback owner (ho:HarnessAutonomyShape). Provided
+# centrally by the envelope-exit failure rows (id:fp-envelope-exit /
+# id:fp-envelope-exit-severe), whose recovery strategies ARE the reach procedure.
+id:cap-safe-halt a ho:Capability ; skos:prefLabel "Safe halt" ; skos:altLabel "safe-halt state" ;
+    skos:definition "Reach and hold the safe-halt STATE -- a state, not a verb: it is reached when no irreversible work is in progress, in-flight work is checkpointed, and the halt is published on the declared channels; and it is held with NO automatic resumption (reactivation is an explicit, separate act -- a halt that resumes by itself is a pause, not a halt). Required of any harness whose autonomy tier makes the harness the fallback owner. Names what a component CAN do, never what the harness MAY do: authorization is stated by the envelope and tier, not by the capability graph." .
+
 # The skill-authoring/packaging capability: a component that PROVIDES it knows how
 # to author a well-formed Claude skill (an on-demand ho:Instruction emitted as a
 # named SKILL.md). Its verification contracts (below) judge the emitted skill tree.

@@ -221,5 +221,127 @@ id:c-role-multiplicity a ho:Concept ;
     skos:definition "The situation of staffing SEVERAL concurrent agent instances of ONE role on a project, together with the discipline that keeps them from colliding: each instance claims its work item before starting and writes only inside its own disjoint scope, with the merge left to the ordinary fan-in and contradiction machinery (id:pat-fanout-fanin, id:fp-conflict-contradiction). Distinct from id:c-execution-mode, which fixes the runtime topology agents coordinate in: this is about how MANY instances of the same role run at once and how they stay out of each other's way; tag the guardrails and error rows that govern concurrent instances of one role." ;
     skos:broader id:c-multiagent .
 
+#===================== Operating-envelope attribute scheme =============
+# The controlled vocabulary an ho:EnvelopeStatement declares over
+# (ho:envelopeAttribute): five axes under one parent term, each axis holding
+# the request-time judgable attributes of that facet. The five-axis split
+# (domain / task / stakeholder / surface / asset) exists because a range
+# narrowed to the subject area alone misses where envelope exits actually
+# happen — in WHO asks, over WHICH surface, and WHAT is at stake. A
+# protected-characteristics axis is DELIBERATELY EXCLUDED this wave: this
+# store's harnesses operate on artifacts, not on decisions about persons, so
+# the axis enters only with a source harness that judges persons (explicit
+# out-of-model exclusion, per the coverage-audit convention).
+id:c-operating-envelope a ho:Concept ;
+    skos:prefLabel "Operating envelope" ;
+    skos:altLabel "declared operating range" ;
+    skos:definition "The declared, machine-readable range of requests and run states a harness undertakes to handle, judged attribute by attribute at request time; tag the envelope components, guardrails and error rows that declare, check or recover that range. Parent of the five envelope attribute axes (domain, task, stakeholder, surface, asset)." ;
+    skos:topConceptOf id:scheme ; skos:related id:c-autonomy , id:c-safety .
+
+id:c-envelope-domain a ho:Concept ;
+    skos:prefLabel "Envelope domain axis" ;
+    skos:definition "The subject-area facet of an operating envelope: attributes about WHAT AREA a request falls in, judgable at request time. Refines — never duplicates — the coarse targeting the ho:Domain individuals (dom-*) give a harness via ho:targetsDomain: the Domain names what the harness is for, these attributes decide whether one concrete request is in that area." ;
+    skos:broader id:c-operating-envelope .
+id:c-envelope-subject-matter a ho:Concept ;
+    skos:prefLabel "Subject-matter fit" ;
+    skos:definition "Whether the request's subject matter lies inside the harness's declared area of work, as opposed to a neighbouring area it superficially resembles." ;
+    skos:broader id:c-envelope-domain .
+id:c-envelope-language-scope a ho:Concept ;
+    skos:prefLabel "Language scope" ;
+    skos:definition "The natural (and where relevant programming) languages a harness undertakes to work in — the languages of requests, prose and deliverables it declares itself for." ;
+    skos:broader id:c-envelope-domain .
+id:c-envelope-environment-assumption a ho:Concept ;
+    skos:prefLabel "Environment assumption" ;
+    skos:definition "What the harness assumes about the environment it runs in — the workspace, toolchain or session shape that must be present for its declared range to hold." ;
+    skos:broader id:c-envelope-domain .
+id:c-envelope-knowledge-recency a ho:Concept ;
+    skos:prefLabel "Knowledge recency" ;
+    skos:definition "Whether answering the request needs information newer than what the harness can know or retrieve — the freshness boundary of its declared range." ;
+    skos:broader id:c-envelope-domain .
+
+id:c-envelope-task a ho:Concept ;
+    skos:prefLabel "Envelope task axis" ;
+    skos:definition "The work facet of an operating envelope: attributes about the REQUESTED WORK itself — its kind, size, reversibility and decidability. The centre axis of an agent harness's range (a taxonomy carried over from a domain-only tradition misses exactly this facet), refining the coarse ho:addressesTask targeting." ;
+    skos:broader id:c-operating-envelope .
+id:c-envelope-task-kind a ho:Concept ;
+    skos:prefLabel "Task kind" ;
+    skos:definition "Whether the requested work maps to one of the kinds of task the harness declares itself for, rather than a neighbouring kind it was never composed to perform." ;
+    skos:broader id:c-envelope-task .
+id:c-envelope-task-scale a ho:Concept ;
+    skos:prefLabel "Task scale" ;
+    skos:definition "The size and scope of the requested work relative to what the harness's process can carry — e.g. whether a request decomposes into units its workflow can actually dispatch and integrate." ;
+    skos:broader id:c-envelope-task .
+id:c-envelope-reversibility a ho:Concept ;
+    skos:prefLabel "Action reversibility" ;
+    skos:definition "Whether the actions the request calls for can be undone, or are guarded by an explicit confirmation step where they cannot — the irreversibility boundary of the declared range." ;
+    skos:broader id:c-envelope-task .
+id:c-envelope-completion-criterion a ho:Concept ;
+    skos:prefLabel "Completion criterion" ;
+    skos:definition "Whether 'done' is decidable for the request within the harness's own gates — a request whose success cannot be judged by any bound check lies outside a well-declared range." ;
+    skos:broader id:c-envelope-task .
+
+id:c-envelope-stakeholder a ho:Concept ;
+    skos:prefLabel "Envelope stakeholder axis" ;
+    skos:definition "The people facet of an operating envelope: attributes about WHO requests the work, who holds approval authority over it, whom it affects, and whether a responsive human is reachable while it runs." ;
+    skos:broader id:c-operating-envelope .
+id:c-envelope-requester a ho:Concept ;
+    skos:prefLabel "Requester identity" ;
+    skos:definition "Who may submit requests to the harness and over which declared entry point — the boundary that keeps a harness from serving arrivals it never declared itself open to." ;
+    skos:broader id:c-envelope-stakeholder .
+id:c-envelope-approval-authority a ho:Concept ;
+    skos:prefLabel "Approval authority" ;
+    skos:definition "Who holds sign-off for the consequential actions a request entails — the authority the harness must be able to reach when its tier's approval unit demands one." ;
+    skos:broader id:c-envelope-stakeholder .
+id:c-envelope-affected-party a ho:Concept ;
+    skos:prefLabel "Affected party" ;
+    skos:definition "Whose artifacts or interests the requested work touches — a request whose effects land on parties outside the declared set is out of range even when the work itself is familiar." ;
+    skos:broader id:c-envelope-stakeholder .
+id:c-envelope-user-availability a ho:Concept ;
+    skos:prefLabel "User availability" ;
+    skos:definition "Whether a responsive human is reachable within the run — the standing precondition of any tier whose fallback owner is a receptive user, and an attribute that can silently lapse mid-run." ;
+    skos:broader id:c-envelope-stakeholder .
+
+id:c-envelope-surface a ho:Concept ;
+    skos:prefLabel "Envelope surface axis" ;
+    skos:definition "The interface facet of an operating envelope: attributes about WHICH exposed surfaces the work moves over — the tools that may be driven, the paths that may be written, the channels requests arrive on and the reach beyond the workspace." ;
+    skos:broader id:c-operating-envelope .
+id:c-envelope-tool-surface a ho:Concept ;
+    skos:prefLabel "Tool surface" ;
+    skos:definition "Which of the harness's bound tools the requested work may drive — a request that needs an operation no bound tool exposes lies outside the declared surface." ;
+    skos:broader id:c-envelope-surface .
+id:c-envelope-write-scope a ho:Concept ;
+    skos:prefLabel "Write scope" ;
+    skos:definition "The paths and artifacts the harness undertakes to modify — the write boundary of its declared range, judged against the paths a request actually names." ;
+    skos:broader id:c-envelope-surface .
+id:c-envelope-input-channel a ho:Concept ;
+    skos:prefLabel "Input channel" ;
+    skos:definition "Over which declared conduits work may arrive — requests reaching the harness outside its declared channels are out of range regardless of their content." ;
+    skos:broader id:c-envelope-surface .
+id:c-envelope-external-access a ho:Concept ;
+    skos:prefLabel "External access" ;
+    skos:definition "Whether the requested work needs reach beyond the workspace — network, external services or systems — and whether that reach is part of the declared surface." ;
+    skos:broader id:c-envelope-surface .
+
+id:c-envelope-asset a ho:Concept ;
+    skos:prefLabel "Envelope asset axis" ;
+    skos:definition "The stakes facet of an operating envelope: attributes about WHAT IS AT STAKE in the requested work — sensitive data, credentials, spend and standing — independent of whether the work itself is familiar." ;
+    skos:broader id:c-operating-envelope .
+id:c-envelope-data-sensitivity a ho:Concept ;
+    skos:prefLabel "Data sensitivity" ;
+    skos:definition "Whether the request handles data whose exposure would be a harm in itself — secrets, personal or confidential material — and whether such handling is inside the declared range." ;
+    skos:broader id:c-envelope-asset .
+id:c-envelope-credential-exposure a ho:Concept ;
+    skos:prefLabel "Credential exposure" ;
+    skos:definition "Whether the work can touch or reveal credentials and access tokens — an asset boundary that turns an ordinary edit into an out-of-range action." ;
+    skos:broader id:c-envelope-asset .
+id:c-envelope-budget-exposure a ho:Concept ;
+    skos:prefLabel "Budget exposure" ;
+    skos:definition "How much compute, spend or quota the requested work can commit — the resource stake a declared range caps." ;
+    skos:broader id:c-envelope-asset .
+id:c-envelope-reputation-exposure a ho:Concept ;
+    skos:prefLabel "Reputation exposure" ;
+    skos:definition "Whether outputs leave the workspace under the operator's name — published, sent or committed externally — putting standing at stake beyond the artifact itself." ;
+    skos:broader id:c-envelope-asset .
+
 #===================== Concept scheme ==================================
 id:scheme a skos:ConceptScheme ; skos:prefLabel "Harness ontology vocabulary" .

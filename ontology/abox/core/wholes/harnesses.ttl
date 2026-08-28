@@ -31,7 +31,9 @@ id:h-coding a ho:Harness ;
     ho:hasWorkflow id:wf-react ;
     ho:hasGuardrail id:gr-nodestruct, id:gr-lang, id:gr-standard-terms ;
     ho:usesModel id:mc-opus ;
+    ho:hasEnvelope id:oe-coding ;
     ho:appliesPattern id:pat-react ;
+    ho:autonomyTier id:tier-bounded-autonomy ;
     ho:requiresCapability id:cap-codeexec, id:cap-fileedit ;
     ho:tagged id:c-softeng, id:c-debugging, id:c-autonomy ;
     ho:maturity "stable" .
@@ -138,8 +140,10 @@ id:h-multiagent a ho:Harness ;
     ho:hasAssemblySection id:as-overview, id:as-persona, id:as-operating-rules, id:as-process,
         id:as-model, id:as-roles, id:as-channels, id:as-skills, id:as-execution-mode,
         id:as-data-flow, id:as-error-handling, id:as-test-scenarios, id:as-hooks ;
+    ho:hasEnvelope id:oe-multiagent ;
     ho:appliesPattern id:pat-orchestrator-workers, id:pat-ontology-composition ;
     ho:hasExecutionMode id:mode-sub-agents, id:mode-standing-service ;
+    ho:autonomyTier id:tier-per-plan-approval ;
     ho:requiresCapability id:cap-orchestration, id:cap-traceability, id:cap-codeexec, id:cap-fileedit ;
     ho:tagged id:c-design, id:c-multiagent, id:c-traceability ;
     ho:maturity "draft" .
@@ -211,6 +215,15 @@ id:h-peer-mesh a ho:Harness ;
 # be the near-synonym drift the store exists to prevent. The same reuse-as-default
 # holds for id:h-harness-factory, which binds this board while declaring no roles
 # at all.
+# It also carries the OPERATING-ENVELOPE discipline (id:gr-envelope-check /
+# id:gr-envelope-unknown / id:gr-transient-tolerance) and its exit rows
+# (id:fp-envelope-exit / id:fp-envelope-exit-severe, which the two declared
+# envelopes point at via ho:onEnvelopeExit and which PROVIDE id:cap-safe-halt).
+# Hosted here, not on the envelope-declaring harnesses (id:h-coding /
+# id:h-multiagent), for the standard library-carrier reason: binding them here
+# leaves those harnesses' materialized documents byte-identical this wave
+# (envelope rendering is a later wave), while onEnvelopeExit stays a refinement
+# edge whose reachability this carrier's hasFailurePolicy binding supplies.
 id:h-workspace-synthesis a ho:Harness ;
     skos:prefLabel "Workspace-synthesis harness" ; skos:altLabel "convergence-gate library host" ;
     skos:definition "A neutral, domain-independent template that wires the recurring central-library parts a multi-agent worker team reuses: the worker archetypes a team is staffed from (analyst, author, implementer, planner, strategist, tester), which hand off deliverables over a shared file workspace (id:chan-workspace) under the recurring team disciplines -- structured output, ordinal artifact naming, declared hand-off routes, severity-triaged cross-validation, scaling to the request and graceful degradation -- with a terminal synthesizer gate (id:role-synthesizer) that cross-checks every contribution and compiles the integrated final result (providing id:cap-synthesis, which this harness requires), plus the domain-independent error rows such a team declares. It exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- it names no specific problem domain, tool or technology. Derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -223,7 +236,8 @@ id:h-workspace-synthesis a ho:Harness ;
         id:gr-graceful-fallback,
         id:gr-cross-validation, id:gr-declared-routes, id:gr-sequenced-artifacts,
         id:gr-three-flow-acceptance, id:gr-execution-separation,
-        id:gr-work-claim, id:gr-instance-isolation ;
+        id:gr-work-claim, id:gr-instance-isolation,
+        id:gr-envelope-check, id:gr-envelope-unknown, id:gr-transient-tolerance ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer,
@@ -233,7 +247,8 @@ id:h-workspace-synthesis a ho:Harness ;
     ho:hasChannel id:chan-workspace, id:chan-task-board ;
     ho:hasFailurePolicy id:fp-agent-failure-retry, id:fp-insufficient-input,
         id:fp-review-critical-rework, id:fp-source-unavailable,
-        id:fp-conflict-contradiction, id:fp-refer-to-expert, id:fp-duplicate-claim ;
+        id:fp-conflict-contradiction, id:fp-refer-to-expert, id:fp-duplicate-claim,
+        id:fp-envelope-exit, id:fp-envelope-exit-severe ;
     ho:hasExecutionMode id:mode-sub-agents ;
     ho:requiresCapability id:cap-synthesis ;
     ho:tagged id:c-multiagent, id:c-design, id:c-synthesis ;
@@ -289,7 +304,12 @@ id:h-workspace-synthesis a ho:Harness ;
 # a later run because its lesson was never captured or never consulted. The
 # capture / reuse / promotion RULES themselves stay on id:h-multiagent, whose agents
 # keep the durable store they act on; this carrier holds only the row that fires
-# when they were not honoured.
+# when they were not honoured. Its scenario catalog also carries the two
+# range-judgment fixtures of the operating-envelope axis (id:scn-envelope-in-range /
+# id:scn-envelope-exit): they judge envelope-declaring harnesses in general, so
+# they live beside the other neutral scn-* fixtures on this methodology host
+# rather than on the declaring harnesses (whose materialized documents stay
+# byte-identical this wave).
 id:h-harness-factory a ho:Harness ;
     skos:prefLabel "Harness-factory harness" ; skos:altLabel "harness-authoring methodology host" ;
     skos:definition "A neutral, domain-independent template that wires the harness-authoring methodology parts: the guardrails that bound multi-agent orchestration complexity and govern faithful authoring, verification and model selection, plus the shared task-board channel (id:chan-task-board) over which workers claim and report tasks. It is a meta-harness -- its subject is the methodology of composing, verifying and evolving harnesses themselves. Like id:h-workspace-synthesis it exists to make those parts connected, reusable components (anti-orphan) and stands as a neutral template -- the parts live here rather than on id:h-multiagent so binding them leaves that harness's materialized document byte-identical. It names no specific problem domain, tool or technology, derives from id:h-multiagent and reuses central parts by IRI." ;
@@ -307,7 +327,8 @@ id:h-harness-factory a ho:Harness ;
     ho:hasInstruction id:ins-well-formed-skill ;
     ho:hasChannel id:chan-task-board ;
     ho:hasHook id:hook-session-start, id:hook-pre-tool-use, id:hook-post-tool-use, id:hook-stop ;
-    ho:hasTestScenario id:scn-compose-smoke, id:scn-trigger-near-miss ;
+    ho:hasTestScenario id:scn-compose-smoke, id:scn-trigger-near-miss,
+        id:scn-envelope-in-range, id:scn-envelope-exit ;
     ho:hasFailurePolicy id:fp-dispatch-timeout, id:fp-validation-fail, id:fp-repeated-mistake ;
     ho:appliesPattern id:pat-orchestrator-workers ;
     ho:hasExecutionMode id:mode-hybrid ;
@@ -315,3 +336,139 @@ id:h-harness-factory a ho:Harness ;
     ho:tagged id:c-multiagent, id:c-composition, id:c-agent-methodology ;
     ho:derivedFrom id:h-multiagent ;
     ho:maturity "draft" .
+
+########################################################################
+# Operating-envelope declarations — the machine-readable range the two
+# representative harnesses undertake to handle (ho:hasEnvelope above). Layer
+# split, deliberate: the ATTRIBUTE SCHEME is central vocabulary
+# (vocab/concepts.ttl, the five axes under id:c-operating-envelope); the
+# DECLARATIONS over those attributes are per-harness and live here with the
+# declaring harnesses — other harnesses declare theirs on the recipe side.
+# Both envelopes are RESTRICTIVE: only include-rows are written, everything
+# unstated is out of range, which is what keeps a declaration this small
+# honest. Every row states only what is true of the harness as authored (its
+# bound tools, guardrails, tasks and channels — nothing aspirational), and
+# every row carries the observable that decides it at request time
+# (ho:EnvelopeStatementShape). Exit handling points at the central rows
+# (id:fp-envelope-exit / -severe, carried by id:h-workspace-synthesis).
+########################################################################
+
+#===================== ENVELOPES: h-coding =============================
+id:oe-coding a ho:OperatingEnvelope ;
+    skos:prefLabel "Coding agent operating envelope" ;
+    skos:definition "The declared range of id:h-coding: software-engineering work — bug fixing and code review — on the workspace repository, in Korean or English, through its bound shell and editor tools, with irreversible actions gated on explicit confirmation. Restrictive: anything these rows do not include (other subject areas, paths outside the repository, unattended external effects) is out of range." ;
+    ho:envelopeDefault "restrictive" ;
+    ho:hasEnvelopeStatement id:es-coding-subject, id:es-coding-task-kind, id:es-coding-write-scope,
+        id:es-coding-language, id:es-coding-reversibility, id:es-coding-environment ;
+    ho:onEnvelopeExit id:fp-envelope-exit, id:fp-envelope-exit-severe ;
+    ho:tagged id:c-operating-envelope ;
+    ho:tokenEstimate 110 ; ho:maturity "draft" .
+
+id:es-coding-subject a ho:EnvelopeStatement ;
+    skos:prefLabel "Coding envelope: subject matter" ;
+    ho:envelopeAttribute id:c-envelope-subject-matter ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "software engineering on the workspace repository (authoring, repair, review of code)" ;
+    ho:envelopeObservable "whether the request's subject matter is the authoring, repair or review of code in the workspace repository" ;
+    ho:tokenEstimate 61 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-coding-task-kind a ho:EnvelopeStatement ;
+    skos:prefLabel "Coding envelope: task kind" ;
+    ho:envelopeAttribute id:c-envelope-task-kind ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "bug fixing; code review" ;
+    ho:envelopeObservable "whether the requested work maps to one of the harness's declared tasks (id:task-bugfix, id:task-codereview)" ;
+    ho:tokenEstimate 44 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-coding-write-scope a ho:EnvelopeStatement ;
+    skos:prefLabel "Coding envelope: write scope" ;
+    ho:envelopeAttribute id:c-envelope-write-scope ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "files inside the workspace repository" ;
+    ho:envelopeObservable "whether every path the request names resolves inside the workspace repository root" ;
+    ho:tokenEstimate 42 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-coding-language a ho:EnvelopeStatement ;
+    skos:prefLabel "Coding envelope: language scope" ;
+    ho:envelopeAttribute id:c-envelope-language-scope ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "Korean or English prose; any programming language in code" ;
+    ho:envelopeObservable "the natural language of the request and of the prose it asks for (the id:gr-lang boundary)" ;
+    ho:tokenEstimate 50 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-coding-reversibility a ho:EnvelopeStatement ;
+    skos:prefLabel "Coding envelope: action reversibility" ;
+    ho:envelopeAttribute id:c-envelope-reversibility ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeClosure "restrictive" ;
+    ho:envelopeValueType "boolean" ;
+    ho:envelopeObservable "whether the requested actions are reversible, or gated on the explicit confirmation id:gr-nodestruct requires where they are not" ;
+    ho:tokenEstimate 48 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-coding-environment a ho:EnvelopeStatement ;
+    skos:prefLabel "Coding envelope: environment assumption" ;
+    ho:envelopeAttribute id:c-envelope-environment-assumption ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "boolean" ;
+    ho:envelopeObservable "whether the workspace provides the shell and file-editing tools the harness binds (id:tool-shell, id:tool-editor)" ;
+    ho:tokenEstimate 42 ; ho:salience 0.2 ; ho:maturity "draft" .
+
+#===================== ENVELOPES: h-multiagent =========================
+id:oe-multiagent a ho:OperatingEnvelope ;
+    skos:prefLabel "Multi-agent template operating envelope" ;
+    skos:definition "The declared range of id:h-multiagent: design and structured multi-role authoring work arriving from the session user over the declared user channel, decomposable into node-scoped dispatch briefs, written inside the roles' least-privilege boundaries, in Korean or English, with a responsive user reachable for escalation. Restrictive: work that cannot be decomposed for dispatch, arrives outside the declared channels, or writes outside the role boundaries is out of range." ;
+    ho:envelopeDefault "restrictive" ;
+    ho:hasEnvelopeStatement id:es-multiagent-subject, id:es-multiagent-task-scale,
+        id:es-multiagent-requester, id:es-multiagent-user-availability,
+        id:es-multiagent-write-scope, id:es-multiagent-language ;
+    ho:onEnvelopeExit id:fp-envelope-exit, id:fp-envelope-exit-severe ;
+    ho:tagged id:c-operating-envelope ;
+    ho:tokenEstimate 130 ; ho:maturity "draft" .
+
+id:es-multiagent-subject a ho:EnvelopeStatement ;
+    skos:prefLabel "Multi-agent envelope: subject matter" ;
+    ho:envelopeAttribute id:c-envelope-subject-matter ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "design, architecture and structured multi-role authoring work" ;
+    ho:envelopeObservable "whether the request is a design, architecture or structured authoring task of the kind the harness's declared tasks name (id:task-architecture, id:task-designdecision)" ;
+    ho:tokenEstimate 75 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-multiagent-task-scale a ho:EnvelopeStatement ;
+    skos:prefLabel "Multi-agent envelope: task scale" ;
+    ho:envelopeAttribute id:c-envelope-task-scale ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "work decomposable into node-scoped dispatch briefs" ;
+    ho:envelopeObservable "whether the request can be split into briefs each completable by one dispatched worker and integrable by the orchestrator" ;
+    ho:tokenEstimate 56 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-multiagent-requester a ho:EnvelopeStatement ;
+    skos:prefLabel "Multi-agent envelope: requester" ;
+    ho:envelopeAttribute id:c-envelope-requester ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "the session user, over the declared user channel" ;
+    ho:envelopeObservable "whether the request arrives from the user over the declared user channel (id:chan-agent-user)" ;
+    ho:tokenEstimate 48 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-multiagent-user-availability a ho:EnvelopeStatement ;
+    skos:prefLabel "Multi-agent envelope: user availability" ;
+    ho:envelopeAttribute id:c-envelope-user-availability ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeClosure "restrictive" ;
+    ho:envelopeValueType "boolean" ;
+    ho:envelopeObservable "whether the user endpoint of id:chan-agent-user is responsive within the run, so escalated open decisions can actually be answered (the id:tier-per-plan-approval fallback precondition)" ;
+    ho:tokenEstimate 63 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-multiagent-write-scope a ho:EnvelopeStatement ;
+    skos:prefLabel "Multi-agent envelope: write scope" ;
+    ho:envelopeAttribute id:c-envelope-write-scope ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "each role's own least-privilege file boundary" ;
+    ho:envelopeObservable "whether the artifacts the request touches fall inside the responsibility boundary of some bound role (the id:gr-least-privilege boundary)" ;
+    ho:tokenEstimate 59 ; ho:salience 0.2 ; ho:maturity "draft" .
+id:es-multiagent-language a ho:EnvelopeStatement ;
+    skos:prefLabel "Multi-agent envelope: language scope" ;
+    ho:envelopeAttribute id:c-envelope-language-scope ;
+    ho:envelopeVerdict "include" ;
+    ho:envelopeValueType "categorical" ;
+    ho:envelopeThreshold "Korean or English prose; technical terms in English" ;
+    ho:envelopeObservable "the natural language of the request and of the deliverables it asks for (the id:gr-lang boundary)" ;
+    ho:tokenEstimate 51 ; ho:salience 0.2 ; ho:maturity "draft" .

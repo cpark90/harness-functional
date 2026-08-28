@@ -334,3 +334,25 @@ id:hook-stop a ho:Hook ;
     ho:tokenEstimate 74 ; ho:maturity "draft" ;
     dct:source "https://github.com/rohitg00/awesome-claude-code-toolkit" ;
     dct:license "Apache-2.0" .
+
+#===================== Operating-envelope discipline ===================
+# The behavioural half of the operating-envelope axis (id:c-operating-envelope):
+# the envelope itself is data (ho:OperatingEnvelope + statements on the
+# declaring harness), these are the rules that make agents USE it -- judge the
+# range before accepting work, ask when an attribute cannot be observed, and
+# do not let one noisy observation trip the exit ladder. Hosted on the
+# library-carrier harness (id:h-workspace-synthesis), NOT on the two harnesses
+# that declare demo envelopes, so those harnesses' materialized documents stay
+# byte-identical this wave (envelope rendering is a later wave).
+id:gr-envelope-check a ho:Guardrail ; skos:prefLabel "Check the envelope before accepting" ;
+    skos:altLabel "range judgment before work" ;
+    ho:promptText "Before accepting a request, judge it against the harness's declared operating envelope: evaluate each envelope statement's observable for this request and accept only what the declaration includes (under a restrictive default, whatever is unstated is out). Treat a request outside the declaration as an envelope exit handled by the declared exit policy (id:fp-envelope-exit) -- never silently reinterpret it into an in-scope task and never improvise a refusal." ;
+    ho:tagged id:c-operating-envelope ; ho:tokenEstimate 131 ; ho:maturity "draft" .
+id:gr-envelope-unknown a ho:Guardrail ; skos:prefLabel "Ask when an envelope attribute is unobservable" ;
+    skos:altLabel "unknown attribute means ask" ;
+    ho:promptText "When an envelope statement's observable cannot be evaluated for a request -- the attribute is UNKNOWN, not merely unfavourable -- do not guess in either direction: under the restrictive default an unobservable attribute counts as outside the declaration, so put the missing observation to the approval authority as a targeted question and proceed only once the attribute is determined. Distinct from id:gr-envelope-check, which judges attributes that CAN be observed: this rule covers the ones that cannot." ;
+    ho:tagged id:c-operating-envelope ; ho:tokenEstimate 146 ; ho:maturity "draft" .
+id:gr-transient-tolerance a ho:Guardrail ; skos:prefLabel "Tolerate transient envelope excursions" ;
+    skos:altLabel "momentary exit is a re-check, not a fallback" ;
+    ho:promptText "A momentary excursion outside the declared envelope is a RE-EVALUATION trigger, not an immediate fallback: re-check the violated statement's observable before acting on it, and start the declared exit policy only when the excursion persists across the re-check -- except where the violated statement guards an irreversible or safety-critical attribute, which skips the tolerance and goes straight to the severe exit row (id:fp-envelope-exit-severe). Keeps one noisy observation from halting a healthy run while leaving hard boundaries hard." ;
+    ho:tagged id:c-operating-envelope ; ho:tokenEstimate 156 ; ho:maturity "draft" .

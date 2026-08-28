@@ -26,7 +26,10 @@
 <https://harness-ontology.dev/shapes> a owl:Ontology ;
     sh:declare [
         sh:prefix "ho" ;
-        sh:namespace "https://harness-ontology.dev/schema#"^^xsd:anyURI ] .
+        sh:namespace "https://harness-ontology.dev/schema#"^^xsd:anyURI ] ;
+    sh:declare [
+        sh:prefix "id" ;
+        sh:namespace "https://harness-ontology.dev/id/core/"^^xsd:anyURI ] .
 
 #--- A harness must be intentful and complete -------------------------
 ho:HarnessShape a sh:NodeShape ;
@@ -54,7 +57,13 @@ ho:HarnessShape a sh:NodeShape ;
         sh:path ho:hasWorkflow ;
         sh:minCount 1 ;
         sh:class ho:Workflow ;
-        sh:message "Harness must have >=1 Workflow component." ] .
+        sh:message "Harness must have >=1 Workflow component." ] ;
+    sh:property [
+        sh:path ho:environmentFidelity ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "mock" "cassette" "replica" "digital-twin" "production" ) ;
+        sh:message "ho:environmentFidelity, when declared, is at most one value from the closed set (mock/cassette/replica/digital-twin/production) — a harness sits on one staged-rollout rung at a time." ] .
 
 #--- No orphaned components: each must belong to a harness ------------
 # componentOf is the (inferred) inverse of hasComponent and its sub-props.
@@ -499,3 +508,241 @@ ho:AlternativeOfSharedAnchorShape a sh:NodeShape ;
                 }
             }
             """ ] .
+
+#--- OperatingEnvelope: a complete, judgeable range declaration ------
+# An envelope must be labelled and mature, declare its closure posture
+# (envelopeDefault, closed set — restrictive is the intended norm), carry at
+# least one EnvelopeStatement row (a range with no rows declares nothing) and
+# name the FailurePolicy that handles a range exit (onEnvelopeExit) — the exit
+# is a first-class failure condition, so an envelope without an exit policy is
+# half a declaration. EnvelopeRules stay optional (rules are the exception).
+ho:OperatingEnvelopeShape a sh:NodeShape ;
+    sh:targetClass ho:OperatingEnvelope ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "OperatingEnvelope must have a skos:prefLabel." ] ;
+    sh:property [
+        sh:path ho:envelopeDefault ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "restrictive" "permissive" ) ;
+        sh:message "OperatingEnvelope must have exactly one ho:envelopeDefault from the closed set (restrictive/permissive)." ] ;
+    sh:property [
+        sh:path ho:hasEnvelopeStatement ;
+        sh:minCount 1 ;
+        sh:class ho:EnvelopeStatement ;
+        sh:message "OperatingEnvelope must carry >=1 EnvelopeStatement via ho:hasEnvelopeStatement (a range with no rows declares nothing)." ] ;
+    sh:property [
+        sh:path ho:onEnvelopeExit ;
+        sh:minCount 1 ;
+        sh:class ho:FailurePolicy ;
+        sh:message "OperatingEnvelope must name >=1 FailurePolicy via ho:onEnvelopeExit (a range exit is a first-class failure condition, never an improvised refusal)." ] ;
+    sh:property [
+        sh:path ho:maturity ;
+        sh:minCount 1 ;
+        sh:message "OperatingEnvelope must have ho:maturity." ] .
+
+#--- EnvelopeStatement: one observable row about one attribute -------
+# The measurability tooth of the envelope transfer: every statement MUST say
+# what observation decides its attribute at request time (envelopeObservable).
+# A range declared over an unobservable attribute cannot be judged in
+# principle, so this shape is what separates a testable declaration from
+# plausible-sounding prose. One attribute per row (a weight of statements over
+# two attributes at once is not interpretable — write two rows), verdict and
+# value type from closed sets, per-attribute closure optional.
+ho:EnvelopeStatementShape a sh:NodeShape ;
+    sh:targetClass ho:EnvelopeStatement ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "EnvelopeStatement must have a skos:prefLabel." ] ;
+    sh:property [
+        sh:path ho:envelopeAttribute ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class ho:Concept ;
+        sh:message "EnvelopeStatement must name exactly one envelope-attribute ho:Concept via ho:envelopeAttribute (one row declares over one attribute)." ] ;
+    sh:property [
+        sh:path ho:envelopeVerdict ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "include" "exclude" ) ;
+        sh:message "EnvelopeStatement must have exactly one ho:envelopeVerdict from the closed set (include/exclude)." ] ;
+    sh:property [
+        sh:path ho:envelopeClosure ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "restrictive" "permissive" ) ;
+        sh:message "ho:envelopeClosure, when present, must be one value from the closed set (restrictive/permissive)." ] ;
+    sh:property [
+        sh:path ho:envelopeValueType ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "boolean" "categorical" "numeric" ) ;
+        sh:message "EnvelopeStatement must have exactly one ho:envelopeValueType from the closed set (boolean/categorical/numeric)." ] ;
+    sh:property [
+        sh:path ho:envelopeObservable ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "EnvelopeStatement must have >=1 ho:envelopeObservable (what decides the attribute at request time — an unobservable attribute cannot be judged, so the declaration would have no teeth)." ] ;
+    sh:property [
+        sh:path ho:maturity ;
+        sh:minCount 1 ;
+        sh:message "EnvelopeStatement must have ho:maturity." ] .
+
+#--- EnvelopeRule: a complete conditional row ------------------------
+ho:EnvelopeRuleShape a sh:NodeShape ;
+    sh:targetClass ho:EnvelopeRule ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "EnvelopeRule must have a skos:prefLabel." ] ;
+    sh:property [
+        sh:path ho:ruleCondition ;
+        sh:minCount 1 ;
+        sh:datatype xsd:string ;
+        sh:message "EnvelopeRule must have >=1 ho:ruleCondition (the IF clause over envelope attributes)." ] ;
+    sh:property [
+        sh:path ho:ruleEffect ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "include" "exclude" ) ;
+        sh:message "EnvelopeRule must have exactly one ho:ruleEffect from the closed set (include/exclude)." ] ;
+    sh:property [
+        sh:path ho:maturity ;
+        sh:minCount 1 ;
+        sh:message "EnvelopeRule must have ho:maturity." ] .
+
+#--- AutonomyTier: five well-typed responsibility slots --------------
+# Every tier must fill all five allocation slots from their closed value sets —
+# a tier with an open slot is not a usable allocation. The slots are data (not
+# prose) precisely so the usage implications below are SHACL-checkable.
+ho:AutonomyTierShape a sh:NodeShape ;
+    sh:targetClass ho:AutonomyTier ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "AutonomyTier must have a skos:prefLabel." ] ;
+    sh:property [
+        sh:path ho:executionOwner ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "user" "user-and-harness" "harness" ) ;
+        sh:message "AutonomyTier must have exactly one ho:executionOwner from the closed set (user/user-and-harness/harness)." ] ;
+    sh:property [
+        sh:path ho:oversightOwner ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "user" "harness" ) ;
+        sh:message "AutonomyTier must have exactly one ho:oversightOwner from the closed set (user/harness)." ] ;
+    sh:property [
+        sh:path ho:fallbackOwner ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "user" "receptive-user" "harness" ) ;
+        sh:message "AutonomyTier must have exactly one ho:fallbackOwner from the closed set (user/receptive-user/harness)." ] ;
+    sh:property [
+        sh:path ho:envelopeBinding ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "none" "bounded" "unbounded" ) ;
+        sh:message "AutonomyTier must have exactly one ho:envelopeBinding from the closed set (none/bounded/unbounded)." ] ;
+    sh:property [
+        sh:path ho:approvalUnit ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "none" "per-action" "per-plan" "per-exception" "post-hoc" ) ;
+        sh:message "AutonomyTier must have exactly one ho:approvalUnit from the closed set (none/per-action/per-plan/per-exception/post-hoc)." ] ;
+    sh:property [
+        sh:path ho:maturity ;
+        sh:minCount 1 ;
+        sh:message "AutonomyTier must have ho:maturity." ] .
+
+#--- Harness autonomy usage rules (tier => envelope / capability / channel) ---
+# The usage-specification teeth of the autonomy axis, on any harness that
+# declares ho:autonomyTier. (1) At most one tier. (2) A tier bound to an
+# envelope (envelopeBinding not none/unbounded) demands ho:hasEnvelope — a
+# bounded allocation without a declared range is unusable. (3) fallbackOwner
+# implications: "harness" demands a bound component PROVIDING the safe-halt
+# capability (id:cap-safe-halt — reaching and holding the halt state is a real
+# ability the harness must ship, not a hope), and "receptive-user" demands a
+# bound channel that involves the user (there must be a conduit to reach the
+# human who is expected to respond). SPARQL constraints because the condition
+# spans the tier's slot values and the harness's own bindings (the
+# ho:AlternativeOfSharedAnchorShape mechanism); they run against the reasoned
+# graph, so hasComponent includes every sub-property and chain rollup.
+ho:HarnessAutonomyShape a sh:NodeShape ;
+    sh:targetSubjectsOf ho:autonomyTier ;
+    sh:property [
+        sh:path ho:autonomyTier ;
+        sh:maxCount 1 ;
+        sh:class ho:AutonomyTier ;
+        sh:message "A harness declares at most one ho:autonomyTier (one responsibility allocation at a time), and it must be a typed ho:AutonomyTier." ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Autonomy tier {?tier} is envelope-bound, but this harness declares no ho:hasEnvelope: a bounded allocation without a declared operating range is unusable (declare the envelope, or use a boundary tier)." ;
+        sh:prefixes <https://harness-ontology.dev/shapes> ;
+        sh:select """
+            SELECT $this ?tier
+            WHERE {
+                $this ho:autonomyTier ?tier .
+                ?tier ho:envelopeBinding ?binding .
+                FILTER (?binding NOT IN ("none", "unbounded"))
+                FILTER NOT EXISTS { $this ho:hasEnvelope ?envelope . }
+            }
+            """ ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Autonomy tier {?tier} makes the HARNESS the fallback owner, but no bound component provides the safe-halt capability (id:cap-safe-halt): a harness that must halt itself safely has to ship that ability." ;
+        sh:prefixes <https://harness-ontology.dev/shapes> ;
+        sh:select """
+            SELECT $this ?tier
+            WHERE {
+                $this ho:autonomyTier ?tier .
+                ?tier ho:fallbackOwner "harness" .
+                FILTER NOT EXISTS {
+                    $this ho:hasComponent ?component .
+                    ?component ho:providesCapability id:cap-safe-halt .
+                }
+            }
+            """ ] ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Autonomy tier {?tier} expects a RECEPTIVE USER as fallback owner, but this harness binds no channel that involves the user: there is no conduit to reach the human expected to respond (bind a user channel, or change the fallback owner)." ;
+        sh:prefixes <https://harness-ontology.dev/shapes> ;
+        sh:select """
+            SELECT $this ?tier
+            WHERE {
+                $this ho:autonomyTier ?tier .
+                ?tier ho:fallbackOwner "receptive-user" .
+                FILTER NOT EXISTS {
+                    $this ho:hasChannel ?channel .
+                    ?channel ho:involvesUser true .
+                }
+            }
+            """ ] .
+
+#--- Guardrail approval-gate granularity: closed value set -----------
+# Targets only the guardrails that DECLARE an approval scope (the predicate is
+# optional and most guardrails are not approval gates), so no blanket
+# GuardrailShape is minted for one optional field. Repeatable by design: one
+# gate may cover several object kinds (e.g. tool-call and task-output). The
+# value set is deliberately DISJOINT from ho:approvalUnit's tier-level set —
+# sharing values would blur the gate-granularity vs tier-cadence boundary.
+ho:ApprovalScopeShape a sh:NodeShape ;
+    sh:targetSubjectsOf ho:approvalScope ;
+    sh:property [
+        sh:path ho:approvalScope ;
+        sh:datatype xsd:string ;
+        sh:in ( "tool-call" "tool-call-arg-pattern" "task-output" "plan" "turn" "run-termination" "session-mode" ) ;
+        sh:message "ho:approvalScope must come from the closed set (tool-call/tool-call-arg-pattern/task-output/plan/turn/run-termination/session-mode)." ] .
