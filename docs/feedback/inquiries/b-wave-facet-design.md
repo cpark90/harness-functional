@@ -148,6 +148,24 @@ shape의 SPARQL 한 곳(`?region` 조건에 facet 필터 추가)만 바꾸면 �
    B2를 별도 wave로 갈지(inspection 권고: **후자** — B2만 랭킹을 바꾸므로 분리하면 회귀
    판정이 쉬워진다).
 
+## 7.5 사용자 결정 (2026-08-28) — "권고대로 진행" → 확정 내역
+
+사용자가 §7을 inspection 권고대로 위임. 명시 권고가 있는 곳은 그대로, 초안만 있는 곳은 초안을
+채택하되 근거를 기록한다 (dispatch는 orchestrator):
+
+1. **facet 5개 확정** — anatomy/quality/method/domain/**scope** 그대로. `scope` 별도 인정
+   (해체 대안은 B2 규모를 41로 키우고, "내용 축이 아님을 말할 자리"라는 §3a 논거가 유지 이유).
+2. **판단 3건 = 초안 배정 채택**: `c-communication`=**anatomy**(자식 3개 controlled-vocabulary·
+   report-over-prompt·structured-output은 **method로 재부모화**) · `c-inforetrieval`=**domain**
+   (§3b 초안 유지 — "검색은 하네스 기능" 반론은 tool/cap 노드가 이미 anatomy 축을 담당) ·
+   `c-oversight`=**quality**(§1 성격 분류표의 원배정 — "감독됨"이라는 성질; method 독해분은
+   기존 `c-agent-methodology` 자식들이 담당. B1 리뷰에서 재론 가능으로 표기).
+3. **B2 범위 = 27개**(scope 단독 개체만 — §5의 한정 근거 채택; 41/115안 기각).
+4. **실행 순서 = B1 선행 land → 회귀 확인 → B2 별도 wave → B3**(명시 권고 그대로. B3 완료
+   시 결정 6-(b)의 shape 강화 잔여 필요성 재평가 — decisions 항목 처리 기록 참조).
+
+→ 이 확정으로 본 설계는 **B1 브리프로 채택 가능** 상태다 (orchestrator).
+
 ## 8. 부수 관찰
 
 조사 중 `OperatingEnvelope`가 0 → 2로 증가했다(병행 세션이 W1 §4d 하네스 선언을 진행 중).

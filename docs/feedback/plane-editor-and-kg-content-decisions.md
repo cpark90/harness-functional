@@ -144,3 +144,22 @@ backbone)으로 처리됐으나, 실측하면 **깊이 1의 평면 구조**(top 
 
 > 처리 노트: 결정 1·2·3·4의 적용 착수 허가 신호는 이 항목의 `status: open → approved` 태깅이다
 > (README 규약 — 답변 기재만으로는 orchestrator가 착수하지 않는다).
+
+## 사용자 피드백 2 (2026-08-28)
+5. **(a)** — 2쌍 저작.
+6. **(b)** — 실사용 시점으로 미룸.
+§7(facet 설계)은 inspection 권고대로 진행.
+
+## 처리 기록 (inspection, 2026-08-28)
+- **결정 5-(a) 실행 스펙** (orchestrator → developer micro dispatch): edge 2개만 추가 —
+  `id:gr-well-formed-skill ho:overlapsWith id:ins-well-formed-skill`(공유 `c-skill-authoring`)
+  · `core:chan-peer ho:overlapsWith core:pat-peer-mesh`(공유 `c-multiagent`). 개체 신설 0,
+  §3 순서상 관계 그룹(item 5) 위치. 게이트: validate PASS + `overlapsWith`는 1선별 트리거가
+  아니므로 **retrieve 팩 byte-identity 유지**(회귀 확인) + determinism PASS.
+- **결정 6-(b) 채택 + 게이트 조건**: shape 강화는 실사용 시점으로 미루되, **"첫
+  `ho:alternativeOf` 저작을 포함하는 모든 브리프는 `AlternativeOfSharedAnchorShape` 강화(공유
+  태그 수·정의 유사도 하한)를 선행 항목으로 포함해야 한다"** 를 게이트로 기록. 부수: B-wave
+  **B3**(region 정의의 facet 필터화)가 이 강화의 상당 부분을 구조적으로 해소하므로, B3 land
+  후에는 잔여 강화 필요성을 재평가한다.
+- **§7 채택 내역**: `inquiries/b-wave-facet-design.md` §7에 확정 기록 (요지: facet 5개 유지
+  scope 포함 / 판단 3건은 초안 배정 / B2=27개 한정 / **B1 선행 land 후 B2 별도 wave**).
