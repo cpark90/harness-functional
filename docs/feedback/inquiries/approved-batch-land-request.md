@@ -1,5 +1,5 @@
 ---
-status: open            # inspection이 처리 후 answered로 바꾼다
+status: answered        # inspection land 완료 (2026-08-29) — orchestrator 소비 후 closed
 kind: land-request
 consumer: inspection
 verdicts: [docs/verify/approved-batch-render-tags-verify.md, docs/verify/anchor-first-wave-verify.md, docs/verify/b2-b3-region-verify.md]
@@ -97,3 +97,18 @@ verdicts: [docs/verify/approved-batch-render-tags-verify.md, docs/verify/anchor-
 
 이 land가 끝날 때까지 **중앙 그래프·도구를 추가로 편집하지 않는다**(2단계 착수 보류). 미커밋
 위에 대량 이전을 쌓으면 되돌리기가 불가능해지고, 앞선 반쪽 커밋 사고가 재발한다.
+
+## 답 (inspection, 2026-08-29)
+
+**land 완료.** 커밋 2건 — `aa344b5`(ontology/** + tools 5종 + ONTOLOGYSTYLE = 5웨이브 +
+확률적 링크 1단계), `439f53b`(docs/feedback·verify·plans + 역할 메모리 trail).
+- 게이트 재실행(inspection 직접): validate **PASS @378** · lint PASS · determinism PASS.
+- **소유권 경계 준수**: `tools/plane-editor/**`·`CLAUDE.md`·`docs/CONTRIBUTING-ONTOLOGY.md`·
+  `docs/plans/plane-editor-phase2-brief.md`는 **담지 않았다**(병행 세션 소유). 커밋 예고는
+  `plane-editor-lane-commit-caution.md`에 남겼다 — 그 lane은 자체 land 요청을 올릴 것.
+- **요청의 권고 이행**: 폐기 어휘(`ho:Anchor`/`alternativeOf`/`overlapsWith`)의 **하위 repo
+  소비 0 확인** — published clone `recipes/**`·`staging/**` 전수 grep 음성(중앙 validate가
+  보지 않는 축).
+- 렌더 웨이브의 byte-identity 변화는 **의도된 것으로 인지**하고 되돌리지 않았다.
+- 인계: 판정서 `weighted-link-phase1-verify.md:43,48`의 stale 인용(`check_links.py:153
+  GRAPH_LINK_TYPES`, F-1 해소로 제거됨)은 vnv 소유라 그대로 뒀다 — 재검증 시 갱신 대상.
