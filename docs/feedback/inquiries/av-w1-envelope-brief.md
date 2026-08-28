@@ -165,6 +165,17 @@ Guardrail 전체 필드셋(부착점·권한 사다리·집행모드·주기·�
 materialize 렌더 · `envelopeObservable`의 참조 승격. 전부 W2~W4 대상이며, W1은 **선언과
 이탈 처리**만으로 좁힌다(부록 B5 참조).
 
+## 6.5 inspection 검토 노트 (2026-08-28, 채택 전 반영 필수 1건 + 주의 1건)
+
+- **F1 [필수 정정]**: §2-2·§4a의 `ho:AutonomyTier ⊑ ho:Specification` — **`ho:Specification`
+  클래스는 TBox에 존재하지 않는다**(grep 0). "ExecutionMode와 같은 성격"의 실제 부모는
+  **`ho:SpecConcept`**(`harness.ttl:256`, ExecutionMode의 subClassOf). 채택 시
+  `ho:SpecConcept`로 교체할 것 — 없는 부모로 저작하면 orphan-class로 validate FAIL.
+- **F2 [주의, 비차단]**: §2-1 chain이 `hasEnvelopeStatement`만 롤업하고 **`hasEnvelopeRule`은
+  롤업하지 않는다** — reachability는 약연결이라 orphan은 아니지만, statement만
+  HarnessComponent로 추론되고 rule은 아닌 **비대칭**이 생긴다. developer가 (a) rule chain 1개
+  추가 또는 (b) 비대칭 사유를 TBox 정의문에 명시, 둘 중 하나를 택해 기록할 것.
+
 ## 7. 이 브리프가 남기는 결정 포인트 (orchestrator 판단)
 
 - tier 개체를 `spec/patterns.ttl`에 둘지 신규 `spec/autonomy.ttl`을 만들지(파일 분할 정책).

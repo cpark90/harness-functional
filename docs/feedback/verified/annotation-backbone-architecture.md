@@ -160,3 +160,9 @@ vnv 자기보고와 별개로 워킹트리에서 재실측 — **전부 일치, 
   "성공 케이스만 보지 말 것" 준수 확인. vnv `plane-editor-phase0-verify` pass-with-notes와 합치.
 - ④ 진행 상태: Phase 0(매핑)+Phase 1(앵커 엔진 검증) 완료, Phase 2+(산문 평면 2종·링크
   저장소·코드 평면·툴 스코핑) 잔여 — HOLD 유지.
+- **Phase 2 필수 이월 결함** (vnv 적대적 재검증 `plane-editor-phase1-verify.md` note 3,
+  CONFIRMED): 블록 통째 삭제 시 RelativePosition이 `unresolved`(null)로 죽는데 tombstone
+  규칙이 `collapsed`에만 걸려 quote 복구가 **남의 문장에 오부착**(both-affix 정규 경로 통과,
+  `MIN_AFFIX=4`가 자연어에서 약함). S1–S8 밖이라 게이트는 유효하나 "오해소 0" 정신 위반 —
+  Phase 2 브리프에 (a) 블록 삭제 시나리오 S9 추가, (b) tombstone 규칙의 unresolved 확장
+  (+affix 강화)을 **필수 항목**으로 넣을 것.
