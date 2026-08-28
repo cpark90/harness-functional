@@ -29,6 +29,15 @@ export function annotationRecord({ id, anchors, body, status }) {
         prefix: anchors.textQuote.prefix,
         suffix: anchors.textQuote.suffix,
       },
+      // 삭제와 이동을 가르는 세 번째 selector (src/blocks.mjs). 없으면 null로 남는다.
+      blockContext: anchors.blockContext
+        ? {
+            text: anchors.blockContext.text,
+            offset: anchors.blockContext.offset,
+            itemId: anchors.blockContext.itemId,
+            stateVector: anchors.blockContext.stateVector,
+          }
+        : null,
     },
     body,
     status,

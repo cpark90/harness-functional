@@ -1,5 +1,14 @@
 /**
- * 편집 시나리오 스위트 S1–S8 (브리프 §4 고정) + 비게이팅 진단 D1.
+ * 편집 시나리오 스위트 S1–S8 (브리프 §4 고정) + 파괴적 편집 S9·S10 + 진단 D1·D2.
+ *
+ * S9·S10은 스위트 **밖**에서 실측된 오해소 2종을 정식 시나리오로 들여온 것이다
+ * (vnv 판정 `docs/verify/plane-editor-phase1-verify.md` note 3·4):
+ *   S9  블록 통째 삭제 — RelativePosition이 collapsed가 아니라 unresolved로 죽어
+ *       tombstone 규칙을 우회했고, quote 복구가 살아남은 남의 문장에 붙었다.
+ *   S10 제자리 텍스트 교체 — affix guard가 한 글자 겹침으로 통과해 무관한 텍스트에
+ *       붙었다.
+ * 둘 다 기대값은 **orphaned**다. 사용자가 앵커의 문자들을 지운 뒤이므로, 어딘가에
+ * 붙이는 것은 전부 오부착이다 (조용한 오부착보다 명시적 orphan이 낫다).
  *
  * 각 시나리오는 **앵커 1개당 독립 시행(trial)** 으로 돌린다: 매번 새 세션을
  * 열어 6개 앵커를 전부 부착하고, 대상 앵커 기준으로 편집을 가한 뒤 **세 레인**을
@@ -24,8 +33,10 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import * as Y from 'yjs'
 import {
-  FIXTURE_ANCHORS,
   FRAGMENT_NAME,
+  FIXTURE_ANCHORS,
+  MAIN_FIXTURE,
+  TWIN_FIXTURE,
   openSession,
   locate,
   previousTextblockStart,
@@ -88,14 +99,28 @@ function passed(expected, outcome) {
     : outcome === 'survived' || outcome === 'recovered'
 }
 
+/**
+ * 반사실 계측: **더 약한 정책이었다면** 이 시행이 어디에 붙었을지를 같은 기준으로
+ * 분류한다. 강화 규칙이 아무것도 막지 못하면(vacuous) 이 값이 전부 0으로 나오므로,
+ * 리포트가 규칙의 값어치를 스스로 증명한다.
+ */
 function counterfactualSummary(expected, resolution) {
-  const quote = resolution.counterfactualQuote
-  if (!quote) return null
-  if (quote.status !== 'resolved') {
-    return { status: quote.status, candidates: quote.candidates ?? 0, text: null, wouldMisResolve: false }
+  const counterfactual = resolution.counterfactual
+  if (!counterfactual) return null
+  const summary = {}
+  for (const [id, slice] of Object.entries(counterfactual)) {
+    const { outcome } = classifyResolution(expected, slice)
+    summary[id] = {
+      method: slice.method,
+      text: slice.text,
+      outcome,
+      wouldMisResolve: outcome === 'wrong',
+      guardAccepted: slice.guardAccepted,
+      quoteAcceptance: slice.quoteAcceptance,
+      reason: slice.reason,
+    }
   }
-  const wouldMisResolve = expected.kind === 'orphan' || quote.text !== expected.value
-  return { status: quote.status, candidates: quote.candidates ?? 0, text: quote.text, wouldMisResolve }
+  return summary
 }
 
 function resolutionLane(name, expected, resolution, extra = {}) {
@@ -113,10 +138,14 @@ function resolutionLane(name, expected, resolution, extra = {}) {
     rawStatus: resolution.raw.status,
     rawText: resolution.raw.text,
     guardAccepted: resolution.guard.accepted,
-    quoteStatus: resolution.quote ? resolution.quote.status : null,
-    quoteCandidates: resolution.quote ? (resolution.quote.candidates ?? null) : null,
-    quoteAcceptance: resolution.quote ? (resolution.quote.acceptance ?? null) : null,
-    counterfactualQuote: counterfactualSummary(expected, resolution),
+    guardRule: resolution.guard.rule ?? null,
+    guardAgreement: resolution.guard.agreement ?? 0,
+    guardRequired: resolution.guard.required ?? 0,
+    recoveryStatus: resolution.recovery ? resolution.recovery.status : null,
+    recoveryAcceptance: resolution.recovery ? (resolution.recovery.acceptance ?? null) : null,
+    blockMatches: resolution.recovery ? (resolution.recovery.matches ?? null) : null,
+    blockFresh: resolution.recovery ? (resolution.recovery.fresh ?? null) : null,
+    counterfactual: counterfactualSummary(expected, resolution),
     reason: resolution.reason ?? null,
     ...extra,
   }
@@ -225,16 +254,19 @@ function trialResult({ scenario, spec, target, expected, lanes, bystanders, extr
  * generic per-anchor runner
  * ------------------------------------------------------------------ */
 
+export const scenarioFixture = (scenario) => scenario.fixture ?? MAIN_FIXTURE
+
 function runPerAnchor(scenario) {
+  const fixture = scenarioFixture(scenario)
   const trials = []
-  for (const spec of FIXTURE_ANCHORS) {
-    const session = openSession({ clientID: CLIENT.AUTHOR })
-    const attached = attachFixtureAnnotations(session)
+  for (const spec of fixture.anchors) {
+    const session = openSession({ clientID: CLIENT.AUTHOR, docJSON: fixture.doc })
+    const attached = attachFixtureAnnotations(session, fixture.anchors)
     const entry = attached.find((item) => item.id === spec.id)
     const target = entry.target
     const expected = scenario.expected(target)
 
-    scenario.edit(session, target)
+    scenario.edit(session, target, spec)
 
     const snapshot = liveSnapshot(session, spec.id)
     const saved = captureForSave(session, snapshot, entry.record.anchors)
@@ -242,7 +274,7 @@ function runPerAnchor(scenario) {
     const docText = session.text()
     session.close()
 
-    const reload = openSession({ update: merged, clientID: CLIENT.RELOAD })
+    const reload = openSession({ update: merged, clientID: CLIENT.RELOAD, docJSON: fixture.doc })
     const staleResolution = resolveAnchors(reload, entry.record.anchors)
     const pipelineResolution =
       saved.mode === 'recaptured' ? resolveAnchors(reload, saved.anchors) : staleResolution
@@ -328,7 +360,7 @@ export const SCENARIOS = [
   {
     id: 'S6',
     title: '앵커 담은 블록 이동 (cut+paste)',
-    target: '실측 보고 (quote 복구 포함)',
+    target: '실측 보고 (블록 정체성 복구 포함)',
     gating: false,
     expected: (t) => textExpectation(t.exact),
     edit: (session, t) => {
@@ -445,6 +477,29 @@ export const SCENARIOS = [
           extra: { separateProcess, storeVersion: payload.storeVersion, childPlaneRecords: payload.planeRecords },
         })
       })
+    },
+  },
+  {
+    id: 'S9',
+    title: '앵커 담은 블록 통째 삭제',
+    target: 'orphaned 판정 (오해소 0)',
+    gating: true,
+    fixture: TWIN_FIXTURE,
+    expected: () => orphanExpectation(),
+    edit: (session, t) => session.dispatch((tr) => tr.delete(t.blockOuterFrom, t.blockOuterTo)),
+  },
+  {
+    id: 'S10',
+    title: '앵커 텍스트 제자리 교체',
+    target: 'orphaned 판정 (오해소 0)',
+    gating: true,
+    fixture: TWIN_FIXTURE,
+    expected: () => orphanExpectation(),
+    edit: (session, t, spec) => {
+      // 선택 후 타이핑 = 삭제 직후 같은 자리에 삽입. 앵커의 문자들은 사라졌지만
+      // RelativePosition은 살아 돌아온다 -> guard가 유일한 방어선인 경로.
+      session.dispatch((tr) => tr.delete(t.from, t.to))
+      session.dispatch((tr) => tr.insertText(spec.replacement, t.from))
     },
   },
 ]

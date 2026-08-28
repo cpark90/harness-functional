@@ -13,6 +13,12 @@
           "exact": "Alpha beta",
           "prefix": "Annotation plane probe\n",
           "suffix": " gamma delta epsilon zeta eta th"
+        },
+        "blockContext": {
+          "text": "Alpha beta gamma delta epsilon zeta eta theta.",
+          "offset": 0,
+          "itemId": "1:25",
+          "stateVector": "AQGGAw=="
         }
       },
       "body": "Block-head anchor: probes left-boundary bias.",
@@ -29,6 +35,12 @@
           "exact": "delta epsilon",
           "prefix": "on plane probe\nAlpha beta gamma ",
           "suffix": " zeta eta theta.\nThe standoff mo"
+        },
+        "blockContext": {
+          "text": "Alpha beta gamma delta epsilon zeta eta theta.",
+          "offset": 17,
+          "itemId": "1:25",
+          "stateVector": "AQGGAw=="
         }
       },
       "body": "Mid-block multi-word anchor, shares its block with a1.",
@@ -45,6 +57,12 @@
           "exact": "standoff model",
           "prefix": "lta epsilon zeta eta theta.\nThe ",
           "suffix": " keeps annotations outside the d"
+        },
+        "blockContext": {
+          "text": "The standoff model keeps annotations outside the document body.",
+          "offset": 4,
+          "itemId": "1:73",
+          "stateVector": "AQGGAw=="
         }
       },
       "body": "Anchor whose first word repeats elsewhere in the document.",
@@ -61,6 +79,12 @@
           "exact": "classical weakness",
           "prefix": "ument body.\nAnchor drift is the ",
           "suffix": " of every standoff scheme.\nSelec"
+        },
+        "blockContext": {
+          "text": "Anchor drift is the classical weakness of every standoff scheme.",
+          "offset": 20,
+          "itemId": "1:138",
+          "stateVector": "AQGGAw=="
         }
       },
       "body": "Plain mid-block anchor.",
@@ -77,6 +101,12 @@
           "exact": "Selector multiplexing",
           "prefix": "kness of every standoff scheme.\n",
           "suffix": " recovers anchors after destruct"
+        },
+        "blockContext": {
+          "text": "Selector multiplexing recovers anchors after destructive edits.",
+          "offset": 0,
+          "itemId": "1:204",
+          "stateVector": "AQGGAw=="
         }
       },
       "body": "Block-head anchor in a block with no other anchor.",
@@ -93,6 +123,12 @@
           "exact": "honest orphan",
           "prefix": "ong resolution is worse than an ",
           "suffix": " record.\nKeeping an honest orpha"
+        },
+        "blockContext": {
+          "text": "Wrong resolution is worse than an honest orphan record.",
+          "offset": 34,
+          "itemId": "1:269",
+          "stateVector": "AQGGAw=="
         }
       },
       "body": "Adversarial anchor: the exact quote occurs twice in the document, so quote recovery must be disambiguated by prefix/suffix or refused.",

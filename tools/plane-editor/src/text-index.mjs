@@ -8,24 +8,43 @@
 
 export const BLOCK_SEPARATOR = '\n'
 
+/**
+ * `parts` maps text runs, `blocks` maps textblocks. The block span is what the
+ * block-identity selector needs: "which textblock does this offset live in, and
+ * what did that whole block say?" (see `src/blocks.mjs`).
+ */
 export function buildTextIndex(doc) {
   const parts = []
+  const blocks = []
   let text = ''
 
   doc.descendants((node, pos) => {
     if (node.isTextblock) {
       if (text.length > 0) text += BLOCK_SEPARATOR
+      blocks.push({
+        node,
+        pmFrom: pos,
+        pmInnerFrom: pos + 1,
+        textFrom: text.length,
+        textTo: text.length,
+        text: '',
+      })
       return true
     }
     if (node.isText) {
       parts.push({ pmFrom: pos, textFrom: text.length, len: node.text.length })
       text += node.text
+      const block = blocks[blocks.length - 1]
+      if (block) {
+        block.text += node.text
+        block.textTo = text.length
+      }
       return false
     }
     return true
   })
 
-  return { text, parts }
+  return { text, parts, blocks }
 }
 
 /** ProseMirror position -> character offset (clamped to the nearest text run). */

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "b1",
+    "quote": "disputed clause",
+    "occurrence": 0,
+    "replacement": "a redacted passage.",
+    "body": "Identical-context twin: the very same sentence occurs again later.",
+    "note": "worst case for quote recovery - prefix and suffix both match the twin"
+  },
+  {
+    "id": "b2",
+    "quote": "honest orphan",
+    "occurrence": 0,
+    "replacement": "a blunt paraphrase.",
+    "body": "Distinct-context twin: the quote survives in a different sentence.",
+    "note": "the surviving affixes (an / record) are ordinary language, not identity evidence"
+  },
+  {
+    "id": "b3",
+    "quote": "Alpha beta",
+    "occurrence": 0,
+    "replacement": "Amazing unrelated content here",
+    "body": "Block-head anchor with a unique quote.",
+    "note": "replacement shares exactly one leading character with the quote"
+  },
+  {
+    "id": "b4",
+    "quote": "Critical failure",
+    "occurrence": 0,
+    "replacement": "Cure",
+    "body": "Block-head anchor replaced by a much shorter unrelated word.",
+    "note": "replacement shares one leading and one trailing character"
+  },
+  {
+    "id": "b5",
+    "quote": "standoff model",
+    "occurrence": 0,
+    "replacement": "a different framing.",
+    "body": "One-sided twin: another block repeats the quote with the same following words.",
+    "note": "the suffix agreement alone would satisfy the relaxed one-affix rule"
+  },
+  {
+    "id": "b6",
+    "quote": "final verdict",
+    "occurrence": 0,
+    "replacement": "finally something unrelated",
+    "body": "Mid-block anchor with a unique quote.",
+    "note": "replacement shares a five-character prefix with the quote"
+  }
+]

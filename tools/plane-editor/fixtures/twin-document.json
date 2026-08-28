@@ -1,0 +1,50 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 1 },
+      "content": [{ "type": "text", "text": "Twin fixture for destructive edits" }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "The ledger records a disputed clause and then stops." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "A neutral middle block of filler text." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "The ledger records a disputed clause and then stops." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Wrong resolution is worse than an honest orphan record." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Keeping an honest orphan record beats a silent mis-attachment." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Alpha beta gamma delta epsilon zeta eta theta." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Critical failure of the anchor engine hides in plain sight." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "The standoff model keeps annotations outside the document body." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "Any standoff model keeps its promises only when tested." }]
+    },
+    {
+      "type": "paragraph",
+      "content": [{ "type": "text", "text": "The reviewer wrote the final verdict into the shared log." }]
+    }
+  ]
+}

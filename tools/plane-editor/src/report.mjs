@@ -20,11 +20,13 @@ function table(header, rows) {
   return lines.join('\n')
 }
 
-function laneMatrix(result, lane) {
-  const anchorIds = result.fixture.anchorIds
+function laneMatrix(result, lane, fixtureId) {
+  const fixture = result.fixtures.find((item) => item.id === fixtureId)
+  const anchorIds = fixture.anchorIds
+  const scenarios = result.scenarios.filter((scenario) => scenario.fixtureId === fixtureId)
   return table(
     ['id', '시나리오', '기대', ...anchorIds, '앵커수', '생존', '복구', '드리프트', 'orphan', '오해소', '판정'],
-    result.scenarios.map((scenario) => {
+    scenarios.map((scenario) => {
       const byAnchor = new Map(scenario.trials.map((trial) => [trial.anchorId, trial]))
       const cells = anchorIds.map((id) => {
         const trial = byAnchor.get(id)
@@ -55,13 +57,13 @@ function laneMatrix(result, lane) {
 const LANE_MEANING = {
   live: {
     survived: 'Decoration이 편집을 따라 재정렬되어 기대 텍스트를 덮음',
-    recovered: '해당 없음 — live 레인에는 quote 복구 단계가 없다',
+    recovered: '해당 없음 — live 레인에는 복구 단계가 없다',
     orphaned: 'Decoration이 사라짐 — 평면이 명시적으로 orphan으로 표기',
   },
   pipeline: {
-    survived: '주앵커 RelativePosition만으로 기대 텍스트 해소',
-    recovered: '주앵커 실패 후 TextQuoteSelector로 기대 텍스트 해소',
-    orphaned: '두 selector 모두 실패(또는 tombstone 증언) — 명시적으로 orphaned 표기',
+    survived: '주앵커 RelativePosition + guard 통과로 기대 텍스트 해소',
+    recovered: '주앵커 실패 후 블록 정체성(moved-block)으로 기대 텍스트 해소',
+    orphaned: '복구 조건 미충족(삭제 증거 포함) — 명시적으로 orphaned 표기',
   },
 }
 LANE_MEANING.stale = LANE_MEANING.pipeline
@@ -108,9 +110,26 @@ export function renderReport(result) {
   )
   out.push('')
   out.push(
-    `문서 fixture = 블록 ${result.fixture.blocks}개 / 문자 ${result.fixture.docChars}자, ` +
-      `앵커 ${result.fixture.anchors}개(${result.fixture.anchorIds.join(', ')}), 시나리오 ${result.scenarios.length}종, ` +
-      `시나리오당 앵커 1개씩 독립 시행 → 총 ${result.totals.pipeline.trials}시행.`,
+    `시나리오 ${result.scenarios.length}종, 시나리오당 앵커 1개씩 독립 시행 → 총 ${result.totals.pipeline.trials}시행. ` +
+      '문서 fixture는 2종이다.',
+  )
+  out.push('')
+  out.push(
+    '> **오해소(mis-resolution) 수치의 범위**: 이 리포트의 "오해소 0"은 **아래에 열거된 시나리오·레인·시행 안에서만** ' +
+      '측정된 값이다. 스위트 밖 편집 모양까지 보장한다는 뜻이 아니다 (§4 주장 범위 참조).',
+  )
+  out.push('')
+  out.push(
+    table(
+      ['fixture', '쓰임', '블록', '문자', '앵커'],
+      result.fixtures.map((fixture) => [
+        `\`${fixture.id}\``,
+        fixture.title,
+        String(fixture.blocks),
+        String(fixture.docChars),
+        `${fixture.anchors} (${fixture.anchorIds.join(', ')})`,
+      ]),
+    ),
   )
   out.push('')
 
@@ -168,6 +187,13 @@ export function renderReport(result) {
           yesNo(result.gates.G3.pass),
           `동일 프로세스 내 ${result.gates.G3.repeats}회 반복 digest 일치=${result.gates.G3.deterministic}, payload sha256=\`${result.gates.G3.payloadSha256.slice(0, 16)}…\``,
         ],
+        [
+          'C1',
+          `S9·S10 전 레인 오해소 0 (합산 ${result.gates.C1.minTrials}시행 이상)`,
+          yesNo(result.gates.C1.pass),
+          `S9(블록 통째 삭제)+S10(제자리 교체) ${result.gates.C1.trials}시행 — 전 레인 orphaned ${result.gates.C1.orphanedAllLanes}, ` +
+            `오해소 ${result.gates.C1.wrongAllLanes}. Phase 1 규칙이었다면 이 범위에서만 오해소 ${result.gates.C1.blockedMisResolutions.phase1}건`,
+        ],
         ['G4', '기존 게이트 3종 회귀', result.gates.G4.status, result.gates.G4.note],
         [
           'G5',
@@ -195,18 +221,21 @@ export function renderReport(result) {
       '`O`=orphaned, `X`=오해소. 굵은 글자는 기대 불일치 셀이다 (S5는 `O`가 정답).',
   )
   out.push('')
-  out.push('### 2.1 pipeline 레인 (게이트 기준)')
-  out.push('')
-  out.push(laneMatrix(result, 'pipeline'))
-  out.push('')
-  out.push('### 2.2 stale 레인 (최악 경로)')
-  out.push('')
-  out.push(laneMatrix(result, 'stale'))
-  out.push('')
-  out.push('### 2.3 live 레인 (세션 안 Decoration)')
-  out.push('')
-  out.push(laneMatrix(result, 'live'))
-  out.push('')
+  const laneSections = [
+    ['pipeline', 'pipeline 레인 (게이트 기준)'],
+    ['stale', 'stale 레인 (최악 경로)'],
+    ['live', 'live 레인 (세션 안 Decoration)'],
+  ]
+  laneSections.forEach(([lane, title], laneIndex) => {
+    out.push(`### 2.${laneIndex + 1} ${title}`)
+    out.push('')
+    result.fixtures.forEach((fixture, fixtureIndex) => {
+      out.push(`#### 2.${laneIndex + 1}.${fixtureIndex + 1} fixture \`${fixture.id}\` — ${fixture.title}`)
+      out.push('')
+      out.push(laneMatrix(result, lane, fixture.id))
+      out.push('')
+    })
+  })
 
   /* ---- four-way totals ---- */
   out.push('## 3. 4분류 총계')
@@ -231,39 +260,88 @@ export function renderReport(result) {
   out.push('')
 
   /* ---- policy effects ---- */
-  out.push('## 4. 해소 정책의 효과 (오해소 0을 만든 규칙)')
+  const policy = result.policy
+  const reasonCount = (prefix) =>
+    Object.entries(policy.orphanReasons)
+      .filter(([reason]) => reason.startsWith(prefix))
+      .reduce((total, [, count]) => total + count, 0)
+
+  out.push('## 4. 해소 정책의 효과 (측정된 시나리오 범위 안에서 오해소 0을 만든 규칙)')
+  out.push('')
+  out.push(
+    `**주장 범위**: 아래 "오해소 0"은 이 스위트가 실제로 돌린 시나리오 ${result.scenarios.length}종 ` +
+      `(${result.scenarios.map((scenario) => scenario.id).join(', ')}) × 레인 3종 × ` +
+      `${result.totals.pipeline.trials}시행 **안에서만** 참이다. 측정하지 않은 편집 모양에 대한 무한정 주장이 아니다 ` +
+      '— 실제로 Phase 1의 "오해소 0"도 S1–S8 밖에서 두 종류가 재현되어(vnv 판정 note 3·4) ' +
+      'S9·S10으로 스위트에 편입됐다. 같은 방식으로 스위트 밖 편집은 여전히 미측정이다 ' +
+      '(아래 "측정하지 않은 것" 절에 무엇이 빠져 있는지 열거한다).',
+  )
   out.push('')
   out.push(
     table(
-      ['규칙', '발동', '없었다면'],
+      ['규칙', '발동', '없었다면 (반사실)'],
       [
         [
-          'tombstone evidence — RelativePosition이 collapsed면 quote 복구를 돌리지 않고 orphan 확정',
-          `${result.policy.tombstoneSkips}건`,
-          `오해소 ${result.policy.counterfactualMisResolves}건 (naive fallback 반사실 측정)`,
+          'A. 구조적 affix guard — 해소 텍스트가 exact의 앞·뒤 조각으로 설명되고(head+tail ≥ min 길이), ' +
+            '캡처 때부터 있던 문자가 하나라도 남아야 채택',
+          `거절 ${policy.guardRejections}건 (Phase 1 guard였다면 통과했을 시행)`,
+          '해당 시행이 전부 무관한 텍스트에 부착 = 오해소',
         ],
         [
-          'quote 채택 = 양쪽 affix 일치, 단 exact가 문서에 유일하면 한쪽 affix 허용',
-          `${result.policy.quoteUniqueOneAffix}건이 유일-한쪽 규칙으로 복구`,
-          '해당 앵커들은 전부 orphan (복구율 하락, 오해소는 불변)',
+          'B. 삭제 증거 — collapsed(문자 삭제 증언) / 자리는 살아 있는데 내용이 바뀜(제자리 교체)이면 복구를 돌리지 않는다',
+          `orphan 확정 ${reasonCount('collapsed') + reasonCount('content-replaced')}건 ` +
+            `(collapsed ${reasonCount('collapsed')}, 제자리 교체 ${reasonCount('content-replaced')})`,
+          '같은 문자열의 다른 출현으로 복구가 흘러가 오해소',
+        ],
+        [
+          'C. 블록 정체성 — 블록이 통째로 사라졌을 때, 같은 텍스트이면서 **캡처 이후 새로 생긴** 블록이 ' +
+            '유일할 때만 복구 (이동 O / 삭제 X)',
+          `복구 ${policy.movedBlockRecoveries}건 · 거절 ${reasonCount('block-gone')}건`,
+          '이동은 복구되지만 삭제도 같이 복구되어 살아남은 남의 문장에 부착',
         ],
       ],
     ),
   )
   out.push('')
-  if (result.policy.counterfactualTrials.length > 0) {
-    out.push('naive fallback이 잘못 붙였을 자리:')
+  out.push(
+    table(
+      ['대조 정책', '뜻', '이 스위트에서 냈을 오해소'],
+      [
+        ['phase1', 'Phase 1에서 실제로 돌던 규칙 (겹침 1자 guard + 문서 전역 quote 복구)', `${policy.blockedMisResolutions.phase1}건`],
+        ['naive', 'phase1에서 tombstone 규칙까지 뺀 것', `${policy.blockedMisResolutions.naive}건`],
+        ['strict (현행)', '위 A·B·C', `${result.totals.pipeline.wrong + result.totals.stale.wrong + result.totals.live.wrong}건 (전 레인 실측)`],
+      ],
+    ),
+  )
+  out.push('')
+  if (policy.blockedTrials.length > 0) {
+    const grouped = new Map()
+    for (const row of policy.blockedTrials) {
+      const key = [row.scenario, row.anchorId, row.policy].join('|')
+      const entry = grouped.get(key)
+      if (entry) entry.lanes.push(row.lane)
+      else grouped.set(key, { ...row, lanes: [row.lane] })
+    }
+    out.push('막힌 자리 — 더 약한 정책이었다면 **어디에** 붙었을지 (반사실 계측, 레인별로 셈):')
     out.push('')
     out.push(
       table(
-        ['시나리오', '앵커', '레인', '붙었을 텍스트'],
-        result.policy.counterfactualTrials.map((row) => [
+        ['시나리오', '앵커', '대조 정책', '레인', '경로', '붙었을 텍스트', '현행 결과'],
+        [...grouped.values()].map((row) => [
           row.scenario,
           row.anchorId,
-          row.lane,
+          row.policy,
+          row.lanes.join('+'),
+          row.via,
           `\`${row.wouldAttachTo}\``,
+          row.strictOutcome,
         ]),
       ),
+    )
+    out.push('')
+  } else {
+    out.push(
+      '**주의**: 반사실 계측에서 막힌 오해소가 0건이다 = 강화 규칙이 이 스위트에서 아무것도 막지 못했다(vacuous).',
     )
     out.push('')
   }
@@ -332,6 +410,48 @@ export function renderReport(result) {
   out.push(`## ${section}. 관측 (수치에서 바로 도출)`)
   out.push('')
   for (const finding of result.findings) out.push(`- ${finding}`)
+  out.push('')
+  section += 1
+
+  /* ---- explicit scope of what was NOT measured ---- */
+  out.push(`## ${section}. 측정하지 않은 것 (잔여 위험)`)
+  out.push('')
+  out.push(
+    '"오해소 0"이 어디까지의 주장인지 못 박아 두는 절이다. 아래 항목은 이 스위트가 **한 번도 누르지 않은** ' +
+      '경로이므로, 여기서 새 오해소가 나올 수 있다 (Phase 1의 S9·S10이 정확히 그렇게 발견됐다).',
+  )
+  out.push('')
+  out.push(
+    table(
+      ['미측정 항목', '왜 위험한가'],
+      [
+        [
+          `문서 규모 — fixture는 ${result.fixtures.map((fixture) => `${fixture.id} ${fixture.blocks}블록/${fixture.docChars}자`).join(', ')}, 앵커는 시나리오당 ${result.fixtures[0].anchors}개`,
+          '대형 문서·수백 앵커에서의 후보 충돌률과 성능은 미측정',
+        ],
+        [
+          '블록 종류 — fixture는 heading·paragraph만 쓴다',
+          '표·중첩 리스트·코드블록 안의 앵커, 블록 타입 변경(paragraph -> heading)은 미측정',
+        ],
+        [
+          '복합 편집 — "블록을 고친 뒤 이동", "여러 블록 동시 삭제", 앵커 범위를 가로지르는 동시 편집',
+          '블록 정체성 복구는 블록 텍스트가 **완전히 같을 때만** 걸리므로, 고쳐서 옮기면 orphan이 된다(안전하지만 복구율 하락). 그 경계는 미측정',
+        ],
+        [
+          '문서 재임포트 — 같은 텍스트를 새 Y.Doc으로 다시 만들어 붙이는 경로',
+          '캡처 시점 state vector 기준으로는 모든 블록이 "새 내용"이 되므로, 블록 텍스트가 유일하면 복구가 걸린다. 이 경로의 오부착 위험은 미측정',
+        ],
+        [
+          '앵커가 블록 경계를 걸치는 경우 (blockContext 없음)',
+          '이 경우 이동 복구를 아예 시도하지 않는다(=orphan). 안전한 방향이지만 복구율 손실은 미측정',
+        ],
+        [
+          '경계 흡수 — 앵커 끝에 붙여 쓴 긴 삽입',
+          `D1이 보였듯 RelativePosition은 끝 경계 삽입을 범위 안으로 흡수한다. 흡수량 상한이 없으므로 앵커가 크게 늘어날 수 있다(오부착은 아니나 범위 오염)`,
+        ],
+      ],
+    ),
+  )
   out.push('')
   section += 1
 

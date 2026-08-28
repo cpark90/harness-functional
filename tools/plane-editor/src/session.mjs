@@ -18,12 +18,34 @@ import { captureAnchors } from './anchors.mjs'
 
 export const FRAGMENT_NAME = 'prosemirror'
 
-export const FIXTURE_DOC = JSON.parse(
-  readFileSync(new URL('../fixtures/document.json', import.meta.url), 'utf8'),
-)
-export const FIXTURE_ANCHORS = JSON.parse(
-  readFileSync(new URL('../fixtures/anchors.json', import.meta.url), 'utf8'),
-)
+const readFixture = (name) =>
+  JSON.parse(readFileSync(new URL(`../fixtures/${name}`, import.meta.url), 'utf8'))
+
+export const FIXTURE_DOC = readFixture('document.json')
+export const FIXTURE_ANCHORS = readFixture('anchors.json')
+
+/**
+ * fixture 2종.
+ *   main — 편집 생존 시나리오 S1–S8용 (앵커 a6은 같은 문자열이 두 번 나오는 함정)
+ *   twin — 파괴적 편집 S9·S10용. 앵커마다 "살아남는 쌍둥이"를 다르게 배치해
+ *          (동일 문맥 / 다른 문맥 / 한쪽 affix만 맞는 문맥 / 쌍둥이 없음)
+ *          오해소가 날 수 있는 경로를 전부 한 번씩 누른다.
+ */
+export const MAIN_FIXTURE = Object.freeze({
+  id: 'main',
+  title: '편집 생존 fixture',
+  doc: FIXTURE_DOC,
+  anchors: FIXTURE_ANCHORS,
+})
+
+export const TWIN_FIXTURE = Object.freeze({
+  id: 'twin',
+  title: '쌍둥이 문장 fixture (파괴적 편집용)',
+  doc: readFixture('twin-document.json'),
+  anchors: readFixture('twin-anchors.json'),
+})
+
+export const FIXTURES = Object.freeze([MAIN_FIXTURE, TWIN_FIXTURE])
 
 const schema = buildSchema()
 
