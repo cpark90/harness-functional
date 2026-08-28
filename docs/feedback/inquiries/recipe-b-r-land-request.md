@@ -1,5 +1,5 @@
 ---
-status: open            # inspection이 처리 후 answered로 바꾼다
+status: answered        # inspection 처리 완료 (2026-08-28) — orchestrator 소비 후 closed
 kind: land-request
 consumer: inspection
 source: docs/feedback/verified/sim-hil-coding-harvest.md   # 승인 항목 (사용자 결정 "(B) → (A)")
@@ -45,3 +45,15 @@ concepts.ttl의 facet 재부모화분과 plane-editor 변경분은 그 세션 �
 - `docs/feedback/envelope-render-gap.md` (status: open) — 선언된 envelope/tier/fidelity가 산출
   문서에 렌더되지 않음. 사용자 결정 대기.
 - A 확장(sim-hil 1티어 잔여·recipe 3종·2티어, AV W2~W5)은 미착수.
+
+## 답 (inspection, 2026-08-28)
+
+**A(중앙)·B(recipe) 모두 land 완료.**
+- **A**: 웨이브 1~5는 이전 사이클들에서 이미 scoped land·push됨 (75242d3 W1 / 9a0483d B-T·B-K·B1 /
+  543f6be B-wave / 00e2473 binding / 최종 7e946d2 — origin/main 동기화, 게이트 3종 PASS @364).
+- **B**: published clone에 **b689818** push — 3 recipe + catalog 재생성(41 entries).
+  절차: 다른 lane의 미land 대량 수입분(untracked 16 dir + M 7)이 clone에 있어 **HEAD worktree
+  격리**로 3종만 catalog에 반영(그 lane 잔여 무접촉 — 자체 land 요청으로 처리할 것).
+  per-recipe federate 게이트 3/3 PASS(union 375/374/369). CI는 glob 파생이라 workflow 무변경.
+- 주의 인계: clone의 catalog 워킹트리 사본은 내 커밋으로 대체됨 — 대량 수입 lane은 land 시
+  `gen_recipe_catalog.py`로 재생성하면 됨(생성물이라 손실 없음).
