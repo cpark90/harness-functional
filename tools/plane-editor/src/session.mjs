@@ -45,7 +45,47 @@ export const TWIN_FIXTURE = Object.freeze({
   anchors: readFixture('twin-anchors.json'),
 })
 
-export const FIXTURES = Object.freeze([MAIN_FIXTURE, TWIN_FIXTURE])
+const blockText = (block) => (block.content ?? []).map((node) => node.text ?? '').join('')
+
+/**
+ * 앵커가 든 블록마다 **완전히 같은 텍스트의 쌍둥이 블록**이 하나씩 있는 문서를 만든다.
+ * 이미 쌍둥이가 있는 블록은 건드리지 않고, 없는 블록만 복제해 문서 끝에 덧붙인다.
+ */
+function withTwinForEveryAnchor(doc, anchors) {
+  const content = doc.content.map((block) => structuredClone(block))
+  const duplicate = []
+  for (const anchor of anchors) {
+    const index = content.findIndex((block) => blockText(block).includes(anchor.quote))
+    if (index === -1) throw new Error(`s11 fixture: no block carries the quote ${anchor.quote}`)
+    const text = blockText(content[index])
+    const existingTwins = content.filter((block) => blockText(block) === text).length
+    if (existingTwins > 1 || duplicate.includes(index)) continue
+    duplicate.push(index)
+  }
+  return {
+    ...doc,
+    content: [...content, ...duplicate.map((index) => structuredClone(content[index]))],
+  }
+}
+
+/**
+ * S11 fixture — "앵커 블록이 사라진 **뒤** 같은 텍스트의 블록이 새로 나타난다" 계열
+ * (쌍둥이 이동 / 삭제 후 재타이핑 / 원격 피어 작성)을 재기 위한 문서.
+ *
+ * 이 계열을 앵커 6개 전부에서 누르려면 앵커마다 쌍둥이 블록이 하나씩 필요한데, twin
+ * fixture는 b1의 블록에만 쌍둥이가 있다. 그래서 twin 문서에서 **쌍둥이가 없는 앵커
+ * 블록만 복제**해 덧붙인 문서를 파생시킨다 (fixture 파일을 늘리지 않는 결정론적 파생).
+ * 앵커 정의는 twin fixture와 같은 것을 쓰되 id만 `c*`로 바꿔, 리포트 표에서 twin 쪽
+ * 시행(`b*`)과 섞이지 않게 한다.
+ */
+export const S11_FIXTURE = Object.freeze({
+  id: 's11',
+  title: '앵커마다 쌍둥이 블록이 있는 fixture (블록 사라짐 계열)',
+  doc: withTwinForEveryAnchor(TWIN_FIXTURE.doc, TWIN_FIXTURE.anchors),
+  anchors: TWIN_FIXTURE.anchors.map((anchor) => ({ ...anchor, id: anchor.id.replace(/^b/, 'c') })),
+})
+
+export const FIXTURES = Object.freeze([MAIN_FIXTURE, TWIN_FIXTURE, S11_FIXTURE])
 
 const schema = buildSchema()
 

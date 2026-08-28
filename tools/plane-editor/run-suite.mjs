@@ -38,6 +38,9 @@ import {
   runScenario,
   runBoundaryDiagnostic,
   runDeletionAlignmentDiagnostic,
+  runDocumentReimportDiagnostic,
+  runLegacyStoreDiagnostic,
+  runMoveIdentityDiagnostic,
   scenarioFixture,
 } from './src/scenarios.mjs'
 import { checkLanguagePolicy } from './src/language.mjs'
@@ -50,7 +53,13 @@ const GATING_SURVIVAL = ['S1', 'S2', 'S3', 'S4', 'S8']
 /** C1 = 스위트 밖에서 실측된 오해소 2종을 정식 시나리오로 들여온 것 (전 레인 오해소 0). */
 const ADVERSARIAL = ['S9', 'S10']
 const C1_MIN_TRIALS = 12
-const COUNTERFACTUAL_POLICIES = ['phase1', 'naive']
+/**
+ * C1b = vnv 적대 프로브가 그 다음에 CONFIRMED한 오해소 4종(N1/N1b·N3·N4·N8)을 들여온 것.
+ * 넷 다 "블록이 사라진 뒤 같은 텍스트 블록이 새로 나타난다"는 한 뿌리에서 나온다.
+ */
+const IDENTITY_ADVERSARIAL = ['S11a', 'S11b', 'S11c', 'S11d', 'S11e']
+const C1B_MIN_TRIALS_PER_SCENARIO = 2
+const COUNTERFACTUAL_POLICIES = ['textmove', 'phase1', 'naive']
 const LANES = ['live', 'pipeline', 'stale']
 const OUTCOMES = ['survived', 'recovered', 'drifted', 'orphaned', 'wrong']
 const DETERMINISM_REPEATS = 2
@@ -160,10 +169,14 @@ function addTotals(accumulator, totals) {
  *   orphanReasons  : orphan 확정 사유별 건수 (규칙이 어디서 걸었는지)
  *   guardRejections: 구조적 guard는 거절했는데 Phase 1 guard는 통과시켰을 건수
  *   blocked        : 더 약한 정책이었다면 **오해소가 났을** 건수 (반사실)
+ *   forgone        : 그 정책이었다면 **살렸을** 복구 건수 = 안전을 택한 대가(recall 손실)
  * blocked가 0이면 강화가 아무것도 막지 못한 것(vacuous)이므로 리포트에 그대로 드러난다.
+ * forgone은 그 반대 방향의 정직성 장치다 — 대가를 적지 않으면 "안전"만 자랑하게 된다.
  */
 function policyCounts(scenarios) {
   const blocked = Object.fromEntries(COUNTERFACTUAL_POLICIES.map((id) => [id, 0]))
+  const forgone = Object.fromEntries(COUNTERFACTUAL_POLICIES.map((id) => [id, 0]))
+  const forgoneTrials = []
   const blockedTrials = []
   const methods = {}
   const orphanReasons = {}
@@ -176,7 +189,7 @@ function policyCounts(scenarios) {
         const result = trial.lanes[lane]
         if (!result.measured) continue
         methods[result.method] = (methods[result.method] ?? 0) + 1
-        if (result.method === 'moved-block') movedBlockRecoveries += 1
+        if (result.method === 'block-identity') movedBlockRecoveries += 1
         if (result.method === 'orphaned' && result.reason) {
           orphanReasons[result.reason] = (orphanReasons[result.reason] ?? 0) + 1
         }
@@ -187,22 +200,47 @@ function policyCounts(scenarios) {
         }
         for (const id of COUNTERFACTUAL_POLICIES) {
           const alternative = counterfactual[id]
-          if (!alternative || !alternative.wouldMisResolve || result.outcome === 'wrong') continue
-          blocked[id] += 1
-          blockedTrials.push({
-            scenario: scenario.id,
-            anchorId: trial.anchorId,
-            lane,
-            policy: id,
-            strictOutcome: result.outcome,
-            wouldAttachTo: alternative.text,
-            via: alternative.method,
-          })
+          if (!alternative) continue
+          if (alternative.wouldMisResolve && result.outcome !== 'wrong') {
+            blocked[id] += 1
+            blockedTrials.push({
+              scenario: scenario.id,
+              anchorId: trial.anchorId,
+              lane,
+              policy: id,
+              strictOutcome: result.outcome,
+              wouldAttachTo: alternative.text,
+              via: alternative.method,
+            })
+          }
+          const wouldResolveAsExpected =
+            alternative.outcome === 'recovered' || alternative.outcome === 'survived'
+          if (result.outcome === 'orphaned' && wouldResolveAsExpected) {
+            forgone[id] += 1
+            forgoneTrials.push({
+              scenario: scenario.id,
+              anchorId: trial.anchorId,
+              lane,
+              policy: id,
+              wouldRecover: alternative.text,
+              via: alternative.method,
+              strictReason: result.reason,
+            })
+          }
         }
       }
     }
   }
-  return { blocked, blockedTrials, methods, orphanReasons, guardRejections, movedBlockRecoveries }
+  return {
+    blocked,
+    blockedTrials,
+    forgone,
+    forgoneTrials,
+    methods,
+    orphanReasons,
+    guardRejections,
+    movedBlockRecoveries,
+  }
 }
 
 function bystanderCounts(scenarios) {
@@ -240,7 +278,13 @@ function measure() {
   return {
     schema: purity,
     scenarios,
-    diagnostics: [runBoundaryDiagnostic(), runDeletionAlignmentDiagnostic()],
+    diagnostics: [
+      runBoundaryDiagnostic(),
+      runDeletionAlignmentDiagnostic(),
+      runMoveIdentityDiagnostic(),
+      runLegacyStoreDiagnostic(),
+      runDocumentReimportDiagnostic(),
+    ],
   }
 }
 
@@ -302,12 +346,15 @@ function deriveFindings(result) {
   )
 
   const s6 = byId.get('S6')
+  const identity = result.diagnostics.find((diagnostic) => diagnostic.id === 'D3')
   findings.push(
     `S6(블록 cut+paste) ${s6.lanes.stale.measured}건: 주앵커 생존 ${s6.lanes.stale.survived}, 복구 ${s6.lanes.stale.recovered}, ` +
       `orphan ${s6.lanes.stale.orphaned}, 오해소 ${s6.lanes.stale.wrong}. live 레인은 생존 ${s6.lanes.live.survived}/${s6.lanes.live.measured} ` +
       '— PM이 블록을 지웠다 새로 넣으면 Decoration은 전부 사라지고 Yjs RelativePosition도 null을 돌려준다. ' +
-      '복구는 블록 정체성(같은 텍스트 + 캡처 이후 새로 생긴 블록 + 유일)으로만 하며, 같은 조건이 ' +
-      'S9(블록 삭제)에서는 성립하지 않는다 — 이동과 삭제를 가르는 지점이 정확히 이것이다.',
+      `이때 블록 item 정체성은 **파괴**되고(D3: 이동과 재타이핑의 Yjs 업데이트가 byte 동일=${!identity.moveIsDistinguishable}), ` +
+      '남는 단서는 "같은 텍스트 블록이 새로 생겼다"뿐인데 그것은 재타이핑·쌍둥이 이동·원격 작성과 구별되지 않는다. ' +
+      `그래서 strict 정책은 여기서 복구하지 않는다 — 대조 정책 textmove였다면 살렸을 복구가 스위트 전체에서 ` +
+      `${result.policy.forgoneRecoveries.textmove}건이고, 그 대가로 오해소가 ${result.policy.blockedMisResolutions.textmove}건 났다.`,
   )
 
   const s7 = byId.get('S7')
@@ -328,12 +375,22 @@ function deriveFindings(result) {
       '두 시나리오는 vnv가 스위트 밖에서 재현한 실패를 그대로 시나리오화한 것이다.',
   )
 
+  const c1b = result.gates.C1b
+  const legacy = result.diagnostics.find((diagnostic) => diagnostic.id === 'D4')
+  findings.push(
+    `S11(블록이 사라진 뒤 같은 텍스트 블록이 새로 나타남) ${c1b.trials}시행 — 전 레인 orphaned ${c1b.orphanedAllLanes}, ` +
+      `오해소 ${c1b.wrongAllLanes}. 같은 범위에서 대조 정책이었다면 오해소는 textmove ${c1b.blockedMisResolutions.textmove}건, ` +
+      `phase1 ${c1b.blockedMisResolutions.phase1}건, naive ${c1b.blockedMisResolutions.naive}건이다. ` +
+      `S11e(v1 레코드)는 저장 버전 ${legacy.currentVersion} 엔진이 옛 파일을 읽었을 때의 경로이며, D4가 실제 파일로 확인한다 ` +
+      `(로드됨=${legacy.recordsLoaded}건, 출처 미상 표시=${legacy.markedLegacy}, 해소=${legacy.method}).`,
+  )
+
   const reasons = Object.entries(result.policy.orphanReasons)
     .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
     .map(([reason, count]) => `${reason} ${count}`)
   findings.push(
     `복구 경로: 주앵커 채택 ${result.policy.resolutionMethods['relative-position'] ?? 0}건, ` +
-      `이동 블록 복구(moved-block) ${result.policy.movedBlockRecoveries}건, orphan ${result.policy.resolutionMethods.orphaned ?? 0}건. ` +
+      `블록 정체성 복구(block-identity) ${result.policy.movedBlockRecoveries}건, orphan ${result.policy.resolutionMethods.orphaned ?? 0}건. ` +
       `orphan 사유 내역: ${reasons.join(' / ')}. ` +
       `구조적 affix guard가 거절했는데 Phase 1 guard였다면 통과했을 시행 ${result.policy.guardRejections}건.`,
   )
@@ -436,22 +493,30 @@ const s5Pipeline = payload.scenarios.find((scenario) => scenario.id === 'S5').la
 const s5Stale = payload.scenarios.find((scenario) => scenario.id === 'S5').lanes.stale
 const wrongTotal = totals.pipeline.wrong + totals.stale.wrong + totals.live.wrong
 
-const adversarial = {
-  scenarios: ADVERSARIAL,
-  live: gateSlice(payload.scenarios, 'live', ADVERSARIAL),
-  pipeline: gateSlice(payload.scenarios, 'pipeline', ADVERSARIAL),
-  stale: gateSlice(payload.scenarios, 'stale', ADVERSARIAL),
+function adversarialSlice(ids) {
+  const slice = {
+    scenarios: ids,
+    live: gateSlice(payload.scenarios, 'live', ids),
+    pipeline: gateSlice(payload.scenarios, 'pipeline', ids),
+    stale: gateSlice(payload.scenarios, 'stale', ids),
+  }
+  slice.trials = slice.pipeline.trials
+  slice.wrongAllLanes = slice.live.wrong + slice.pipeline.wrong + slice.stale.wrong
+  slice.orphanedAllLanes = slice.live.orphaned + slice.pipeline.orphaned + slice.stale.orphaned
+  slice.trialsPerScenario = Object.fromEntries(
+    ids.map((id) => [id, payload.scenarios.find((scenario) => scenario.id === id).trials.length]),
+  )
+  slice.blockedMisResolutions = Object.fromEntries(
+    COUNTERFACTUAL_POLICIES.map((cf) => [
+      cf,
+      policy.blockedTrials.filter((row) => row.policy === cf && ids.includes(row.scenario)).length,
+    ]),
+  )
+  return slice
 }
-adversarial.trials = adversarial.pipeline.trials
-adversarial.wrongAllLanes = adversarial.live.wrong + adversarial.pipeline.wrong + adversarial.stale.wrong
-adversarial.orphanedAllLanes =
-  adversarial.live.orphaned + adversarial.pipeline.orphaned + adversarial.stale.orphaned
-adversarial.blockedMisResolutions = Object.fromEntries(
-  COUNTERFACTUAL_POLICIES.map((id) => [
-    id,
-    policy.blockedTrials.filter((row) => row.policy === id && ADVERSARIAL.includes(row.scenario)).length,
-  ]),
-)
+
+const adversarial = adversarialSlice(ADVERSARIAL)
+const identityAdversarial = adversarialSlice(IDENTITY_ADVERSARIAL)
 
 const gates = {
   G1: payload.schema.gate,
@@ -489,6 +554,24 @@ const gates = {
     note:
       '스위트 밖에서 실측된 오해소 2종(블록 통째 삭제 / 제자리 텍스트 교체)을 정식 시나리오로 ' +
       '들여온 것이다. 두 시나리오의 기대값은 orphaned이며, 어디든 붙으면 오해소로 집계된다.',
+  },
+  C1b: {
+    pass:
+      identityAdversarial.wrongAllLanes === 0 &&
+      Object.values(identityAdversarial.trialsPerScenario).every(
+        (count) => count >= C1B_MIN_TRIALS_PER_SCENARIO,
+      ) &&
+      identityAdversarial.pipeline.pass === identityAdversarial.pipeline.measured &&
+      identityAdversarial.stale.pass === identityAdversarial.stale.measured &&
+      identityAdversarial.live.pass === identityAdversarial.live.measured,
+    requirement: `S11 전 레인 오해소 0, 시나리오마다 ${C1B_MIN_TRIALS_PER_SCENARIO}시행 이상`,
+    minTrialsPerScenario: C1B_MIN_TRIALS_PER_SCENARIO,
+    ...identityAdversarial,
+    note:
+      'vnv 적대 프로브가 CONFIRMED한 오해소 4종을 정식 시나리오로 들여온 것이다 ' +
+      '(S11a/S11b=쌍둥이 블록 이동 양쪽 순서, S11c=삭제 후 재타이핑, S11d=원격 피어 작성, ' +
+      'S11e=v1 레코드 하위호환). 넷의 뿌리는 하나다: "블록 텍스트가 같고 캡처 이후 생겼다"는 ' +
+      '이동의 증거가 아니다 — D3가 그것을 byte 단위로 보인다.',
   },
   G3: {
     pass: deterministic,
@@ -545,6 +628,8 @@ const result = {
     movedBlockRecoveries: policy.movedBlockRecoveries,
     blockedMisResolutions: policy.blocked,
     blockedTrials: policy.blockedTrials,
+    forgoneRecoveries: policy.forgone,
+    forgoneTrials: policy.forgoneTrials,
   },
   bystanders,
   gates,
@@ -554,7 +639,8 @@ const result = {
 }
 result.findings = deriveFindings(result)
 
-const overallPass = gates.G1.pass && gates.G2.pass && gates.C1.pass && gates.G3.pass && gates.G5.pass
+const overallPass =
+  gates.G1.pass && gates.G2.pass && gates.C1.pass && gates.C1b.pass && gates.G3.pass && gates.G5.pass
 
 writeFileSync(path('schema-dump.json'), `${JSON.stringify(payload.schema.fingerprint, null, 2)}\n`)
 writeFileSync(path('suite-result.json'), `${JSON.stringify(result, null, 2)}\n`)
@@ -570,7 +656,9 @@ const lines = [
   `     stale    S1-S4,S8 : survived ${staleGate.survived}/${staleGate.measured}, drifted ${staleGate.drifted}, orphan ${staleGate.orphaned}, wrong ${staleGate.wrong}`,
   `     S5 orphan/wrong   : pipeline ${s5Pipeline.orphaned}/${s5Pipeline.wrong}, stale ${s5Stale.orphaned}/${s5Stale.wrong}`,
   `  C1 adversarial S9,S10: ${gates.C1.pass ? 'PASS' : 'FAIL'} (trials ${adversarial.trials}, orphan(all lanes) ${adversarial.orphanedAllLanes}, wrong(all lanes) ${adversarial.wrongAllLanes})`,
-  `     blocked mis-resolutions: phase1 policy ${policy.blocked.phase1}, naive policy ${policy.blocked.naive} (counterfactual, whole suite)`,
+  `  C1b block identity S11: ${gates.C1b.pass ? 'PASS' : 'FAIL'} (trials ${identityAdversarial.trials}, orphan(all lanes) ${identityAdversarial.orphanedAllLanes}, wrong(all lanes) ${identityAdversarial.wrongAllLanes})`,
+  `     blocked mis-resolutions: textmove ${policy.blocked.textmove}, phase1 ${policy.blocked.phase1}, naive ${policy.blocked.naive} (counterfactual, whole suite)`,
+  `     recoveries forgone     : textmove ${policy.forgone.textmove} (safety cost — orphan instead of a guessed move)`,
   `  G3 determinism       : ${gates.G3.pass ? 'PASS' : 'FAIL'} (sha256 ${digests[0].slice(0, 16)}…)`,
   '  G4 python gates      : external (run from repo root)',
   `  G5 language policy   : ${gates.G5.pass ? 'PASS' : 'FAIL'} (authored files ${gates.G5.filesScanned}, out-of-policy chars ${gates.G5.violations.length})`,

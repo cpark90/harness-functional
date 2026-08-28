@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "plane": "link",
+  "links": [
+    {
+      "id": "ln-anchor-recovery-tagged-traceability",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-anchor-recovery-crdt-evidence"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-traceability"
+      },
+      "type": "tagged",
+      "evidence": "docs/verify/plane-editor-c1-verify.md",
+      "created_by": "developer dispatch (plane-editor Phase 2)"
+    },
+    {
+      "id": "ln-link-store-derived-from-plane-separation",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-link-store-outside-ontology"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:pat-knowledge-plane-separation"
+      },
+      "type": "derivedFrom",
+      "evidence": "ontology/abox/core/spec/patterns.ttl - 'Planes couple ONLY through a link plane of typed edges'",
+      "created_by": "developer dispatch (plane-editor Phase 2)"
+    },
+    {
+      "id": "ln-link-store-tagged-bounded-context",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-link-store-outside-ontology"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-bounded-context"
+      },
+      "type": "tagged",
+      "evidence": "docs/feedback/plane-editor-and-kg-content-decisions.md decision 2-(a)",
+      "created_by": "developer dispatch (plane-editor Phase 2)"
+    },
+    {
+      "id": "ln-parallel-start-derived-from-plane-separation",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-plane-parallel-start"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:pat-knowledge-plane-separation"
+      },
+      "type": "derivedFrom",
+      "evidence": "docs/feedback/plane-editor-and-kg-content-decisions.md decision 1-(a)",
+      "created_by": "developer dispatch (plane-editor Phase 2)"
+    },
+    {
+      "id": "ln-parallel-start-overlaps-link-store",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-plane-parallel-start"
+      },
+      "to": {
+        "plane": "decision",
+        "ref": "dec-link-store-outside-ontology"
+      },
+      "type": "overlapsWith",
+      "evidence": "both decisions scope the same Phase 2 wave; neither subsumes the other",
+      "created_by": "developer dispatch (plane-editor Phase 2)"
+    }
+  ]
+}

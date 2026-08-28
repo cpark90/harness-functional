@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "plane": "link",
+  "links": [
+    {
+      "id": "ln-fixture-annotation-overlaps-decision",
+      "from": {
+        "plane": "annotation",
+        "ref": "a2"
+      },
+      "to": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format-v2"
+      },
+      "type": "overlapsWith",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    },
+    {
+      "id": "ln-fixture-annotation-tagged-concept",
+      "from": {
+        "plane": "annotation",
+        "ref": "a9-never-captured"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-absent-from-the-graph"
+      },
+      "type": "tagged",
+      "evidence": "fixture: annotation endpoint resolved against annotations.json",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    },
+    {
+      "id": "ln-fixture-decision-derived-from-pattern",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format-v2"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:pat-knowledge-plane-separation"
+      },
+      "type": "derivedFrom",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    },
+    {
+      "id": "ln-fixture-supersedes-store-format",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format-v2"
+      },
+      "to": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format"
+      },
+      "type": "supersedes",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    }
+  ]
+}

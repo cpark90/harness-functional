@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "plane": "decision",
+  "decisions": [
+    {
+      "id": "dec-fixture-store-format",
+      "title": "Fixture decision: keep link records in one flat array",
+      "body": "Fixture record for the checker's positive control. It is superseded by dec-fixture-store-format-v2, which is what makes the supersedes link in this fixture resolvable and its status coherent.",
+      "status": "superseded",
+      "decided_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    },
+    {
+      "id": "dec-fixture-store-format-v2",
+      "title": "Fixture decision: sort link records by id",
+      "body": "Fixture record that supersedes dec-fixture-store-format through a supersedes-typed link, exercising the decision-plane-internal link type on the positive control.",
+      "status": "accepted",
+      "decided_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    }
+  ]
+}

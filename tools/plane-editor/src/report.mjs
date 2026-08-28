@@ -62,8 +62,8 @@ const LANE_MEANING = {
   },
   pipeline: {
     survived: '주앵커 RelativePosition + guard 통과로 기대 텍스트 해소',
-    recovered: '주앵커 실패 후 블록 정체성(moved-block)으로 기대 텍스트 해소',
-    orphaned: '복구 조건 미충족(삭제 증거 포함) — 명시적으로 orphaned 표기',
+    recovered: '주앵커 실패 후 블록 item 정체성(block-identity)으로 기대 텍스트 해소',
+    orphaned: '복구 조건 미충족(삭제 증거·출처 미상 포함) — 명시적으로 orphaned 표기',
   },
 }
 LANE_MEANING.stale = LANE_MEANING.pipeline
@@ -194,6 +194,14 @@ export function renderReport(result) {
           `S9(블록 통째 삭제)+S10(제자리 교체) ${result.gates.C1.trials}시행 — 전 레인 orphaned ${result.gates.C1.orphanedAllLanes}, ` +
             `오해소 ${result.gates.C1.wrongAllLanes}. Phase 1 규칙이었다면 이 범위에서만 오해소 ${result.gates.C1.blockedMisResolutions.phase1}건`,
         ],
+        [
+          'C1b',
+          `S11 전 레인 오해소 0 (시나리오마다 ${result.gates.C1b.minTrialsPerScenario}시행 이상)`,
+          yesNo(result.gates.C1b.pass),
+          `S11a·S11b(쌍둥이 블록 이동)+S11c(재타이핑)+S11d(원격 작성)+S11e(v1 레코드) ${result.gates.C1b.trials}시행 — ` +
+            `전 레인 orphaned ${result.gates.C1b.orphanedAllLanes}, 오해소 ${result.gates.C1b.wrongAllLanes}. ` +
+            `텍스트 동일성으로 이동을 추정하는 정책(textmove)이었다면 이 범위에서만 오해소 ${result.gates.C1b.blockedMisResolutions.textmove}건`,
+        ],
         ['G4', '기존 게이트 3종 회귀', result.gates.G4.status, result.gates.G4.note],
         [
           'G5',
@@ -294,10 +302,10 @@ export function renderReport(result) {
           '같은 문자열의 다른 출현으로 복구가 흘러가 오해소',
         ],
         [
-          'C. 블록 정체성 — 블록이 통째로 사라졌을 때, 같은 텍스트이면서 **캡처 이후 새로 생긴** 블록이 ' +
-            '유일할 때만 복구 (이동 O / 삭제 X)',
+          'C. 블록 item 정체성 — 블록이 통째로 사라졌을 때, 저장된 **item id가 지금도 살아 있는 블록**일 ' +
+            '때만 복구 (텍스트 동일성은 보조 검증)',
           `복구 ${policy.movedBlockRecoveries}건 · 거절 ${reasonCount('block-gone')}건`,
-          '이동은 복구되지만 삭제도 같이 복구되어 살아남은 남의 문장에 부착',
+          '"같은 텍스트 블록이 새로 생겼다"로 복구하게 되어, 재타이핑·쌍둥이 이동·원격 작성이 전부 부착 (D3·S11)',
         ],
       ],
     ),
@@ -305,15 +313,68 @@ export function renderReport(result) {
   out.push('')
   out.push(
     table(
-      ['대조 정책', '뜻', '이 스위트에서 냈을 오해소'],
+      ['대조 정책', '뜻', '이 스위트에서 냈을 오해소', '이 스위트에서 살렸을 복구'],
       [
-        ['phase1', 'Phase 1에서 실제로 돌던 규칙 (겹침 1자 guard + 문서 전역 quote 복구)', `${policy.blockedMisResolutions.phase1}건`],
-        ['naive', 'phase1에서 tombstone 규칙까지 뺀 것', `${policy.blockedMisResolutions.naive}건`],
-        ['strict (현행)', '위 A·B·C', `${result.totals.pipeline.wrong + result.totals.stale.wrong + result.totals.live.wrong}건 (전 레인 실측)`],
+        [
+          'textmove',
+          '블록 **텍스트** 동일성으로 이동을 추정하는 복구 (C1 규칙 + 원격 client 보정)',
+          `${policy.blockedMisResolutions.textmove}건`,
+          `${policy.forgoneRecoveries.textmove}건`,
+        ],
+        [
+          'phase1',
+          'Phase 1에서 실제로 돌던 규칙 (겹침 1자 guard + 문서 전역 quote 복구)',
+          `${policy.blockedMisResolutions.phase1}건`,
+          `${policy.forgoneRecoveries.phase1}건`,
+        ],
+        [
+          'naive',
+          'phase1에서 tombstone 규칙까지 뺀 것',
+          `${policy.blockedMisResolutions.naive}건`,
+          `${policy.forgoneRecoveries.naive}건`,
+        ],
+        [
+          'strict (현행)',
+          '위 A·B·C',
+          `${result.totals.pipeline.wrong + result.totals.stale.wrong + result.totals.live.wrong}건 (전 레인 실측)`,
+          '기준',
+        ],
       ],
     ),
   )
   out.push('')
+  out.push(
+    '오른쪽 열이 **안전을 택한 대가**다. strict가 orphan으로 접은 자리 중 그 정책이었다면 기대 텍스트로 ' +
+      '살아났을 시행 수이며, 0이 아니면 복구율을 실제로 잃고 있다는 뜻이다 (허용되는 손실이지만 숨기지 않는다). ' +
+      'textmove의 두 숫자는 같은 규칙의 양면이다 — 이동을 텍스트로 추정하면 그만큼 살리고 그만큼 오부착한다.',
+  )
+  out.push('')
+  if (policy.forgoneTrials.length > 0) {
+    const grouped = new Map()
+    for (const row of policy.forgoneTrials) {
+      const key = [row.scenario, row.anchorId, row.policy].join('|')
+      const entry = grouped.get(key)
+      if (entry) entry.lanes.push(row.lane)
+      else grouped.set(key, { ...row, lanes: [row.lane] })
+    }
+    out.push('포기한 복구 — 더 약한 정책이었다면 **살렸을** 자리 (반사실 계측):')
+    out.push('')
+    out.push(
+      table(
+        ['시나리오', '앵커', '대조 정책', '레인', '경로', '살렸을 텍스트', 'strict의 orphan 사유'],
+        [...grouped.values()].map((row) => [
+          row.scenario,
+          row.anchorId,
+          row.policy,
+          row.lanes.join('+'),
+          row.via,
+          `\`${row.wouldRecover}\``,
+          `\`${row.strictReason}\``,
+        ]),
+      ),
+    )
+    out.push('')
+  }
   if (policy.blockedTrials.length > 0) {
     const grouped = new Map()
     for (const row of policy.blockedTrials) {
@@ -375,6 +436,61 @@ export function renderReport(result) {
               '항상 우측 결합이라 삽입을 범위 안으로 흡수한다. Phase 2에서 앵커 결합 방향을 명시 저장해야 한다는 뜻이다 (비게이팅 관측).',
       )
       out.push('')
+    } else if (diagnostic.id === 'D3') {
+      out.push(
+        table(
+          ['편집', '결과 문서(끝 44자)', 'Yjs 업데이트 sha256(앞 16)'],
+          diagnostic.rows.map((row) => [
+            row.label,
+            `\`…${row.docText.slice(-44).replace(/\n/g, ' / ')}\``,
+            `\`${row.updateSha256.slice(0, 16)}…\``,
+          ]),
+        ),
+      )
+      out.push('')
+      out.push(
+        diagnostic.moveIsDistinguishable
+          ? '이동과 재타이핑의 CRDT 업데이트가 **다르다** — 텍스트 동일성으로 이동을 판별할 여지가 있다.'
+          : '**이동과 재타이핑의 Yjs 업데이트가 byte 단위로 같다.** 블록을 잘라 붙이는 편집은 Yjs에서 ' +
+              '"옛 element 삭제 + 새 element 삽입"이고, 같은 문장을 지웠다 다시 치는 편집도 정확히 같은 연산이다. ' +
+              '결과 문서 텍스트도 같다(=' +
+              `${diagnostic.sameDocumentText}). 따라서 **어떤 해소 규칙도 저장된 상태만으로 둘을 가를 수 없다** — ` +
+              '"같은 텍스트 블록이 새로 생겼다"를 이동의 증거로 쓰면 재타이핑(S11c)·쌍둥이 이동(S11a·S11b)·' +
+              '원격 작성(S11d)이 전부 같이 통과한다. 그래서 규칙 C는 **item 정체성이 살아 있을 때만** 복구하고, ' +
+              '정체성이 파괴된 뒤에는 orphan으로 접는다. 그 대가는 §4의 "포기한 복구" 표에 숫자로 있다 ' +
+              '(S6 블록 이동이 복구되지 않는다).',
+      )
+      out.push('')
+    } else if (diagnostic.id === 'D4') {
+      out.push(
+        table(
+          ['항목', '값'],
+          [
+            ['현재 저장 버전', String(diagnostic.currentVersion)],
+            ['읽은 파일의 버전', String(diagnostic.loadedVersion)],
+            ['로드된 레코드', `${diagnostic.recordsLoaded}건 (버려지지 않는다)`],
+            ['출처 미상 표시', `${diagnostic.markedLegacy} (\`${diagnostic.legacyReason}\`)`],
+            ['블록 문맥', diagnostic.blockContextDropped ? '비움 — 이동 복구 대상 아님' : '남아 있음'],
+            ['편집', `\`${diagnostic.anchorQuote}\` -> \`${diagnostic.replacement}\` (제자리 교체)`],
+            ['해소 결과', `${diagnostic.method}${diagnostic.attachedText ? ` -> \`${diagnostic.attachedText}\`` : ''}`],
+            ['사유', `\`${diagnostic.reason}\` (guard 출처 판정 \`${diagnostic.guardProvenance}\`)`],
+            ['알 수 없는 버전 거절', String(diagnostic.rejectsUnknownVersion)],
+          ],
+        ),
+      )
+      out.push('')
+      out.push(
+        diagnostic.orphaned
+          ? '옛 파일은 **로드되지만 승격되지 않는다**: 출처 증거가 없으므로 문자열 구조만으로 통과시키지 않고 ' +
+              'orphan 사유를 남긴다. 이 경로가 열려 있으면 강화된 guard가 옛 레코드에서만 조용히 무력화된다.'
+          : '**옛 레코드가 문자열만으로 통과했다** — 하위호환 구멍이다.',
+      )
+      out.push('')
+    } else if (diagnostic.pairs) {
+      out.push(table(['항목', '값'], diagnostic.pairs))
+      out.push('')
+      out.push(diagnostic.note)
+      out.push('')
     } else {
       out.push(
         table(
@@ -434,16 +550,20 @@ export function renderReport(result) {
           '표·중첩 리스트·코드블록 안의 앵커, 블록 타입 변경(paragraph -> heading)은 미측정',
         ],
         [
-          '복합 편집 — "블록을 고친 뒤 이동", "여러 블록 동시 삭제", 앵커 범위를 가로지르는 동시 편집',
-          '블록 정체성 복구는 블록 텍스트가 **완전히 같을 때만** 걸리므로, 고쳐서 옮기면 orphan이 된다(안전하지만 복구율 하락). 그 경계는 미측정',
+          '복합 편집 — "여러 블록 동시 삭제", 앵커 범위를 가로지르는 동시 편집, 블록 타입 변경 중의 앵커',
+          '블록 정체성이 파괴되는 편집은 이제 **전부 orphan**이라 오부착 위험은 낮지만, 이 모양들의 복구율 손실은 미측정',
         ],
         [
-          '문서 재임포트 — 같은 텍스트를 새 Y.Doc으로 다시 만들어 붙이는 경로',
-          '캡처 시점 state vector 기준으로는 모든 블록이 "새 내용"이 되므로, 블록 텍스트가 유일하면 복구가 걸린다. 이 경로의 오부착 위험은 미측정',
+          '문서 재임포트 **여러 앵커·여러 문서 세대** (D5는 앵커 1개짜리 단발 측정이다)',
+          '한 앵커에 대해서는 D5가 orphan을 확인했지만, 재임포트를 반복하거나 일부만 재임포트하는 혼합 문서는 미측정',
         ],
         [
           '앵커가 블록 경계를 걸치는 경우 (blockContext 없음)',
-          '이 경우 이동 복구를 아예 시도하지 않는다(=orphan). 안전한 방향이지만 복구율 손실은 미측정',
+          '캡처 기준점은 v2에서 따로 저장하므로 guard(문자 출처)는 그대로 작동하지만, 정체성 복구는 아예 시도하지 않는다(=orphan). 그 복구율 손실은 미측정',
+        ],
+        [
+          '이동을 CRDT가 보존하는 편집기·연산 (예: Yjs의 move 연산, 블록 id를 갖는 스키마)',
+          '규칙 C의 복구 경로는 item 정체성이 살아남을 때만 발동한다. 지금 스택(y-prosemirror)에서는 D3대로 정체성이 파괴되므로 **한 번도 발동하지 않았다** — 그 경로 자체가 미측정',
         ],
         [
           '경계 흡수 — 앵커 끝에 붙여 쓴 긴 삽입',

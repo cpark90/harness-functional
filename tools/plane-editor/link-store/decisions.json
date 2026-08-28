@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "plane": "decision",
+  "decisions": [
+    {
+      "id": "dec-anchor-quote-recovery-affix",
+      "title": "Recover an unresolved anchor when its quote plus one affix matches uniquely",
+      "body": "Phase 1 policy for re-attaching a standoff anchor whose CRDT position no longer resolves: search the document for the stored quote, and accept a hit when the exact text is unique and at least one affix (prefix or suffix) overlaps the stored context by a few characters. Rationale at the time: string context is cheap evidence of identity and keeps recovery rates high. Superseded because an affix overlap is not evidence of identity - short shared fragments cross a small threshold by accident, so the rule re-attached anchors to other sentences under ordinary edits (whole-block deletion, in-place replacement).",
+      "status": "superseded",
+      "decided_by": "developer dispatch (Phase 1 anchor engine) - tools/plane-editor/src/anchors.mjs"
+    },
+    {
+      "id": "dec-anchor-recovery-crdt-evidence",
+      "title": "Recover an anchor only on CRDT evidence, never on string similarity alone",
+      "body": "Recovery is attempted only when the CRDT says the block itself disappeared, and it is accepted only when a block with the stored text exists that was created after the capture state vector, and when characters that existed at capture time survive inside the resolved range. Deleted-character evidence and in-place replacement both block recovery outright. When in doubt the anchor stays orphaned; the cost in recovery rate is measured rather than assumed.",
+      "status": "accepted",
+      "supersedes": "dec-anchor-quote-recovery-affix",
+      "decided_by": "vnv dispatch - docs/verify/plane-editor-c1-verify.md (pass-with-notes, 2026-08-28)"
+    },
+    {
+      "id": "dec-link-store-outside-ontology",
+      "title": "Keep the link plane in one store outside ontology/ with a dedicated integrity checker",
+      "body": "Cross-plane links live in a single JSON store under tools/plane-editor/, not in the knowledge graph. The graph tools only scan ontology/, so a store placed outside it cannot re-enter the graph by accident, which satisfies the no-reintroduction rule mechanically. The price is that SHACL and reachability no longer guard these edges, so a dedicated checker (check_links.py) carries endpoint existence, type vocabulary and boundary rules instead. Rejected alternatives: widening anchorTarget in the schema, and an editor-local store that opens no graph contact point at all.",
+      "status": "accepted",
+      "decided_by": "user - docs/feedback/plane-editor-and-kg-content-decisions.md, decision 2-(a) (status: approved)"
+    },
+    {
+      "id": "dec-plane-parallel-start",
+      "title": "Start the link and decision planes in parallel, defer anchor binding to the C1 gate",
+      "body": "The link store and the decision plane are authored immediately; only binding a text anchor as a link endpoint waits for the anchor-misresolution gate. Links therefore target record identifiers, never text positions, until that gate passes. The measured baseline that made parallel work acceptable is the stale lane at 93.3 percent selector durability with zero misresolution in the measured scenarios.",
+      "status": "accepted",
+      "decided_by": "user - docs/feedback/plane-editor-and-kg-content-decisions.md, decision 1-(a) (status: approved)"
+    }
+  ]
+}
