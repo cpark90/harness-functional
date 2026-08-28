@@ -29,6 +29,13 @@
 # results hand back. This deliberately CHANGES this harness's materialized
 # document (one added tool, one added operating rule) -- intended: the agent
 # running under this harness is the one these parts govern.
+# Envelope-operation bindings (render wave): declaring id:oe-coding means this
+# harness RUNS the range check, so id:gr-envelope-check binds here as declared
+# discipline, and the exit rows id:fp-envelope-exit / -severe bind via
+# ho:hasFailurePolicy so they sit in THIS harness's error-handling catalog.
+# Not duplication of ho:onEnvelopeExit on the envelope: that edge DESIGNATES
+# which policy an exit takes; hasFailurePolicy ENROLS the row in the harness's
+# own error table (the envelope points, the catalog lists).
 id:h-coding a ho:Harness ;
     skos:prefLabel "Autonomous coding agent" ; skos:altLabel "coding harness" ;
     skos:definition "An autonomous agent that fixes bugs and reviews code with shell + editor tools." ;
@@ -37,9 +44,11 @@ id:h-coding a ho:Harness ;
     ho:hasSystemPrompt id:sp-coding ;
     ho:usesTool id:tool-shell, id:tool-editor, id:tool-lint-gated-edit ;
     ho:hasWorkflow id:wf-react ;
-    ho:hasGuardrail id:gr-nodestruct, id:gr-lang, id:gr-standard-terms, id:gr-aci-observation ;
+    ho:hasGuardrail id:gr-nodestruct, id:gr-lang, id:gr-standard-terms, id:gr-aci-observation,
+        id:gr-envelope-check ;
     ho:usesModel id:mc-opus ;
     ho:hasEnvelope id:oe-coding ;
+    ho:hasFailurePolicy id:fp-envelope-exit, id:fp-envelope-exit-severe ;
     ho:appliesPattern id:pat-react ;
     ho:autonomyTier id:tier-bounded-autonomy ;
     ho:requiresCapability id:cap-codeexec, id:cap-fileedit ;
@@ -155,7 +164,8 @@ id:h-multiagent a ho:Harness ;
         id:gr-delegated-orchestration, id:gr-execution-separation, id:gr-structural-coverage,
         id:gr-reuse-first, id:gr-human-checkpoint, id:gr-user-elicitation,
         id:gr-lesson-capture, id:gr-lesson-reuse, id:gr-lesson-promotion,
-        id:gr-plan-evidence, id:gr-rejection-feedback, id:gr-resume-idempotency ;
+        id:gr-plan-evidence, id:gr-rejection-feedback, id:gr-resume-idempotency,
+        id:gr-envelope-check ;
     ho:usesModel id:mc-opus ;
     ho:hasRole id:role-orchestrator, id:role-inspection, id:role-implementer, id:role-research,
         id:role-vnv, id:role-design, id:role-synthesizer ;
@@ -169,8 +179,11 @@ id:h-multiagent a ho:Harness ;
         id:as-model, id:as-roles, id:as-channels, id:as-skills, id:as-execution-mode,
         id:as-data-flow, id:as-error-handling, id:as-test-scenarios, id:as-hooks ;
     ho:hasTestScenario id:scn-oversight-efficacy ;
+    # fp-envelope-exit / -severe: catalog enrolment of the rows oe-multiagent's
+    # ho:onEnvelopeExit designates (same non-duplication split as on id:h-coding).
     ho:hasFailurePolicy id:fp-unanswered-approval, id:fp-reject-retry-feedback,
-        id:fp-dismissal-vs-decline ;
+        id:fp-dismissal-vs-decline,
+        id:fp-envelope-exit, id:fp-envelope-exit-severe ;
     ho:hasEnvelope id:oe-multiagent ;
     ho:appliesPattern id:pat-orchestrator-workers, id:pat-ontology-composition ;
     ho:hasExecutionMode id:mode-sub-agents, id:mode-standing-service ;
@@ -250,11 +263,12 @@ id:h-peer-mesh a ho:Harness ;
 # id:gr-envelope-unknown / id:gr-transient-tolerance) and its exit rows
 # (id:fp-envelope-exit / id:fp-envelope-exit-severe, which the two declared
 # envelopes point at via ho:onEnvelopeExit and which PROVIDE id:cap-safe-halt).
-# Hosted here, not on the envelope-declaring harnesses (id:h-coding /
-# id:h-multiagent), for the standard library-carrier reason: binding them here
-# leaves those harnesses' materialized documents byte-identical this wave
-# (envelope rendering is a later wave), while onEnvelopeExit stays a refinement
-# edge whose reachability this carrier's hasFailurePolicy binding supplies.
+# This stays the LIBRARY host of the whole discipline; since the render wave,
+# the envelope-declaring harnesses (id:h-coding / id:h-multiagent) ALSO bind
+# id:gr-envelope-check and the two exit rows as their own declared discipline
+# (they run the check, so their documents now carry it — intended), while the
+# not-yet-operated parts (id:gr-envelope-unknown / id:gr-transient-tolerance)
+# remain hosted only here and onEnvelopeExit stays a refinement edge.
 # Wave-H adds two guardrails here: id:gr-safe-halt beside that same halt
 # machinery (the fp exit rows PROVIDE id:cap-safe-halt; the rule generalises
 # their path to every stop trigger), and id:gr-dual-approval beside the
@@ -402,7 +416,9 @@ id:h-harness-factory a ho:Harness ;
 # bound tools, guardrails, tasks and channels — nothing aspirational), and
 # every row carries the observable that decides it at request time
 # (ho:EnvelopeStatementShape). Exit handling points at the central rows
-# (id:fp-envelope-exit / -severe, carried by id:h-workspace-synthesis).
+# (id:fp-envelope-exit / -severe, carried by id:h-workspace-synthesis and,
+# since the render wave, ALSO bound by both declaring harnesses'
+# ho:hasFailurePolicy so the rows sit in their own error-handling tables).
 ########################################################################
 
 #===================== ENVELOPES: h-coding =============================

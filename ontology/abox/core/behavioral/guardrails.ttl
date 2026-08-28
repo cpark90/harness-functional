@@ -17,7 +17,7 @@
 id:gr-nodestruct a ho:Guardrail ; skos:prefLabel "No destructive actions" ;
     ho:attachesAt id:c-attach-execution-pre ; ho:approvalScope "tool-call" ;
     ho:promptText "Never run irreversible or destructive commands without explicit confirmation." ;
-    ho:tokenEstimate 30 ; ho:maturity "stable" ; ho:tagged id:c-safety .
+    ho:tokenEstimate 30 ; ho:maturity "stable" ; ho:tagged id:c-safety, id:c-escalation .
 id:gr-cite a ho:Guardrail ; skos:prefLabel "Cite sources" ; skos:altLabel "no fabrication" ;
     ho:attachesAt id:c-attach-output ;
     ho:promptText "Every factual claim must carry a citation to a retrieved source." ;
@@ -153,8 +153,20 @@ id:gr-absolute-paths a ho:Guardrail ; skos:prefLabel "Absolute workspace paths" 
     ho:promptText "Reference shared-workspace files by absolute path rooted at the workspace directory rather than by relative path, so every agent and session resolves the same file regardless of its working directory." ;
     ho:tagged id:c-multiagent, id:c-deliverable-artifact ; ho:tokenEstimate 46 ; ho:maturity "draft" .
 id:gr-well-formed-skill a ho:Guardrail ; skos:prefLabel "Well-formed skill" ;
+    ho:hasLink id:link-gr-well-formed-skill-overlap-ins-well-formed-skill ;
     ho:promptText "Author every skill in well-formed shape: a present description, the required section headings and no forbidden files, so the skill is discoverable, invocable and passes its structural contract." ;
     ho:tagged id:c-skill-authoring ; ho:tokenEstimate 46 ; ho:maturity "draft" .
+# Weighted overlap link — 구 crisp ho:overlapsWith 이전분(대칭 관계라 한 방향
+# 한 건만 저작). origin=curated 사유: 두 노드의 규칙 문면이 사실상 동문(같은
+# well-formed 규정을 guardrail은 정책으로, instruction은 집행 스킬로 진술)이라
+# 겹침 정도가 높은데, 구조 측정(structural-overlap-v1)은 공유 태그
+# c-skill-authoring 1건만 보아 0.5로 과소평가한다 — 문면 대조로 사람이 0.85를
+# 확정했고, curated는 재측정이 덮지 않는다(ho:weightOrigin 보호 계약의 실증 케이스).
+id:link-gr-well-formed-skill-overlap-ins-well-formed-skill a ho:Link ;
+    skos:prefLabel "Well-formed skill / Skill-authoring instruction overlap link" ;
+    ho:linkTarget id:ins-well-formed-skill ; ho:linkKind id:kind-overlap ;
+    ho:linkWeight 0.85 ; ho:weightOrigin "curated" ;
+    ho:weightMethod "structural-overlap-v1" .
 # The ENFORCEMENT counterpart of the guardrail above: a skill-authoring skill
 # (ho:Instruction, a BehavioralComponent leaf) that PROVIDES id:cap-skill, so the
 # structural contracts on that capability roll up (hasComponent o providesCapability
@@ -264,21 +276,21 @@ id:gr-dual-approval a ho:Guardrail ; skos:prefLabel "Dual independent approval" 
     skos:altLabel "four-eyes approval" , "two-person rule" ;
     ho:attachesAt id:c-attach-execution-pre ; ho:approvalScope "tool-call" ;
     ho:promptText "For actions designated as high-consequence, require sign-off from TWO approvers who are independent of each other and of the proposing agent -- the second approver sees the same evidence, not the first approver's verdict, and either rejection blocks the action. Distinguished from id:gr-human-checkpoint, which gates a milestone on ONE human approval: this strengthens the gate with approver count and independence for actions where a single reviewer's lapse is not an acceptable failure mode; and from id:gr-cross-validation, which is peer review of a deliverable by another agent role, not a human authorisation to act." ;
-    ho:tagged id:c-human-in-loop ; ho:tokenEstimate 155 ; ho:maturity "draft" .
+    ho:tagged id:c-human-in-loop, id:c-escalation ; ho:tokenEstimate 155 ; ho:maturity "draft" .
 id:gr-plan-evidence a ho:Guardrail ; skos:prefLabel "Evidence-backed plan approval" ;
     skos:altLabel "plan plausibility is not correctness" ;
     ho:attachesAt id:c-attach-execution-pre ; ho:approvalScope "plan" ;
     ho:promptText "A plan presented for human approval must carry the evidence to judge it -- the concrete diff, dry-run result or preview of what executing it would change -- never the narrative alone: a plausible-sounding plan miscalibrates the reviewer's trust, so what is approved is the evidenced effect, and anything the evidence did not show requires re-approval before execution. Distinguished from id:gr-human-checkpoint, which requires that the plan gate EXISTS: this fixes what the gated plan must contain for the approval to mean anything." ;
-    ho:tagged id:c-automation-bias ; ho:tokenEstimate 133 ; ho:maturity "draft" .
+    ho:tagged id:c-automation-bias, id:c-escalation ; ho:tokenEstimate 133 ; ho:maturity "draft" .
 id:gr-rejection-feedback a ho:Guardrail ; skos:prefLabel "Reasoned rejection with feedback injection" ;
     skos:altLabel "no bare rejection" ;
     ho:attachesAt id:c-attach-dialog ;
     ho:promptText "A rejection at any human gate carries the reason for it, and that reason is injected into the context of the next attempt: the agent re-approaches the work with the objection in front of it rather than resubmitting blind, and the approver is never asked to re-reject the same fault twice. Distinguished from id:gr-no-arbitrary-decision, which escalates an OPEN question to the decision authority: here the human has already decided, and the rule preserves what the decision taught." ;
-    ho:tagged id:c-meaningful-control ; ho:tokenEstimate 120 ; ho:maturity "draft" .
+    ho:tagged id:c-meaningful-control, id:c-escalation ; ho:tokenEstimate 120 ; ho:maturity "draft" .
 id:gr-resume-idempotency a ho:Guardrail ; skos:prefLabel "Idempotent side effects before interrupt" ;
     skos:altLabel "safe re-execution on resume" ;
     ho:promptText "Any side effect performed before an interruption point must be idempotent, because resuming re-runs the interrupted unit from its start: design each unit so that re-execution after a pause -- however long the human response takes -- converges to the same state instead of duplicating the effect, and place at most one interruption point per unit. Distinguished from id:gr-verify-proceed, which forbids assuming readiness from elapsed time: this makes the work itself safe to replay when the resume does arrive." ;
-    ho:tagged id:c-human-in-loop ; ho:tokenEstimate 127 ; ho:maturity "draft" .
+    ho:tagged id:c-human-in-loop, id:c-design ; ho:tokenEstimate 127 ; ho:maturity "draft" .
 
 #===================== Run bounding and safe halting ===================
 # The self-bounding half of the wave: what ends or throttles an autonomous
@@ -302,17 +314,17 @@ id:gr-stopping-condition a ho:Guardrail ; skos:prefLabel "Declared stopping cond
     skos:altLabel "no unbounded run" ;
     ho:attachesAt id:c-attach-turn ;
     ho:promptText "Every autonomous loop declares before it starts when it stops: a maximum iteration count plus the explicit conditions -- goal reached, no progress across a bounded window, budget exhausted -- that end the run without a human having to notice it is stuck, checked at each iteration boundary. Distinguished from id:gr-bounded-iteration, which caps the rounds of a corrective review loop: this bounds the run itself, including runs no reviewer is watching." ;
-    ho:tagged id:c-human-out-loop ; ho:tokenEstimate 113 ; ho:maturity "draft" .
+    ho:tagged id:c-human-out-loop, id:c-complexity-governance ; ho:tokenEstimate 113 ; ho:maturity "draft" .
 id:gr-auto-reply-budget a ho:Guardrail ; skos:prefLabel "Autonomous action budget with human reset" ;
     skos:altLabel "consecutive auto-reply cap" ;
     ho:attachesAt id:c-attach-turn ; ho:approvalScope "turn" ;
     ho:promptText "Cap how many consecutive turns an agent may take autonomously: when the budget is exhausted the next turn requires human input before work continues, and any human intervention resets the counter -- so sustained unattended operation is impossible by construction while an attended session is never throttled. Distinguished from id:gr-stopping-condition, which ends a run on its own declared conditions: this does not end the run, it periodically re-inserts the human; and from id:gr-bounded-iteration, which caps the rounds of one corrective loop." ;
-    ho:tagged id:c-human-on-loop ; ho:tokenEstimate 136 ; ho:maturity "draft" .
+    ho:tagged id:c-human-on-loop, id:c-complexity-governance ; ho:tokenEstimate 136 ; ho:maturity "draft" .
 id:gr-safe-halt a ho:Guardrail ; skos:prefLabel "Halt only at a safe state" ;
     skos:altLabel "no mid-action abandonment" ;
     ho:attachesAt id:c-attach-session ;
     ho:promptText "Whatever triggers a stop -- an exhausted budget, a declined approval, a user abort, an envelope exit -- halting means REACHING the safe-halt state, not abandoning work mid-action: no irreversible operation left half-applied, in-flight work checkpointed, the halt and its cause published. Distinguished by layer from id:cap-safe-halt, which defines WHAT the safe state is, and from id:fp-envelope-exit / id:fp-envelope-exit-severe, whose ladders reach it for ENVELOPE exits specifically: this rule makes every stop, whatever its trigger, take that same disciplined path." ;
-    ho:tagged id:c-safety ; ho:tokenEstimate 142 ; ho:maturity "draft" .
+    ho:tagged id:c-safety, id:c-agent-methodology ; ho:tokenEstimate 142 ; ho:maturity "draft" .
 
 #===================== Simulation and interface discipline (wave-S/C) ==
 # Two rules from the sim/coding harvest, each bound where it factually runs:

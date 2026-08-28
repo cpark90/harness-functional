@@ -38,5 +38,5 @@ id:tool-lint-gated-edit a ho:Tool ;
     skos:prefLabel "Lint-gated edit tool" ; skos:altLabel "verify-or-revert editor" ;
     skos:definition "An editing tool whose contract wraps every edit in a verification gate: apply the change, run the declared checks (syntax, lint) on the result, and on failure revert the edit automatically and return the diagnostics instead of leaving the artifact broken -- a gate measured to improve coding-agent outcomes over ungated editing. Choose it when edits land in an artifact whose well-formedness later steps depend on. Distinguished from id:tool-editor, which applies edits unconditionally and leaves checking to later steps, and from id:hook-post-tool-use, an event-triggered automation reacting AFTER a completed action: here the check and the automatic revert are inside the edit contract itself, so a failing edit never commits." ;
     ho:providesCapability id:cap-fileedit ;
-    ho:tagged id:c-softeng ;
+    ho:tagged id:c-softeng, id:c-verify-proceed ;
     ho:tokenEstimate 182 ; ho:maturity "draft" .

@@ -60,5 +60,33 @@ id:mem-longterm a ho:Memory ;
     ho:memoryReadScope "selective" ;
     ho:memoryActivationCondition "A defined trigger condition is met (e.g. the current task matches the memory's applicability); only then is the relevant portion consulted and reflected." ;
     ho:retrievalPolicy "Scored retrieval: rank the stored entries by a weighted combination of recency (decaying with time since the entry was last accessed), importance (a weight assigned when the entry is written) and relevance to the current task, and consult only the top-ranked portion within the read budget -- consumption is selective, so an entry scoring low on all three is simply not loaded." ;
+    ho:hasLink id:link-mem-longterm-topic-memory, id:link-mem-longterm-topic-lesson ;
     ho:tagged id:c-memory, id:c-multiagent, id:c-lesson ;
     ho:tokenEstimate 144 ; ho:maturity "draft" .
+
+#===================== WEIGHTED TOPIC LINKS (ho:Link) ==================
+# 구 ho:Anchor 7건의 이전분(사용자 승인 저작 — 의미 보존: 같은 source/target/
+# 가중치, kind만 id:kind-topic으로 명시화). 가중 눈금은 anchor 규약의 2단 정성
+# 눈금을 그대로 계승한다:
+#   0.9 = primary   — 노드의 definition 본문 주제가 곧 그 region이다.
+#   0.4 = secondary — region이 definition에 문맥·한정어·내용 예시로만 등장하고,
+#                     definition 자신의 문장이 그것을 부차로 자리매김한다.
+# 중간값·소수점 정밀화는 쓰지 않는다(정성 구분을 숫자로 위장하지 않기 위해).
+# ho:weightOrigin "curated": definition 문면 근거로 사람이 확정한 값이므로
+# 재측정이 절대 덮지 않는다(ho:weightOrigin의 보호 계약). topic 링크는
+# definition 문면에서 주/부 구분이 실제로 읽히는 노드에만 단다 — 근거 없는
+# 태그(예: mem-cache/mem-firmware의 c-multiagent)는 crisp ho:tagged로만 남는다.
+
+# mem-longterm의 definition은 전체가 read-timing/persistence 티어 서술(c-memory
+# region 자체)이고, c-lesson은 "the lessons ... are the representative content of
+# this tier"로 티어의 내용물로서 부차 자리매김된다. c-multiagent는 definition에
+# 문면 근거가 없어 topic 링크를 달지 않는다(태그는 유지).
+id:link-mem-longterm-topic-memory a ho:Link ;
+    skos:prefLabel "Long-term memory / Agent memory topic link" ;
+    ho:linkTarget id:c-memory ; ho:linkKind id:kind-topic ;
+    ho:linkWeight 0.9 ; ho:weightOrigin "curated" .
+
+id:link-mem-longterm-topic-lesson a ho:Link ;
+    skos:prefLabel "Long-term memory / Lesson learning topic link" ;
+    ho:linkTarget id:c-lesson ; ho:linkKind id:kind-topic ;
+    ho:linkWeight 0.4 ; ho:weightOrigin "curated" .

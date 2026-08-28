@@ -472,67 +472,122 @@ ho:GlobalStateShape a sh:NodeShape ;
         sh:minCount 1 ;
         sh:message "GlobalState must have ho:maturity." ] .
 
-#--- Anchor: a well-formed weighted annotation (n-ary) --------------
-# An ho:Anchor reifies "this node describes THAT region with THIS confidence",
-# so both halves are mandatory and single-valued: exactly one ho:anchorTarget
-# Concept (a weight against two regions at once is not interpretable — a node
-# describing two regions carries two Anchors) and exactly one ho:anchorConfidence
-# inside 0..1 (an unweighted anchor is just ho:tagged, and an out-of-range weight
-# would silently break the projection layer's per-region ranking, so it FAILS
-# here rather than degrading later). skos:prefLabel is restated for message
-# locality — ho:ComponentConnectivityShape already requires it, since an Anchor
-# is a ho:HarnessComponent reached through the hasComponent o hasAnchor chain.
-ho:AnchorShape a sh:NodeShape ;
-    sh:targetClass ho:Anchor ;
+#--- Link: a well-formed weighted, typed knowledge link (n-ary) ------
+# An ho:Link reifies "this node stands in THAT kind of relation to THAT node,
+# to THIS degree", so every axis is mandatory and single-valued: an attachment
+# (the link must hang off a source via ho:hasLink — a Link is NOT a
+# HarnessComponent, so this inverse-path minimum is its whole anti-orphan
+# defense), exactly one ho:linkTarget typed as a component or Concept, exactly
+# one ho:linkKind, exactly one ho:linkWeight inside 0..1 and exactly one
+# ho:weightOrigin from the provenance set. TEETH NOTE: ho:linkTarget and
+# ho:linkKind deliberately declare NO rdfs:range in the TBox, so OWL RL cannot
+# type-launder a mistyped value (the retired AnchorShape's measured caveat) —
+# the sh:or / sh:class constraints below are the enforced range and genuinely
+# FAIL under the reasoned validate.py pipeline. The SPARQL constraint binds
+# the provenance contract: a "measured" weight without its ho:weightMethod is
+# untraceable, so it fails rather than passing as a plausible number.
+ho:LinkShape a sh:NodeShape ;
+    sh:targetClass ho:Link ;
     sh:property [
         sh:path skos:prefLabel ;
         sh:minCount 1 ;
-        sh:message "Anchor must have a skos:prefLabel." ] ;
+        sh:message "Link must have a skos:prefLabel." ] ;
     sh:property [
-        sh:path ho:anchorTarget ;
+        sh:path [ sh:inversePath ho:hasLink ] ;
+        sh:minCount 1 ;
+        sh:message "Orphaned link: not attached to any source node via ho:hasLink." ] ;
+    sh:property [
+        sh:path ho:linkTarget ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:class ho:Concept ;
-        sh:message "Anchor must point at exactly one ho:Concept via ho:anchorTarget (the single region it weights)." ] ;
+        sh:or ( [ sh:class ho:HarnessComponent ]
+                [ sh:class ho:SpecConcept ]
+                [ sh:class ho:Concept ] ) ;
+        sh:message "Link must point at exactly one target that is a ho:HarnessComponent, a ho:SpecConcept or a ho:Concept via ho:linkTarget (not a Harness, not untyped)." ] ;
     sh:property [
-        sh:path ho:anchorConfidence ;
+        sh:path ho:linkKind ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:class ho:LinkKind ;
+        sh:message "Link must declare exactly one ho:linkKind, a typed ho:LinkKind individual (an untyped or double-kinded edge is not interpretable)." ] ;
+    sh:property [
+        sh:path ho:linkWeight ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:datatype xsd:decimal ;
         sh:minInclusive 0.0 ;
         sh:maxInclusive 1.0 ;
-        sh:message "Anchor must have exactly one ho:anchorConfidence, a decimal within 0..1 (an unweighted anchor is just ho:tagged)." ] .
-
-#--- alternativeOf: alternatives must describe the SAME region -------
-# ho:alternativeOf is what makes two overlapping descriptions legitimate instead
-# of drift, but ONLY under the rule its definition states: alternatives re-tell
-# the SAME knowledge region. This shape gives that rule teeth rather than leaving
-# it a prose promise — two nodes linked by ho:alternativeOf must share at least
-# one ho:tagged Concept whose ho:conceptFacet is a DISCRIMINANT facet ("anatomy"
-# or "method"): only those facets say what a node is ABOUT. A shared quality /
-# domain / scope Concept says something about both nodes without saying they
-# cover the same content (sharing "multiagent" or "safety" is not sharing a
-# region), so it cannot excuse two nodes that are simply about different things.
-# A SPARQL constraint because SHACL Core has no way to compare one node's value
-# set against another's. The property is symmetric, so the reasoner materialises
-# both directions and each violating pair is reported from both ends. Federation
-# note: this fires ONLY on declared ho:alternativeOf subjects — facet-less
-# recipe-local Concepts are never violations by themselves; they merely cannot
-# anchor a region, and a recipe that wants alternativeOf declares a facet on its
-# shared Concept (facet is recommended, not required, outside id/core/).
-ho:AlternativeOfSharedAnchorShape a sh:NodeShape ;
-    sh:targetSubjectsOf ho:alternativeOf ;
+        sh:message "Link must have exactly one ho:linkWeight, a decimal within 0..1 (a fuzzy membership degree; an unweighted link is a crisp edge with extra steps)." ] ;
+    sh:property [
+        sh:path ho:weightOrigin ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:string ;
+        sh:in ( "measured" "asserted" "curated" ) ;
+        sh:message "Link must have exactly one ho:weightOrigin from the closed set (measured/asserted/curated) — without provenance a human correction cannot be protected from re-measurement." ] ;
     sh:sparql [
         a sh:SPARQLConstraint ;
-        sh:message "ho:alternativeOf must link descriptions of the SAME region: this node and {?other} share no ho:tagged Concept with a discriminant ho:conceptFacet (\"anatomy\"/\"method\") — tag both with the shared content region, or the pair is drift, not an alternative (a shared quality/domain/scope tag says nothing about content)." ;
+        sh:message "This link's ho:linkWeight is \"measured\" but names no ho:weightMethod: an untraceable measured value is indistinguishable from a guess — record the procedure identifier that produced it." ;
         sh:prefixes <https://harness-ontology.dev/shapes> ;
         sh:select """
-            SELECT $this ?other
+            SELECT $this
             WHERE {
-                $this ho:alternativeOf ?other .
+                $this ho:weightOrigin "measured" .
+                FILTER NOT EXISTS { $this ho:weightMethod ?method . }
+            }
+            """ ] .
+
+#--- LinkKind: a well-formed relation-kind individual ----------------
+# A relation kind must be labelled, must define its semantics (direction
+# convention and symmetry live in the definition — consumers and authors read
+# them there) and must carry exactly one 0..1 ho:traversalWeight so the read
+# projection can weight its links without a code table.
+ho:LinkKindShape a sh:NodeShape ;
+    sh:targetClass ho:LinkKind ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:minCount 1 ;
+        sh:message "LinkKind must have a skos:prefLabel." ] ;
+    sh:property [
+        sh:path skos:definition ;
+        sh:minCount 1 ;
+        sh:message "LinkKind must have a skos:definition (its direction convention and symmetry are read from there)." ] ;
+    sh:property [
+        sh:path ho:traversalWeight ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:datatype xsd:decimal ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 1.0 ;
+        sh:message "LinkKind must have exactly one ho:traversalWeight, a decimal within 0..1 (the projector's base edge weight for links of this kind)." ] .
+
+#--- alternative-kind links must connect tellings of the SAME region --
+# The ported teeth of the retired ho:AlternativeOfSharedAnchorShape: a link of
+# the alternative kind is what makes two overlapping descriptions legitimate
+# instead of drift, but ONLY when its two ends re-tell the SAME knowledge
+# region — so the source and target must share at least one ho:tagged Concept
+# whose ho:conceptFacet is a DISCRIMINANT facet ("anatomy" or "method"): only
+# those facets say what a node is ABOUT (sharing "multiagent" or "safety" is
+# not sharing a region). A SPARQL constraint because the check joins the
+# link's two ends' value sets. Phase-2 note: when ho:tagged itself migrates to
+# topic links, this constraint's ?region join must follow it. Federation note:
+# fires only on links declaring the central alternative kind; facet-less
+# recipe-local Concepts are never violations by themselves.
+ho:AlternativeLinkSharedRegionShape a sh:NodeShape ;
+    sh:targetClass ho:Link ;
+    sh:sparql [
+        a sh:SPARQLConstraint ;
+        sh:message "Alternative-kind link between {?source} and {?target}: the two ends share no ho:tagged Concept with a discriminant ho:conceptFacet (\"anatomy\"/\"method\") — tag both with the shared content region, or the pair is drift, not an alternative telling." ;
+        sh:prefixes <https://harness-ontology.dev/shapes> ;
+        sh:select """
+            SELECT $this ?source ?target
+            WHERE {
+                $this ho:linkKind id:kind-alternative ;
+                      ho:linkTarget ?target .
+                ?source ho:hasLink $this .
                 FILTER NOT EXISTS {
-                    $this ho:tagged ?region .
-                    ?other ho:tagged ?region .
+                    ?source ho:tagged ?region .
+                    ?target ho:tagged ?region .
                     ?region ho:conceptFacet ?facet .
                     FILTER(?facet IN (\"anatomy\", \"method\"))
                 }

@@ -129,7 +129,8 @@ TOKENESTIMATE_UNCONDITIONAL_CLASSES = (
 # --- §2: naming-table prefixes, class -> required slug prefix -----------------
 PREFIX_MAP = {
     HO.Domain: "dom-", HO.Task: "task-", HO.Capability: "cap-",
-    HO.Contract: "ct-", HO.Concept: "c-", HO.Anchor: "anchor-",
+    HO.Contract: "ct-", HO.Concept: "c-",
+    HO.Link: "link-", HO.LinkKind: "kind-",
     HO.DesignPattern: "pat-",
     HO.ExecutionMode: "mode-", HO.AutonomyTier: "tier-",
     HO.Constraint: "con-", HO.ModelConfig: "mc-",

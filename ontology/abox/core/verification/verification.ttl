@@ -146,7 +146,7 @@ id:fp-unanswered-approval a ho:FailurePolicy ;
     skos:definition "The row for an approval request that gets no answer: without it the gate degenerates into either an indefinite stall or a quiet fallback to acting unapproved. Choose it for any harness that requests human approval mid-run. Distinguished from id:fp-envelope-exit, whose handover window answers a RANGE exit -- here the request is in range and the gate itself is silent; from id:fp-refer-to-expert, where the decision exceeds the agent's remit -- here the authority exists and has simply not replied; and from id:fp-dismissal-vs-decline, which interprets the outcome once the exchange is over." ;
     ho:failureCondition "A human approval request receives no response within its declared response window." ;
     ho:recoveryStrategy "Escalate along a pre-declared chain, each hop with its own deadline: re-notify the approver, then address the request to the declared next approver, then buy time by tightening constraints so lower-stakes work can continue, and on exhaustion of the chain take the declared safe default -- proceed only where a safe default was pre-authorised, otherwise halt safely with the request still open." ;
-    ho:tagged id:c-human-in-loop ;
+    ho:tagged id:c-human-in-loop, id:c-escalation ;
     ho:tokenEstimate 266 ; ho:maturity "draft" .
 
 id:fp-reject-retry-feedback a ho:FailurePolicy ;
@@ -178,7 +178,7 @@ id:scn-oversight-efficacy a ho:TestScenario ;
     ho:scenarioExpected "The gate rejects the seeded deliverable, and the rejection names the defect rather than issuing a generic refusal." ,
         "The rejection reaches the producing side with its reason, per the declared rejection-feedback contract." ,
         "A seeded defect that passes the gate is recorded as a failure of the GATE and triggers its recalibration, not only a fix of the defective item." ;
-    ho:tagged id:c-rubber-stamping ;
+    ho:tagged id:c-rubber-stamping, id:c-agent-methodology ;
     ho:tokenEstimate 224 ; ho:maturity "draft" .
 
 #===================== Envelope-exit policies ==========================

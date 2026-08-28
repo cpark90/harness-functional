@@ -43,8 +43,8 @@ id:as-persona a ho:AssemblySection ;
 
 id:as-operating-rules a ho:AssemblySection ;
     skos:prefLabel "Assembly: operating-rules section" ;
-    skos:definition "Positions the Operating rules section (rendered from the harness's hasGuardrail policies) third, framing behaviour before the process is described." ;
-    ho:sectionKind "operating-rules" ; ho:assemblyOrder 3 ; ho:tokenEstimate 18 ; ho:maturity "draft" .
+    skos:definition "Positions the Operating rules section (rendered from the harness's hasGuardrail policies) third, framing behaviour before the process is described. Since the render wave it also positions the harness's run-governance declarations as CONDITIONAL companion sections directly after the rules: the declared operating envelope (ho:hasEnvelope, with one table row per envelope statement), the autonomy tier (ho:autonomyTier) and the environment fidelity rung (ho:environmentFidelity), each emitting nothing when the harness declares none. They ride this section because, like the guardrails, they state what the harness operates UNDER — which requests it undertakes, who approves at what unit, how real the environment is — and because ho:sectionKind is a closed enum (ho:AssemblySectionShape), so promoting each companion to a first-class kind is a schema decision for its own wave; the promotion would be a byte-identical refactor." ;
+    ho:sectionKind "operating-rules" ; ho:assemblyOrder 3 ; ho:tokenEstimate 233 ; ho:maturity "draft" .
 
 id:as-process a ho:AssemblySection ;
     skos:prefLabel "Assembly: process section" ;

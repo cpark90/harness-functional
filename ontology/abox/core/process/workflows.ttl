@@ -52,7 +52,7 @@ id:wf-approval-gated a ho:Workflow ; skos:prefLabel "Approval-gated delivery loo
     skos:definition "The human-gated shape of a delivery run: close the ambiguities in the request first, checkpoint and wait wherever a consequential action needs a human answer, hold the produced output at a review gate before it is delivered, and end with an explicit transfer of control back to the human. Choose when a harness's autonomy is bounded by human decision points rather than by machine gates alone -- the machine-gated counterpart of its review step is id:wf-multiagent's integrate-and-gate step." ;
     ho:hasStep id:wfs-clarification-round, id:wfs-interrupt-resume,
         id:wfs-output-review, id:wfs-control-transfer ;
-    ho:tagged id:c-human-in-loop ; ho:tokenEstimate 122 ; ho:maturity "draft" .
+    ho:tagged id:c-human-in-loop, id:c-escalation ; ho:tokenEstimate 122 ; ho:maturity "draft" .
 
 #===================== Workflow steps ==================================
 # Ordered decomposition of id:wf-multiagent's control flow into part-to-part

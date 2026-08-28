@@ -224,9 +224,29 @@ id:role-tester a ho:Role ;
     ho:roleTool id:tool-editor ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-three-flow-acceptance, id:gr-discriminating-eval ;
+    ho:hasLink id:link-role-tester-topic-acceptance-coverage,
+        id:link-role-tester-topic-multiagent ;
     ho:tagged id:c-multiagent, id:c-acceptance-coverage ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable fixture-design knowledge at session end; touches no other role's memory." ;
     ho:salience 0.25 ; ho:maturity "draft" .
+
+# Weighted topic links — 구 anchor 이전분(의미 보존: 같은 source/target/가중치,
+# kind=id:kind-topic 명시화, origin=curated로 재측정 보호). 눈금은 2단 정성
+# 눈금(0.9=primary: definition 본문 주제가 곧 그 region / 0.4=secondary:
+# 문맥·한정어로만 등장) — 전체 규약은 ontology/abox/core/state/memory.ttl의
+# WEIGHTED TOPIC LINKS 절 참조.
+# role-tester: definition의 주제는 acceptance material 생산("produces the checks
+# themselves -- test cases, fixtures ...")이고, c-multiagent는 "dispatch-invoked
+# only"·"observed teams"라는 호출 문맥 한정어로만 등장한다.
+id:link-role-tester-topic-acceptance-coverage a ho:Link ;
+    skos:prefLabel "Tester agent / Acceptance coverage topic link" ;
+    ho:linkTarget id:c-acceptance-coverage ; ho:linkKind id:kind-topic ;
+    ho:linkWeight 0.9 ; ho:weightOrigin "curated" .
+
+id:link-role-tester-topic-multiagent a ho:Link ;
+    skos:prefLabel "Tester agent / Multi-agent orchestration topic link" ;
+    ho:linkTarget id:c-multiagent ; ho:linkKind id:kind-topic ;
+    ho:linkWeight 0.4 ; ho:weightOrigin "curated" .
 
 # Curation is a deliverable-type of its own, distinct from the six archetypes
 # above and from the concrete gather/write/diagnose roles: the worker whose
@@ -262,7 +282,7 @@ id:role-benchmarker a ho:Role ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-grounding, id:gr-cite ;
     ho:providesCapability id:cap-benchmarking ;
-    ho:tagged id:c-multiagent, id:c-oversight ;
+    ho:tagged id:c-multiagent, id:c-oversight, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable benchmarking comparators and heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
 
@@ -273,9 +293,35 @@ id:role-auditor a ho:Role ;
     ho:roleGuardrail id:gr-dispatch-execution, id:gr-least-privilege,
         id:gr-traceability, id:gr-no-arbitrary-decision ;
     ho:providesCapability id:cap-audit ;
-    ho:tagged id:c-multiagent, id:c-oversight, id:c-traceability ;
+    ho:hasLink id:link-role-auditor-topic-oversight, id:link-role-auditor-topic-dispatch,
+        id:link-role-auditor-topic-multiagent ;
+    ho:tagged id:c-multiagent, id:c-oversight, id:c-traceability, id:c-dispatch ;
     ho:roleMemoryPolicy "Reads its own role-scoped memory at session start and writes back reusable audit checks and standard-conformance heuristics at session end; touches no other role's memory." ;
     ho:maturity "draft" .
+
+# Weighted topic links (규약: memory.ttl WEIGHTED TOPIC LINKS 절 — 구 anchor
+# 이전분, origin=curated). role-auditor의
+# definition 주제는 "continually audits ... raising an enforcement finding ...
+# compliance findings against a charter or standard" — c-oversight region 자체
+# (그 Concept의 정의도 "tag the ... audit roles"라고 이 role군을 지목한다).
+# c-dispatch("dispatch-invoked only")와 c-multiagent("other agents'")는 한정어·
+# 문맥으로만 등장한다. c-traceability는 definition에 문면 근거가 없어 topic
+# 링크를 달지 않는다 — 그 태그의 근거는 배선(ho:roleGuardrail id:gr-traceability)
+# 이지 definition이 아니므로 crisp ho:tagged로만 남긴다.
+id:link-role-auditor-topic-oversight a ho:Link ;
+    skos:prefLabel "Auditor agent / Oversight topic link" ;
+    ho:linkTarget id:c-oversight ; ho:linkKind id:kind-topic ;
+    ho:linkWeight 0.9 ; ho:weightOrigin "curated" .
+
+id:link-role-auditor-topic-dispatch a ho:Link ;
+    skos:prefLabel "Auditor agent / Dispatch-based execution topic link" ;
+    ho:linkTarget id:c-dispatch ; ho:linkKind id:kind-topic ;
+    ho:linkWeight 0.4 ; ho:weightOrigin "curated" .
+
+id:link-role-auditor-topic-multiagent a ho:Link ;
+    skos:prefLabel "Auditor agent / Multi-agent orchestration topic link" ;
+    ho:linkTarget id:c-multiagent ; ho:linkKind id:kind-topic ;
+    ho:linkWeight 0.4 ; ho:weightOrigin "curated" .
 
 # Simulation stand-in role (wave-S): the role that PLAYS the human side of a
 # run under evaluation, from a hidden scenario, interacting only through the

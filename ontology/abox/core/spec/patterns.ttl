@@ -24,7 +24,8 @@ id:pat-planexec a ho:DesignPattern ; skos:prefLabel "Plan-then-execute" ;
 id:pat-reflection a ho:DesignPattern ; skos:prefLabel "Reflection" ;
     skos:definition "Critique and revise an initial answer before returning it." .
 id:pat-orchestrator-workers a ho:DesignPattern ; skos:prefLabel "Orchestrator-workers" ;
-    skos:definition "A central orchestrator decomposes work into node-scoped tasks, dispatches them to specialised worker agents, and integrates the results; roles carry least-privilege file boundaries." .
+    skos:definition "A central orchestrator decomposes work into node-scoped tasks, dispatches them to specialised worker agents, and integrates the results; roles carry least-privilege file boundaries." ;
+    ho:tagged id:c-pattern-taxonomy .
 id:pat-peer-mesh a ho:DesignPattern ; skos:prefLabel "Peer-mesh" ; skos:altLabel "peer message mesh" ;
     skos:definition "Peer agents coordinate DIRECTLY with one another over a message mesh — each sends work, requests, judgments and results to any peer — rather than routing every hand-off through a single central orchestrator; there is no central-only dispatch bottleneck. The alternative coordination topology to orchestrator-workers. Coordination topology is a PLUGGABLE, EXTENSIBLE dimension: a harness declares its methodology explicitly via ho:appliesPattern plus the matching ho:Channel(s) — orchestrator-workers (central dispatch, id:chan-dispatch) or peer-mesh (direct peer coordination, id:chan-peer) — and a NEW topology is added as a new ho:DesignPattern + ho:Channel without disturbing the existing ones, so different methodologies coexist and recipes select the one they need." ;
     ho:tagged id:c-multiagent, id:c-pattern-taxonomy ; ho:maturity "reviewed" .
@@ -117,29 +118,29 @@ id:tier-advisory a ho:AutonomyTier ; skos:prefLabel "Advisory tier" ; skos:altLa
     skos:definition "The harness only recommends and the user does everything: analysis and proposals flow out, but no action is executed by the harness at all, so no range needs declaring and no approvals are exchanged. A REAL allocation, not a degenerate one -- starting the tier set at the first executing tier would lose the configuration many review- and advice-harnesses actually run in." ;
     ho:executionOwner "user" ; ho:oversightOwner "user" ; ho:fallbackOwner "user" ;
     ho:envelopeBinding "none" ; ho:approvalUnit "none" ;
-    ho:tagged id:c-autonomy ; ho:tokenEstimate 108 ; ho:maturity "draft" .
+    ho:tagged id:c-autonomy, id:c-operating-envelope ; ho:tokenEstimate 108 ; ho:maturity "draft" .
 id:tier-per-action-approval a ho:AutonomyTier ; skos:prefLabel "Per-action approval tier" ; skos:altLabel "every action confirmed" ;
     skos:definition "The harness acts, but every action passes through the user before it runs: the finest approval unit, with the user inline for each step. Choose when actions are individually consequential and the user is present throughout; the cost is that the user's attention is the throughput bound. Distinguished from id:tier-per-plan-approval, where one approval covers a whole plan." ;
     ho:executionOwner "user-and-harness" ; ho:oversightOwner "user" ; ho:fallbackOwner "user" ;
     ho:envelopeBinding "bounded" ; ho:approvalUnit "per-action" ;
-    ho:tagged id:c-autonomy ; ho:tokenEstimate 116 ; ho:maturity "draft" .
+    ho:tagged id:c-autonomy, id:c-operating-envelope ; ho:tokenEstimate 116 ; ho:maturity "draft" .
 id:tier-per-plan-approval a ho:AutonomyTier ; skos:prefLabel "Per-plan approval tier" ; skos:altLabel "plan approved, execution autonomous" ;
     skos:definition "The user approves a plan up front and the harness executes it autonomously within the declared envelope; mid-run the user is reached over a declared user channel when the range is exited, so the fallback owner is a RECEPTIVE user who must respond within a window. Choose for milestone-gated work (present the plan, get sign-off, run). Distinguished from id:tier-per-action-approval by the coarser approval unit, and from id:tier-bounded-autonomy, where no plan is pre-approved and only exceptions escalate." ;
     ho:executionOwner "harness" ; ho:oversightOwner "user" ; ho:fallbackOwner "receptive-user" ;
     ho:envelopeBinding "bounded" ; ho:approvalUnit "per-plan" ;
-    ho:tagged id:c-autonomy ; ho:tokenEstimate 152 ; ho:maturity "draft" .
+    ho:tagged id:c-autonomy, id:c-operating-envelope ; ho:tokenEstimate 152 ; ho:maturity "draft" .
 id:tier-bounded-autonomy a ho:AutonomyTier ; skos:prefLabel "Bounded autonomy tier" ; skos:altLabel "exception-escalation allocation" ;
     skos:definition "The harness works autonomously inside its declared envelope and brings the user in only for exceptions -- range exits, irreversible steps, open decisions -- while the user, present in the interactive loop, owns the fallback directly. The default allocation for an interactive working agent. Distinguished from id:tier-per-plan-approval by having no up-front plan gate, and from id:tier-monitored-autonomy by the user being in the loop rather than reading reports after the fact." ;
     ho:executionOwner "harness" ; ho:oversightOwner "user" ; ho:fallbackOwner "user" ;
     ho:envelopeBinding "bounded" ; ho:approvalUnit "per-exception" ;
-    ho:tagged id:c-autonomy ; ho:tokenEstimate 142 ; ho:maturity "draft" .
+    ho:tagged id:c-autonomy, id:c-operating-envelope ; ho:tokenEstimate 142 ; ho:maturity "draft" .
 id:tier-monitored-autonomy a ho:AutonomyTier ; skos:prefLabel "Monitored autonomy tier" ; skos:altLabel "post-hoc reporting allocation" ;
     skos:definition "The harness runs unattended inside its declared envelope and reports after the fact; no human is assumed reachable during the run, so on a range exit the harness itself must reach the safe-halt state (ho:HarnessAutonomyShape requires it to provide the safe-halt capability). Choose for standing or scheduled lanes where requests arrive while no one watches. Distinguished from id:tier-bounded-autonomy by the fallback owner: there the user is in the loop, here the harness halts itself and the user learns from the report." ;
     ho:executionOwner "harness" ; ho:oversightOwner "harness" ; ho:fallbackOwner "harness" ;
     ho:envelopeBinding "bounded" ; ho:approvalUnit "post-hoc" ;
-    ho:tagged id:c-autonomy ; ho:tokenEstimate 153 ; ho:maturity "draft" .
+    ho:tagged id:c-autonomy, id:c-operating-envelope ; ho:tokenEstimate 153 ; ho:maturity "draft" .
 id:tier-unbounded a ho:AutonomyTier ; skos:prefLabel "Unbounded tier" ; skos:altLabel "declared rangeless allocation" ;
     skos:definition "The boundary tier: the harness executes, oversees and owns its own fallback with NO declared envelope -- explicitly rangeless, which is a state to flag in review, never a default to drift into. It exists so that the absence of a range is a deliberate, visible declaration rather than an omission; a harness that means to run unattended within a range wants id:tier-monitored-autonomy instead." ;
     ho:executionOwner "harness" ; ho:oversightOwner "harness" ; ho:fallbackOwner "harness" ;
     ho:envelopeBinding "unbounded" ; ho:approvalUnit "none" ;
-    ho:tagged id:c-autonomy ; ho:tokenEstimate 118 ; ho:maturity "draft" .
+    ho:tagged id:c-autonomy, id:c-operating-envelope ; ho:tokenEstimate 118 ; ho:maturity "draft" .

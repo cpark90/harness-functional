@@ -67,10 +67,21 @@ id:chan-peer a ho:Channel ;
     skos:prefLabel "Peer channel" ; skos:altLabel "peer message mesh" ;
     skos:definition "The peer-to-peer coordination conduit of a peer-mesh harness: worker roles send work, requests, judgments and results DIRECTLY to one another over a message mesh, with no central-only orchestrator relaying every hand-off (contrast id:chan-dispatch, where the orchestrator spawns each worker and integrates every result). The channel that realises id:pat-peer-mesh. Coordination topology is a pluggable, extensible dimension: a harness selects peer-mesh by declaring ho:appliesPattern id:pat-peer-mesh together with this channel, exactly as an orchestrator-workers harness pairs id:pat-orchestrator-workers with id:chan-dispatch; a new topology is added as a new ho:DesignPattern + ho:Channel without disturbing either existing one. Peers here are worker roles only — no central dispatcher endpoint — and the user is not an endpoint." ;
     ho:channelParticipant id:role-implementer, id:role-vnv, id:role-research, id:role-design ;
+    ho:hasLink id:link-chan-peer-overlap-pat-peer-mesh ;
     ho:tagged id:c-multiagent, id:c-communication ;
     ho:involvesUser false ;
     ho:channelMedium "peer message mesh" ;
     ho:maturity "reviewed" .
+
+# Weighted overlap link — 구 crisp ho:overlapsWith 이전분(대칭 관계라 한 방향
+# 한 건만 저작, kind 정의의 규약). 가중치는 구조 증거 측정(structural-overlap-v1,
+# tools/measure_links.py)이 산출·갱신한다: 상호 definition IRI 교차참조
+# (chan-peer↔pat-peer-mesh 양방향) + 공유 태그(c-multiagent, scope facet).
+id:link-chan-peer-overlap-pat-peer-mesh a ho:Link ;
+    skos:prefLabel "Peer channel / Peer-mesh overlap link" ;
+    ho:linkTarget id:pat-peer-mesh ; ho:linkKind id:kind-overlap ;
+    ho:linkWeight 0.76 ; ho:weightOrigin "measured" ;
+    ho:weightMethod "structural-overlap-v1" .
 
 id:chan-task-board a ho:Channel ;
     skos:prefLabel "Task-board channel" ; skos:altLabel "shared task list" ;
@@ -95,7 +106,7 @@ id:chan-approval a ho:Channel ;
     skos:prefLabel "Approval channel" ; skos:altLabel "approval-request lane" ;
     skos:definition "The dedicated conduit for approval requests: durable and addressed, each request carrying a correlation identifier that ties the eventual answer back to the interrupted work, a declared authorized-responder set whose members alone may decide, and structured response options so approval, rejection and the rejection's reason arrive machine-readable. Distinguished from id:chan-agent-user, the general agent-user feedback conduit: this is the approval lane specifically -- it may ride the same physical medium, but its items are decision requests with correlation and authorization semantics, not free-form reports." ;
     ho:channelParticipant id:role-orchestrator ;
-    ho:tagged id:c-human-in-loop ;
+    ho:tagged id:c-human-in-loop, id:c-communication ;
     ho:involvesUser true ;
     ho:channelMedium "durable addressed approval requests (correlation id + authorized responders + structured response options)" ;
     ho:maturity "draft" .
@@ -104,7 +115,7 @@ id:chan-elicitation a ho:Channel ;
     skos:prefLabel "Elicitation channel" ; skos:altLabel "structured question lane" ;
     skos:definition "The conduit for structured mid-run questions to the human: each query is a message plus a flat schema of primitive-typed fields, so the answer comes back machine-readable, and every query terminates in exactly one of accept (with the filled content), decline or cancel. Distinguished from id:gr-user-elicitation, the policy that gaps must be asked rather than assumed -- this is the conduit contract such asking travels over; and from id:chan-approval, which carries authorization decisions on work the agent proposes: an elicitation asks for missing information, not for permission." ;
     ho:channelParticipant id:role-orchestrator ;
-    ho:tagged id:c-human-in-loop ;
+    ho:tagged id:c-human-in-loop, id:c-communication ;
     ho:involvesUser true ;
     ho:channelMedium "structured query (message + flat primitive-typed schema) answered accept/decline/cancel" ;
     ho:maturity "draft" .

@@ -90,7 +90,7 @@ SHACL 연결성 shape + 전역 reachability BFS가 이를 강제한다. (설계 
   **상한 260만 기계적으로 강제**한다. 초과는 그 노드가 두 가지 이상을 말하고 있다는 **단일
   책임(§1) 위반 신호**이므로, 분해(`WorkflowStep`/`PromptSection`류로 쪼개기)하거나 같은
   대상의 대안 서술이면 별도 노드로 분리한다(대안 서술을 상호 연결하는 술어는
-  `ho:alternativeOf` — §3 5번 관계 그룹). 적용 범위는 **abox 개체뿐**이다 — TBox 스키마
+  `ho:hasLink` + `id:kind-alternative` 가중 링크 — §3 5번 관계 그룹). 적용 범위는 **abox 개체뿐**이다 — TBox 스키마
   문서(축·axiom을 설명하는 기계 대상 산문)는 retrieval 단위로 projection되지 않으므로 제외한다.
 - **[지킴]** **저장된 그래프 전체(stored graph = `ontology/**`의 두 층)를 context에 로드하지
   않는다.** 요청 처리·composition은 항상 `python3 tools/retrieve.py "<request>"`가 준
@@ -147,7 +147,8 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 | Capability | `cap-` | `id:cap-codeexec` |
 | Contract | `ct-` | `id:ct-well-formed-skill-heading` |
 | Concept | `c-` | `id:c-softeng` |
-| Anchor | `anchor-` | `id:anchor-…` |
+| Link | `link-` | `id:link-chan-peer-overlap-pat-peer-mesh` |
+| LinkKind | `kind-` | `id:kind-overlap` |
 | DesignPattern | `pat-` | `id:pat-react` |
 | ExecutionMode | `mode-` | `id:mode-sub-agents` |
 | AutonomyTier | `tier-` | `id:tier-bounded-autonomy` |
@@ -203,8 +204,7 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
 5. `ho:appliesPattern` → `ho:hasExecutionMode` → `ho:autonomyTier` →
    `ho:environmentFidelity`(staged-rollout 환경 선언, Harness) →
    `ho:requiresCapability` / `ho:providesCapability` → `ho:constrainedBy` →
-   `ho:dependsOn` → `ho:specializes` / `ho:derivedFrom` →
-   `ho:alternativeOf` / `ho:overlapsWith` → `ho:hasAnchor`
+   `ho:dependsOn` → `ho:specializes` / `ho:derivedFrom` → `ho:hasLink`
 6. `ho:tagged`
 7. 데이터: `ho:promptText` → `ho:observedTokenVolume` → `ho:tokenEstimate` →
    `ho:salience` → `ho:maturity`

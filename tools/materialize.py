@@ -462,7 +462,19 @@ def _render_persona(g: Graph, h: URIRef, out: list[str], ctx: dict) -> None:
 
 
 def _render_operating_rules(g: Graph, h: URIRef, out: list[str], ctx: dict) -> None:
-    """Operating rules: hasGuardrail policies (+ language conditions)."""
+    """Operating rules: hasGuardrail policies (+ language conditions), followed
+    by the harness's run-governance DECLARATIONS — the operating envelope
+    (ho:hasEnvelope), the autonomy tier (ho:autonomyTier) and the environment
+    fidelity rung (ho:environmentFidelity). The three are rendered by this
+    section (positioned by the as-operating-rules AssemblySection) rather than
+    by dedicated ho:sectionKind values because the kind enum is CLOSED in the
+    SHACL shapes (AssemblySectionShape sh:in) — extending it is a schema
+    decision, and each companion below is a strictly conditional `##` block, so
+    a later promotion to first-class kinds is a byte-identical refactor.
+    Semantically they belong here: like the guardrails, they state the rules the
+    harness operates UNDER — which requests it undertakes (envelope), who may
+    approve what (tier) and how real the environment behind its tools is
+    (fidelity) — before Process says how it works."""
     out.append("## Operating rules")
     out.append("")
     for gr in _sorted(g.objects(h, HO.hasGuardrail)):
@@ -473,6 +485,141 @@ def _render_operating_rules(g: Graph, h: URIRef, out: list[str], ctx: dict) -> N
         out.append(f"- **{lib.label_of(g, gr)}** — {body}")
         for cond in sorted(str(c) for c in g.objects(gr, HO.languageCondition)):
             out.append(f"    - {cond}")
+    out.append("")
+    _render_operating_envelope(g, h, out, ctx)
+    _render_autonomy_tier(g, h, out, ctx)
+    _render_environment_fidelity(g, h, out, ctx)
+
+
+# How the two ho:envelopeDefault postures read in an emitted document. CLOSED
+# set (mirrors the sh:in on ho:envelopeDefault): an unrecognised value is a
+# hard error, never a silently generic sentence — the same closed-policy rule
+# select_candidate applies to ho:selectionPolicy.
+_ENVELOPE_DEFAULT_GLOSS = {
+    "restrictive": "whatever the statements below do not include is OUT of range",
+    "permissive": "whatever the statements below do not exclude is in range",
+}
+
+
+def _render_operating_envelope(g: Graph, h: URIRef, out: list[str], ctx: dict) -> None:
+    """Operating envelope: the declared range (ho:hasEnvelope) — the envelope's
+    own definition, its default posture, the exit policy it points at
+    (ho:onEnvelopeExit — named here by LABEL only: the rows' condition/recovery
+    text lives in the Error handling table, reached through the harness's own
+    ho:hasFailurePolicy binding, so the two edges stay non-duplicating) and one
+    table row per EnvelopeStatement. Columns: the attribute judged, the verdict,
+    the boundary value and the observation that decides it at request time.
+    ho:envelopeValueType and ho:envelopeClosure are deliberately NOT columns
+    (typing/closure metadata a reader gets from the boundary text and the stated
+    default; the Error-handling precedent keeps tables to the load-bearing
+    cells). Conditional — a harness that declares no envelope emits nothing."""
+    envelopes = _sorted(g.objects(h, HO.hasEnvelope))
+    if not envelopes:
+        return
+    out.append("## Operating envelope")
+    out.append("")
+    out.append("The declared operating range — which requests and run states "
+               "this harness undertakes to handle. Judge each incoming request "
+               "against the statements' observables; the range is an "
+               "undertaking, distinct from what the harness's tools make it "
+               "capable of.")
+    out.append("")
+    for oe in envelopes:
+        desc = g.value(oe, SKOS.definition)
+        tail = f" — {desc}" if desc else ""
+        out.append(f"- **{lib.label_of(g, oe)}**{tail}")
+        default = g.value(oe, HO.envelopeDefault)
+        if default is not None:
+            key = str(default)
+            if key not in _ENVELOPE_DEFAULT_GLOSS:
+                raise ValueError(
+                    f"unrecognised ho:envelopeDefault '{key}' on <{oe}>; "
+                    f"recognised: {sorted(_ENVELOPE_DEFAULT_GLOSS)}")
+            out.append(f"    - default: {key} — {_ENVELOPE_DEFAULT_GLOSS[key]}")
+        exits = _sorted(g.objects(oe, HO.onEnvelopeExit))
+        if exits:
+            names = "; ".join(lib.label_of(g, x) for x in exits)
+            # The cross-reference to the Error handling table is only printed
+            # when the harness ENROLS every exit row in its own catalog
+            # (ho:hasFailurePolicy) — a harness may point at central rows it
+            # does not carry, and then the pointer would dangle.
+            enrolled = set(g.objects(h, HO.hasFailurePolicy))
+            suffix = (" (see Error handling)"
+                      if all(x in enrolled for x in exits) else "")
+            out.append(f"    - on range exit: {names}{suffix}")
+        out.append("")
+        statements = _sorted(g.objects(oe, HO.hasEnvelopeStatement))
+        if statements:
+            out.append("| Attribute | Verdict | Boundary | Decided by |")
+            out.append("| --- | --- | --- | --- |")
+            for st in statements:
+                attr = g.value(st, HO.envelopeAttribute)
+                attr_cell = lib.label_of(g, attr) if attr is not None else ""
+                verdict = str(g.value(st, HO.envelopeVerdict) or "")
+                threshold = str(g.value(st, HO.envelopeThreshold) or "—")
+                observable = str(g.value(st, HO.envelopeObservable) or "")
+                out.append(f"| {_cell(attr_cell)} | {_cell(verdict)} "
+                           f"| {_cell(threshold)} | {_cell(observable)} |")
+            out.append("")
+        # Cross-attribute rules, WHEN -> include/exclude. No current harness
+        # declares one (rules are the documented exception, not the norm), so
+        # this path is exercised by no present build; it exists so a declared
+        # rule can never silently miss the emitted document.
+        for rule in _sorted(g.objects(oe, HO.hasEnvelopeRule)):
+            cond = g.value(rule, HO.ruleCondition)
+            effect = g.value(rule, HO.ruleEffect)
+            out.append(f"- **Rule: {lib.label_of(g, rule)}** — when {cond}: "
+                       f"{effect}")
+            out.append("")
+
+
+def _render_autonomy_tier(g: Graph, h: URIRef, out: list[str], ctx: dict) -> None:
+    """Autonomy tier: the responsibility allocation the harness declares
+    (ho:autonomyTier, at most one) — the tier's definition plus its five
+    closed-value slots as sub-bullets. Conditional — a harness that declares no
+    tier emits nothing."""
+    tiers = _sorted(g.objects(h, HO.autonomyTier))
+    if not tiers:
+        return
+    out.append("## Autonomy tier")
+    out.append("")
+    out.append("The allocation of responsibility between the user and this "
+               "harness: who executes the work, who oversees the run, who owns "
+               "the fallback when the declared envelope is exited, and at what "
+               "unit of work a human approval is granted.")
+    out.append("")
+    for tier in tiers:
+        desc = g.value(tier, SKOS.definition)
+        tail = f" — {desc}" if desc else ""
+        out.append(f"- **{lib.label_of(g, tier)}**{tail}")
+        for pred, name in ((HO.executionOwner, "executes"),
+                           (HO.oversightOwner, "oversees"),
+                           (HO.fallbackOwner, "fallback owner"),
+                           (HO.approvalUnit, "approval unit"),
+                           (HO.envelopeBinding, "envelope binding")):
+            value = g.value(tier, pred)
+            if value is not None:
+                out.append(f"    - {name}: {value}")
+    out.append("")
+
+
+def _render_environment_fidelity(g: Graph, h: URIRef, out: list[str], ctx: dict) -> None:
+    """Environment fidelity: the declared rung of the staged-rollout ladder
+    (ho:environmentFidelity, at most one — the sh:in enum is enforced by
+    HarnessShape, so no value gloss is duplicated here). Conditional — a
+    harness that makes no fidelity claim emits nothing."""
+    rungs = sorted(str(r) for r in g.objects(h, HO.environmentFidelity))
+    if not rungs:
+        return
+    out.append("## Environment fidelity")
+    out.append("")
+    out.append("How real the environment behind this harness's actions is "
+               "declared to be — its rung on the staged-rollout ladder (mock, "
+               "cassette, replica, digital-twin, production). Promotion along "
+               "the ladder is a change of this one declared value.")
+    out.append("")
+    for rung in rungs:
+        out.append(f"- declared fidelity: {rung}")
     out.append("")
 
 

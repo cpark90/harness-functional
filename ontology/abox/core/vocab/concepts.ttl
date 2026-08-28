@@ -102,12 +102,12 @@ id:c-agent-methodology a ho:Concept ;
 id:c-least-privilege a ho:Concept ;
     skos:prefLabel "Least privilege" ;
     skos:altLabel "separation of duties" ;
-    skos:definition "The principle that each role edits only its own responsibility boundary and holds the minimum permissions needed, keeping authoring, judgment, application and version control in separate hands." ;
+    skos:definition "The principle that a role's permissions stop at the minimum its own responsibility boundary needs, keeping duties in separate hands." ;
     skos:broader id:c-agent-methodology ; ho:conceptFacet "method" .
 id:c-verify-proceed a ho:Concept ;
     skos:prefLabel "Verify then proceed" ;
     skos:altLabel "no time assumptions" ;
-    skos:definition "The principle of advancing only on confirmed state rather than assuming readiness from elapsed time, treating timeouts as give-up bounds and not as correctness premises." ;
+    skos:definition "The principle that elapsed time is never evidence of state: only confirmed state licenses advancing, and a timeout certifies nothing." ;
     skos:broader id:c-agent-methodology ; ho:conceptFacet "method" .
 id:c-design-for-loss a ho:Concept ;
     skos:prefLabel "Design for loss" ;
@@ -121,7 +121,7 @@ id:c-escalation a ho:Concept ;
 id:c-bounded-context a ho:Concept ;
     skos:prefLabel "Bounded context projection" ;
     skos:altLabel "anti-context-rot" ;
-    skos:definition "The principle of never ingesting the whole knowledge store but retrieving only a request-scoped, budget-capped projection, keeping the working context bounded to defend against context rot." ;
+    skos:definition "The principle that a bounded working context defends against context rot: only a request-scoped, budget-capped projection of the knowledge store enters it." ;
     skos:broader id:c-agent-methodology ; ho:conceptFacet "method" .
 id:c-graceful-fallback a ho:Concept ;
     skos:prefLabel "Graceful fallback" ;
@@ -156,23 +156,23 @@ id:c-lesson a ho:Concept ;
 
 id:c-root-cause a ho:Concept ;
     skos:prefLabel "Root-cause resolution" ;
-    skos:definition "The principle of resolving problems at their underlying cause rather than masking a symptom with a guard that leaves the fault in place." ;
+    skos:definition "The principle that a problem is resolved only at its underlying cause; a masked symptom leaves the fault in place." ;
     skos:broader id:c-design ; ho:conceptFacet "method" .
 id:c-simplicity a ho:Concept ;
     skos:prefLabel "Simplicity" ;
     skos:altLabel "YAGNI" ;
-    skos:definition "The principle of preferring the simplest form that works, removing branches rather than adding them and avoiding speculative generalization that nothing uses yet." ;
+    skos:definition "The principle that the simplest working form wins: speculative generalization and unused branches are standing cost, not value." ;
     skos:broader id:c-design ; ho:conceptFacet "method" .
 
 id:c-report-over-prompt a ho:Concept ;
     skos:prefLabel "Report over prompt" ;
-    skos:definition "The principle of writing status, decisions, questions and reports to durable channels rather than volatile chat, leaving only a one-line pointer to where each was written." ;
+    skos:definition "The principle that durable channels, not volatile chat, carry the record of work: chat dies with its session and holds only pointers." ;
     skos:broader id:c-agent-methodology ; skos:related id:c-communication ;
     ho:conceptFacet "method" .
 id:c-controlled-vocabulary a ho:Concept ;
     skos:prefLabel "Controlled vocabulary" ;
     skos:altLabel "anti-drift" ;
-    skos:definition "The principle of reusing registered terms and established domain vocabulary rather than coining near-synonyms or private abbreviations, adding new terms to a single terminology source." ;
+    skos:definition "The principle that terms come from one registered terminology source: near-synonym and private-abbreviation coinage is vocabulary drift." ;
     skos:broader id:c-agent-methodology ; skos:related id:c-communication ;
     ho:conceptFacet "method" .
 id:c-structured-output a ho:Concept ;
@@ -473,6 +473,51 @@ id:c-simulation-standin a ho:Concept ;
     skos:altLabel "human or environment proxy" ;
     skos:definition "The family of components that stand in for a live counterpart during a simulated or evaluative run -- a role playing the human side from a hidden scenario, a mediated environment surface replacing the real world -- so a harness can be exercised, measured or rehearsed without the real human or environment being present. A stand-in PERFORMS the counterpart during the run; tag the roles, guardrails and tools that do so. Distinct from the fixture authoring of id:role-tester, which PRODUCES the acceptance material a run consumes rather than playing a side of it, and from id:c-acceptance-coverage, which fixes how much behaviour those fixtures must cover." ;
     skos:topConceptOf id:scheme ; ho:conceptFacet "anatomy" .
+
+#===================== LINK KINDS (ho:LinkKind) ========================
+# The relation vocabulary of the weighted link layer (ho:Link): one individual
+# per relation kind, extensible by INDIVIDUAL like the execution modes. They
+# live in this vocab unit because they ARE registered relation terminology —
+# each is tagged id:c-controlled-vocabulary (the registered-terminology
+# principle that keeps edges typed instead of ad hoc), which also keeps the
+# unused kinds connected until their migrations land in phase 2. The five
+# below cover the approved probabilistic-link decision's minimum: the crisp
+# broader/tagged/alternativeOf/overlapsWith replacements plus the
+# same-knowledge fragment kind for text-cap splits. ho:traversalWeight values
+# deliberately equal the crisp predicates' historical projector weights
+# (tagged 0.7, broader 0.5, unknown-predicate default 0.5) so migration alone
+# never re-ranks packs; kind-fragment is 0.9 because a split fragment's
+# siblings are near-mandatory context, like hasComponent edges.
+
+id:kind-broader a ho:LinkKind ;
+    skos:prefLabel "Broader kind" ; skos:altLabel "taxonomic parent link" ;
+    skos:definition "The taxonomic relation kind: the link's TARGET is the broader, more general node and the SOURCE falls under it (the direction convention of skos:broader, which this kind replaces in the weighted layer). Directed, never mirrored. The weight is the degree to which the source genuinely belongs under the target: 1.0 = a full is-a/narrower placement, lower values = a partial or debatable subsumption that a crisp taxonomy edge could not express." ;
+    ho:traversalWeight 0.5 ;
+    ho:tagged id:c-controlled-vocabulary ; ho:maturity "draft" .
+
+id:kind-topic a ho:LinkKind ;
+    skos:prefLabel "Topic kind" ; skos:altLabel "weighted tag link" ;
+    skos:definition "The aboutness relation kind: the TARGET is a Concept naming a knowledge region and the weight says how much the SOURCE is about it — the weighted generalisation of crisp ho:tagged and the exact meaning the retired ho:Anchor carried (its two-notch scale survives as authoring guidance: ~0.9 when the source's definition body IS the region, ~0.4 when the region appears only as context or qualifier). Directed (source is described, target is the region), never mirrored." ;
+    ho:traversalWeight 0.7 ;
+    ho:tagged id:c-controlled-vocabulary ; ho:maturity "draft" .
+
+id:kind-alternative a ho:LinkKind ;
+    skos:prefLabel "Alternative kind" ; skos:altLabel "alternative telling link" ;
+    skos:definition "The re-telling relation kind, replacing the retired crisp ho:alternativeOf: source and target describe the SAME knowledge region in different ways (a terse rule and a worked rationale, a novice and an expert framing), so a bounded context pack should admit ONE of them per region rather than pay for every telling. Symmetric — author ONE link per pair, never a mirror. The weight is the degree of interchangeability: 1.0 = either can fully stand in for the other; lower values = partially substitutable tellings. ho:AlternativeLinkSharedRegionShape enforces that the two ends share a discriminant tagged region." ;
+    ho:traversalWeight 0.5 ;
+    ho:tagged id:c-controlled-vocabulary ; ho:maturity "draft" .
+
+id:kind-overlap a ho:LinkKind ;
+    skos:prefLabel "Overlap kind" ; skos:altLabel "overlapping scope link" ;
+    skos:definition "The intersecting-scope relation kind, replacing the retired crisp ho:overlapsWith: each end says something the other does not, so neither substitutes for the other and a projection must never de-duplicate them — recording the overlap is the anti-drift signal that the intersection is known and intended. Symmetric — author ONE link per pair, never a mirror. The weight is the degree of scope intersection: high values = the two descriptions share most of their ground, low values = they barely touch." ;
+    ho:traversalWeight 0.5 ;
+    ho:tagged id:c-controlled-vocabulary ; ho:maturity "draft" .
+
+id:kind-fragment a ho:LinkKind ;
+    skos:prefLabel "Fragment kind" ; skos:altLabel "same-knowledge fragment link" ;
+    skos:definition "The same-knowledge relation kind for text-cap splits, per the approved decision that an over-cap node is split by meaning and its pieces are connected by a link kind rather than a bespoke predicate: source and target are fragments of ONE knowledge unit that was divided along its cohesion seams (single-responsibility splits), so retrieving one makes the others near-mandatory context. Symmetric among sibling fragments — author ONE link per pair, never a mirror. The weight is the cohesion degree: 1.0 = unmistakably one knowledge unit split only by size, lower values = pieces that also stand alone." ;
+    ho:traversalWeight 0.9 ;
+    ho:tagged id:c-controlled-vocabulary ; ho:maturity "draft" .
 
 #===================== Concept scheme ==================================
 id:scheme a skos:ConceptScheme ; skos:prefLabel "Harness ontology vocabulary" .

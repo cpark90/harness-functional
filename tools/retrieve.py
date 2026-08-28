@@ -12,9 +12,16 @@ whole. Given a request we:
                              the edges among them, base-harness candidates,
                              and capability gaps to fill)
 
-ONE TELLING PER REGION: of the nodes linked as alternatives (`ho:alternativeOf`)
-— the same knowledge told different ways — admission takes one and drops the
-rest, so a set of alternatives costs the budget of a single description.
+ONE TELLING PER REGION: of the nodes linked as alternative tellings (weighted
+links of the alternative kind, `id:kind-alternative`) — the same knowledge told
+different ways — admission takes one and drops the rest, so a set of
+alternatives costs the budget of a single description.
+
+WEIGHTED LINK LAYER: `ho:Link` individuals are typed, weighted relations
+between nodes. They are traversed as EDGES (source <-> target, weighted by
+the kind's base weight x the link's fuzzy degree) and surfaced as weighted
+edge lines in the pack, but the link/kind nodes themselves are NEVER admitted
+— the measured anchor-pollution lesson.
 
 Output is small and relevant by construction, so a large ontology does not
 translate into a large, rotting context window.
@@ -61,6 +68,51 @@ STOPWORDS = {
     "me", "my", "build", "make", "create", "agent", "harness", "want", "need",
     "can", "run", "runs", "it", "on", "in", "is", "be", "who", "which",
 }
+
+# Link-layer classes: their instances DESCRIBE weighted, typed relations
+# between other nodes (source → Link → target, with a kind and a fuzzy degree)
+# — they are not parts a harness assembles, so a pack of assembly parts must
+# not spend budget on them. Left in as nodes, they evict real parts: their
+# prefLabels echo both endpoints' labels into the lexical seed ranking (the
+# measured anchor-pollution failure this replaced). So they are excluded as
+# NODES — never a seed, never admitted — while `weighted_links` re-injects
+# each one as a weighted EDGE between its endpoints, which is the "excluded as
+# node, traversed as edge" contract of the probabilistic link layer.
+LINK_LAYER_CLASSES = {HO.Link, HO.LinkKind}
+
+# A LinkKind that declares no ho:traversalWeight propagates at the projector's
+# unknown-predicate weight, same as PREDICATE_WEIGHT.get default below.
+DEFAULT_KIND_WEIGHT = 0.5
+
+ALTERNATIVE_KIND = lib.ID_CORE["kind-alternative"]
+
+
+def link_layer_nodes(g: Graph) -> set:
+    """Instances of the link-layer classes — excluded from projection as nodes."""
+    return {n for cls in LINK_LAYER_CLASSES
+            for n in g.subjects(RDF.type, cls)}
+
+
+def weighted_links(g: Graph) -> list[tuple]:
+    """Every well-formed ho:Link flattened to (source, target, kind, effective
+    edge weight, degree) tuples, in a total IRI order (determinism). The
+    effective weight is the kind's ho:traversalWeight (base: how strongly this
+    RELATION propagates relevance) x the link's ho:linkWeight (fuzzy degree:
+    how strongly THIS pair holds it). Malformed links (validation failures)
+    are skipped rather than guessed at."""
+    out = []
+    for link in sorted(g.subjects(RDF.type, HO.Link), key=str):
+        target = g.value(link, HO.linkTarget)
+        kind = g.value(link, HO.linkKind)
+        degree = g.value(link, HO.linkWeight)
+        if target is None or kind is None or degree is None:
+            continue
+        base = g.value(kind, HO.traversalWeight)
+        base_w = float(base) if base is not None else DEFAULT_KIND_WEIGHT
+        for source in sorted(g.subjects(HO.hasLink, link), key=str):
+            out.append((source, target, kind, base_w * float(degree),
+                        float(degree)))
+    return out
 
 
 # --- 1. entry-point selection ----------------------------------------
@@ -154,7 +206,10 @@ def _rank_key(g: Graph, item: tuple[object, float]):
 
 def select_seeds(g: Graph, terms: list[str]) -> list[tuple[object, float]]:
     scored = []
+    excluded = link_layer_nodes(g)   # link layer ≠ part: no seed slot
     for n in lib.instance_nodes(g):
+        if n in excluded:
+            continue
         s = lexical_score(g, n, terms)
         if s > 0:
             scored.append((n, s))
@@ -169,10 +224,21 @@ def select_seeds(g: Graph, terms: list[str]) -> list[tuple[object, float]]:
 # --- 2. bounded traversal --------------------------------------------
 def build_adjacency(g: Graph):
     adj = defaultdict(list)
+    excluded = link_layer_nodes(g)   # link layer ≠ part: no hop lands ON a link
     for s, p, o in lib.instance_edges(g):
+        if s in excluded or o in excluded:
+            continue
         w = PREDICATE_WEIGHT.get(p, 0.5)
         adj[s].append((o, p, w))
         adj[o].append((s, p, w))  # undirected discovery
+    # Weighted links traversed as EDGES: each ho:Link contributes a direct
+    # source<->target hop at (kind base weight x fuzzy degree), so the link
+    # layer moves relevance without its nodes ever entering the pack.
+    for source, target, kind, w, _degree in weighted_links(g):
+        if source in excluded or target in excluded:
+            continue
+        adj[source].append((target, kind, w))
+        adj[target].append((source, kind, w))  # undirected discovery
     return adj
 
 
@@ -182,26 +248,27 @@ def token_cost(g: Graph, node) -> int:
     return max(base, MIN_NODE_TOKENS)
 
 
-# ho:alternativeOf links nodes that describe the SAME knowledge region in
-# DIFFERENT ways (a terse rule and a worked rationale, a novice and an expert
-# framing). The store keeps every telling on purpose; the pack must not, or one
-# region buys the token budget N times and the reader pays to read one thing N
-# ways — the noise this projection exists to block. So admission keeps one
-# member per cluster and suppresses the rest.
+# Alternative-kind links (id:kind-alternative) connect nodes that describe the
+# SAME knowledge region in DIFFERENT ways (a terse rule and a worked rationale,
+# a novice and an expert framing). The store keeps every telling on purpose;
+# the pack must not, or one region buys the token budget N times and the reader
+# pays to read one thing N ways — the noise this projection exists to block. So
+# admission keeps one member per cluster and suppresses the rest.
 #
-# NOT ho:overlapsWith: overlapping scopes merely intersect, so each node says
+# NOT the overlap kind: overlapping scopes merely intersect, so each node says
 # something the other does not and dropping one LOSES content. Overlapping
 # nodes are not substitutes and stay both-admissible (budget permitting);
 # only full alternatives are de-duplicated here.
 def alternative_clusters(g: Graph) -> dict:
-    """Map each node touched by ho:alternativeOf to its cluster key — the
-    UNDIRECTED connected component of alternativeOf edges that it belongs to.
+    """Map each node touched by an alternative-kind ho:Link to its cluster key
+    — the UNDIRECTED connected component of alternative links it belongs to.
 
-    Undirected in code on purpose. ho:alternativeOf is an owl:SymmetricProperty,
-    but leaning on OWL RL (prp-symp) to have materialised the reverse edge would
-    make this rule silently one-directional on any raw, unreasoned graph — the
-    same trap that reasoning-dependent audits keep falling into. Reading both
-    directions costs nothing and holds either way.
+    Undirected in code on purpose. The alternative kind is symmetric by
+    convention (one authored link per pair, never mirrored), and reading the
+    n-ary link from both ends costs nothing and holds regardless of which end
+    authored it. Cluster membership is deliberately CRISP for now — any
+    declared alternative link joins the pair into one region — with the fuzzy
+    degree reserved for a later ranking stage.
 
     The key is the lexicographically smallest IRI in the component, and the
     components are walked in sorted IRI order, so the result is a function of
@@ -209,11 +276,11 @@ def alternative_clusters(g: Graph) -> dict:
     gate). Nodes with no declared alternative are absent from the map.
     """
     adj = defaultdict(set)
-    for s, o in g.subject_objects(HO.alternativeOf):
-        if s == o:
+    for source, target, kind, _w, _degree in weighted_links(g):
+        if kind != ALTERNATIVE_KIND or source == target:
             continue                       # a node is not its own alternative
-        adj[s].add(o)
-        adj[o].add(s)
+        adj[source].add(target)
+        adj[target].add(source)
 
     cluster: dict = {}
     for start in sorted(adj, key=str):
@@ -322,15 +389,31 @@ def project(g: Graph, request: str, budget: int) -> dict:
     # Graph iteration order is not reproducible across processes (OWL-RL
     # materialisation inserts inferred triples in set order), so the edge list
     # is sorted on a total key: reading order first, IRIs to break ties.
-    edges = [
-        {"s": lib.label_of(g, s), "p": p.split("#")[-1], "o": lib.label_of(g, o)}
-        for s, p, o in sorted(
-            (t for t in lib.instance_edges(g)
-             if t[0] in in_scope and t[2] in in_scope),
-            key=lambda t: (lib.label_of(g, t[0]), t[1].split("#")[-1],
-                           lib.label_of(g, t[2]), str(t[0]), str(t[1]), str(t[2])),
-        )
+    # Weighted links between two in-scope nodes are surfaced HERE, as edge
+    # lines carrying the kind's short name and the fuzzy degree ("w") — the
+    # link node itself never appears in the pack. One line per authored link
+    # (symmetric kinds are authored once and not mirrored).
+    crisp_edges = [
+        ((lib.label_of(g, s), p.split("#")[-1], lib.label_of(g, o),
+          str(s), str(p), str(o)),
+         {"s": lib.label_of(g, s), "p": p.split("#")[-1],
+          "o": lib.label_of(g, o)})
+        for s, p, o in lib.instance_edges(g)
+        if s in in_scope and o in in_scope
     ]
+    link_edges = []
+    for source, target, kind, _w, degree in weighted_links(g):
+        if source not in in_scope or target not in in_scope:
+            continue
+        kshort = str(kind).rsplit("/", 1)[-1]
+        kshort = kshort[5:] if kshort.startswith("kind-") else kshort
+        link_edges.append(
+            ((lib.label_of(g, source), kshort, lib.label_of(g, target),
+              str(source), str(kind), str(target)),
+             {"s": lib.label_of(g, source), "p": kshort,
+              "o": lib.label_of(g, target), "w": round(degree, 3)}))
+    edges = [e for _k, e in sorted(crisp_edges + link_edges,
+                                   key=lambda it: it[0])]
 
     candidates = [
         {"label": lib.label_of(g, n), "relevance": round(score_of[n], 3)}
@@ -417,7 +500,10 @@ def render_markdown(pack: dict) -> str:
         out.append("## Structure (edges within scope)")
         cap = 30
         for e in shown[:cap]:
-            out.append(f"- {e['s']} —[{e['p']}]→ {e['o']}")
+            if "w" in e:  # weighted link edge: kind short-name + fuzzy degree
+                out.append(f"- {e['s']} —[{e['p']} {e['w']}]→ {e['o']}")
+            else:
+                out.append(f"- {e['s']} —[{e['p']}]→ {e['o']}")
         if len(shown) > cap:
             out.append(f"- …(+{len(shown) - cap} more edges; see --format json)")
         out.append("")
