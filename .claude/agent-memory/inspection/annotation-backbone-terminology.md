@@ -58,3 +58,42 @@ brief.md`(무향 연결성분당 1 admit·새 정렬키 없음·skip은 예산 �
 - **병행 세션 주의**: 같은 날 다른 inspection/orchestrator 세션이 같은 lane에 브리프를 쓸 수
   있다(이번: 작업 중 ①~④ 브리프 4종+tool_suggestion 복원이 병행 생성됨) — verified 편집 전
   재읽기·조사 결론과 병행 결정(예: cap 500) 충돌 시 모순 아닌 층위 구분으로 명시할 것.
+
+## A-wave 후보 탐색 실측 (2026-08-28) — `inquiries/a-wave-candidate-survey.md`
+**탐색 4축 레시피**(재사용): ①같은 클래스 태그 Jaccard ②정의 텍스트 difflib 유사도
+③정의 안 `Distinguished from|Distinct from|Contrast|rather than` + `id:` 정규식(=저자가 이미
+인지한 인접성) ④chars//4 cap 근접. ③이 가장 수확이 크다.
+
+- **alternativeOf 후보 사실상 0**: 태그 겹침 7쌍은 텍스트 유사도 0.01~0.20(형제=보완, 대안 아님).
+  대안으로 묶으면 팩이 하나만 실어 **정보 손실**.
+- **overlapsWith 후보 43쌍 실재**(엣지 0건) — 전용 shape 없음·retrieve 비배제라 저위험. A-wave의
+  실제 수확물. 25쌍은 태그 공유(가군), 17쌍은 비공유(나군 — 태그 보강 여부 결정 필요).
+- ★**region 변별력 붕괴 실측**: tagged 126개체 중 **109개가 태그 1개**, `c-multiagent` 하나가
+  **41개체**. shape의 "같은 region=태그 공유"가 무의미해진다 → **B-wave(계층화)가 A의 전제**.
+  깊이 1 평면 backbone에서는 alternativeOf를 옳게 저작할 수 없다.
+- **c-X ↔ gr-X 쌍둥이 16쌍**: `gr-X`는 **16/16 자기 개념으로 태그**됨(균일). 그래서 shape 완화는
+  기술적으로 가능하나 **하면 안 됨** — alternativeOf는 성분당 1 admit이라 조립에 필요한
+  Guardrail 대신 Concept만 남는 경우가 생기고 승자가 질의마다 뒤바뀜(실측). **처방=정의 축약**,
+  대상은 **sim≥0.56인 7쌍**(~225 tok 회수 = 기본 예산 900의 25%). 나머지 9쌍은 이미 분화됨.
+- **팩 실측 방법**: 쌍둥이가 실제로 함께 실리는지 `retrieve.py`로 투영해 확인 —
+  1·2위 나란히, 예산 896/900(99.6%). 중복 비용 주장은 이렇게 실측으로 뒷받침할 것.
+
+## B-wave 계층 축 설계 (2026-08-28) — `inquiries/b-wave-facet-design.md`
+★**최대 제약(재사용)**: `retrieve.py` 가중치가 `ho:tagged` **0.7** vs `skos:broader/narrower`
+**0.5** — **계층을 한 단계 깊게 할 때마다 개념 간 발견성이 절반**이 된다. 팩은 이미 896/900
+포화라 발견성 저하가 곧 누락이다. → **taxonomy 재구조화를 "위에 루트 씌우기"로 하면 안 된다.**
+
+- **설계 결론**: 계층 = **facet(내용 축) 선언 속성**(`ho:conceptFacet`), 깊이 증가 0.
+  facet 5 = anatomy/quality/method/domain/**scope**, 각각 **판정 질문**으로 정의(예시로 정의하면
+  표류 — 6-layer 문헌 교훈). `scope`를 명시하는 게 핵심: `c-multiagent`가 내용 태그인 척
+  버킷이 된 원인이 "이건 내용 축이 아니다"라고 말할 자리가 없었기 때문.
+- **측정된 문제**: top 12개에 분할 기준 없음(방법·성질·부위·영역·범위 혼재) / `c-multiagent`
+  41개체 중 **27개가 그 태그 하나뿐**(Role 10·Agent 5·Channel 6·Deliverable 2·Guardrail 3·
+  Pattern 1) / 태그 1개뿐 개체 **115**(단 Guardrail 51은 `gr-X→c-X`라 이미 내용 태그 — 진짜
+  결핍은 27개).
+- **A-wave와의 연결**: alternativeOf의 "같은 region"을 *아무 태그 공유*가 아니라
+  **판별 facet(anatomy/method) 공유**로 재정의(shape SPARQL 1곳) → 허위 region 소멸.
+- **파급**: 개념 재부모화는 validate 도달성 안전(tagged 유지), 접두사·파일 무변경.
+  **B1(facet 선언)은 검색 무영향, B2(태그 보강)만 랭킹 변경** → 분리 land 권고.
+  개념 재부모화 **선례 없음**(`abox-taxonomy-reorg`는 파일 레이아웃 재조직이었음).
+- 현행 깊이 실측: 0:12 / 1:36 / 2:20 (깊이 2는 W1 envelope 가지가 유일).

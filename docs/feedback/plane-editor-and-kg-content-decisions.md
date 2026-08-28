@@ -1,5 +1,5 @@
 ---
-status: open            # 사용자만 approved로 바꾼다
+status: approved            # 사용자만 approved로 바꾼다
 targets: [id:pat-knowledge-plane-separation, ho:Anchor, ho:alternativeOf, id:scheme, tools/plane-editor, tools/retrieve.py]
 ---
 # 결정 요청 — ④ lane 이후 진행 방향 4건 (orchestrator)
@@ -62,6 +62,53 @@ backbone)으로 처리됐으나, 실측하면 **깊이 1의 평면 구조**(top 
   A-wave 실측이 案과 파급 추정을 함께 내므로, 그 결과를 보고 案을 고르는 방식.
 - **(b) 부분 계층화** — 파급이 작은 영역(예: 한 상위 개념 아래 밀집한 군)만 먼저 2층으로.
 - **(c) 현행 유지** — 평면 backbone을 유지하고 계층화 요구는 철회/보류.
+
+---
+
+---
+
+## A-wave 실측 결과 반영 (2026-08-28, `docs/verify/kg-content-candidates.md`)
+
+위 결정 3·4의 판단 근거가 실측으로 채워졌다. **핵심: KG의 annotation/anchor 공백은 방치가
+아니라 증거가 지지하는 정답이다** — 저작할 실물이 없다.
+
+| 축 | 후보 | 판정 |
+|---|---|---|
+| `ho:alternativeOf` (진짜 대안 서술) | **0** | 저작하지 말 것 |
+| `ho:overlapsWith` (부분 겹침) | **2** | ↓ 결정 5 |
+| 중복(=병합 대상 drift) | **0** | 조치 불요 |
+| `ho:Anchor` + `anchorConfidence` | **0** | 저작 근거 없음 |
+| layered skeleton | 案 2개 (A 권고) | ↓ 결정 4 보강 |
+
+- **대안 서술 0**: 4개 독립 탐색법(라벨 Jaccard / 태그집합 그룹 / 정의 Jaccard / altLabel 충돌)
+  전부 음성. 유일 후보 `gr-well-formed-skill ↔ ins-well-formed-skill`조차 `alternativeOf`로
+  묶으면 영역당 1-admit이 capability 제공자를 탈락시켜 **phantom gap이 실제 팩에 나타남**(실측)
+  → `overlapsWith`로 강등이 맞다.
+- **가중 anchor 근거 없음**: 다중 태그 노드 17/117(최대 3개), 그중 6개는 chain 제약상 부적격,
+  부수 태그 제거 반사실 팩 diff는 3–5% 자리바꿈뿐, 결정적으로 **`anchorConfidence`를 읽는 코드가
+  0줄**이다. 지금 저작하면 소비자 없는 장식이 된다.
+- **결정 4 보강**: 案 A(허브 2개 아래 중간층 9 + broader 22 재지정)의 retrieve ripple은
+  **12질의 중 0/12**로 사실상 무료다. 즉 판단 기준은 성능이 아니라 **"내용 구분이 실재하는가"**.
+  또한 AV W1 lane에서 `c-operating-envelope` 서브트리가 land되며 **깊이 2 선례가 이미 생겼다**
+  (Concept 42→68, broader 31→56) — 계층화는 이미 시작된 셈이라 案 A는 그 연장선이다.
+
+## 5. (신규) `overlapsWith` 후보 2쌍을 저작할 것인가
+
+실측이 찾은 부분 겹침 2쌍. 저작해도 팩 배제는 일어나지 않는다(`overlapsWith`는 1선별 트리거가
+아님) — 얻는 것은 "관계 없는 근사중복"과 구분되는 명시 관계, 잃는 것은 검증되지 않은 관계의
+추가.
+
+- **(a) 2쌍 저작** — 메커니즘이 실물 하나 없이 남는 상태를 해소(첫 실사용 사례).
+- **(b) 저작 안 함** — 실익이 팩에 나타나지 않으므로 유예.
+
+## 6. (신규) `AlternativeOfSharedAnchorShape` 강화 여부
+
+실측 지적: 이 shape는 **태그 1개 공유만** 보므로 정의 유사도 0.000인 쌍도 통과한다(허브 태그
+하나로 820쌍 통과). 지금은 `alternativeOf` 사용이 0이라 무해하지만, 첫 저작 시 게이트가
+잘못된 저작을 막아주지 못한다.
+
+- **(a) 강화** — 공유 태그 수·정의 유사도 하한 등 추가 조건(첫 alternativeOf 저작 전에).
+- **(b) 현행 유지** — 사용 0인 동안은 비용만 발생하므로 실사용 시점으로 미룸.
 
 ---
 

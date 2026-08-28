@@ -6,6 +6,8 @@
 - **반복 핵심**: (1) 중간노드 도달성=hasComponent propertyChain(직접sub=Harness mistype). (2) 2클래스 공용술어=domain 생략+definition 명시. (3) ⊑HarnessComponent=harness 배선/rollup 필수. (4) bound 노드 prefLabel/definition 수정=byte-id 깨짐(2run cmp). (5) recipe closure=HARNESS_ROOT_ONTOLOGY. (6) 신규 leaf·클래스=`lib.INSTANCE_CLASSES` 등록(미등록=개체 증발).
 
 <!-- 학습 인덱스 (한 줄씩, 상세는 토픽 파일) -->
+- [av-w1-envelope-tier-authoring](av-w1-envelope-tier-authoring.md) — sub-property 경유 rollup은 2-link chain(브리프의 3-link 표기=죽은 chain). byte-id는 carrier 분리로, MANIFEST 증분은 필연. sh:declare에 id: 추가하면 shape가 ABox IRI 참조 가능. 배정분이 이미 디스크에 있으면 재작성 말고 감사→결손만(Concept은 tokenEstimate/maturity 미부여가 관용, tier 라벨에 루프위치 어휘 금지).
+- [new-class-three-point-registry](new-class-three-point-registry.md) — 신규 클래스=INSTANCE_CLASSES+PREFIX_MAP+§2표 3점 등록(미인스턴스도 선등록). 병행 dispatch 충돌은 git diff 먼저·재작성 금지.
 - [lesson-learning-axis-no-tbox](lesson-learning-axis-no-tbox.md) — 개별 lesson=인스턴스라 ho:Lesson 신설 금지(Concept+Guardrail+WorkflowStep). stepGuardedBy는 롤업 없음.
 - [channel-default-participants-generalize](channel-default-participants-generalize.md) — Channel participant 불일치=중앙 default 일반화(전용 재선언=drift). 정의문 role 표현도 전수 교체.
 - [language-terminology-policy-pair](language-terminology-policy-pair.md) — 언어=gr-lang+용어=gr-standard-terms 쌍, carrier 일치. CLAUDE.md 절 동기화.
@@ -117,5 +119,6 @@
 - [retrieve-alternative-one-per-region](retrieve-alternative-one-per-region.md) — 클러스터당 1 admit(traverse pop 직후), 탈락은 `done` 마킹.
 - [design-principle-as-designpattern-node](design-principle-as-designpattern-node.md) — 원리 1건=DesignPattern 1+기존 tag. 재dispatch 방어=`git grep HEAD` 선확인.
 - [plane-formalization-phase0-map](plane-formalization-phase0-map.md) — 코드 매핑 문서=칸마다 file:line 재확인. 병행 트리에선 개수를 척추로 쓰지 말 것(2회 측정).
-- [plane-editor-phase1-anchor-engine](plane-editor-phase1-anchor-engine.md) — standoff 앵커 실측: y-prosemirror assoc 고정·simpleDiff 경계 드리프트·원격=전체 replace. 오해소 0=collapsed면 quote 금지, 레인 3분할+drifted≠wrong.
+- [plane-editor-phase1-anchor-engine](plane-editor-phase1-anchor-engine.md) — standoff 앵커 실측. 오해소 0은 문자열(affix) 아닌 **CRDT 증거**로: 블록 정체성(state vector)+문자 출처, 삭제증거면 복구금지, 정책 대조군 반사실 계측, "0"은 범위 한정 서술.
 - [annotation-tbox-symmetric-anchor](annotation-tbox-symmetric-anchor.md) — 대칭술어+n-ary Anchor(⊑HC assert), sh:sparql은 sh:prefixes 필수.
+- [envelope-shape-teeth-and-dead-vocab](envelope-shape-teeth-and-dead-vocab.md) — 셰이프 이빨=control 1+negative 4(메시지 키워드 필터). 행 종류 둘이면 롤업 체인도 둘. 근사 동의어=domain 축소.
