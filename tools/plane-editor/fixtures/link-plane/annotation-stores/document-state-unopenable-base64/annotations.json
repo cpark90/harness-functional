@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-state-unopenable-base64",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-state-unopenable-base64"
+        }
+      },
+      "body": "An honest store next to a document.json whose yUpdateBase64 no longer decodes. The commit gate signs this store (it does not decode CRDT state); the editor refuses to open it. That asymmetry is measured every run as an expected divergence, never assumed.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

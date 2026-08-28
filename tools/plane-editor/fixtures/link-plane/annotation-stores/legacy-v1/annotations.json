@@ -1,14 +1,14 @@
 {
-  "version": 2,
+  "version": 1,
   "document": "document.json",
   "annotations": [
     {
-      "id": "a1",
+      "id": "f1",
       "body": "Legacy annotation record: readable, but the store declares no documentId, so it cannot bind a link endpoint.",
       "status": "open"
     },
     {
-      "id": "a2",
+      "id": "f2",
       "body": "Second legacy annotation record.",
       "status": "open"
     }

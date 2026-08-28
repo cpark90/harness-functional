@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-legacy-v1",
+  "yUpdateBase64": "AQTZAQAoAQRtZXRhCmRvY3VtZW50SWQBdxVkb2MtZml4dHVyZS1sZWdhY3ktdjEHAQtwcm9zZW1pcnJvcgMJcGFyYWdyYXBoBwDZAQEGBADZAQI9Rml4dHVyZSBkb2N1bWVudCBmb3IgYSBzdG9yZSB0aGF0IHByZWRhdGVzIGRvY3VtZW50IGlkZW50aXR5LgA=",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document for a store that predates document identity."
+          }
+        ]
+      }
+    ]
+  }
+}

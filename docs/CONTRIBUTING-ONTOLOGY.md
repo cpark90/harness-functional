@@ -58,7 +58,8 @@ is what keeps anti-drift intact across repos.
 - Do **not** invent new `ho:` classes/properties. Reuse the TBox vocabulary and
   existing `ho:Concept` tags (anti-drift). A genuinely new concept must be
   connected in the same PR (a `skos:broader` parent or something it `ho:tagged`),
-  or validation flags it as an orphan.
+  or validation flags it as an orphan — and it declares its content axis with
+  `ho:conceptFacet` (below); connectedness alone is no longer the whole rule.
 
 ## Required predicates (anti-orphan / anti-rot)
 
@@ -71,6 +72,22 @@ Every node you author must carry:
   keeps `retrieve.py` projections budget-accurate (context-rot defense).
 - `ho:tagged` at least one `ho:Concept` so the node is discoverable and not an
   orphan island.
+- `ho:conceptFacet` — on `ho:Concept` nodes: one closed value (`anatomy` |
+  `quality` | `method` | `domain` | `scope`) declaring what the term is an axis
+  *about*. Recommended for your repo-local concepts, **mandatory** for concepts
+  in the central `id/core/` namespace. Choose the value with
+  `ONTOLOGYSTYLE.md §3`'s ordered test and its parent tie-break — §3 is the
+  origin of that rule, so it is not restated here.
+
+That last one is enforced in two places on purpose. The shapes close the **value
+set** (`ho:ConceptFacetShape`: one value, one of the five) but carry **no
+`sh:minCount`**: this shapes file is the federation gate that validates *your*
+union too, so a presence constraint here would fail every data repo whose
+concepts predate the axis (the recipes repo alone carries ~239). Central
+coverage is enforced instead by `tools/lint_uniformity.py`, scoped to the
+`id/core/` namespace and not part of your repo's CI — a missing facet therefore
+surfaces in that linter, never in `validate.py`. Do not "fix" the asymmetry by
+tightening the shapes.
 
 A new `Harness` must satisfy `ho:HarnessShape`: 1 `SystemPrompt` + ≥1 `Workflow`
 + tools + guardrails + `ModelConfig`, and every `requiresCapability` must be

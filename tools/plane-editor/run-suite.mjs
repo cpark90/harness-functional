@@ -69,7 +69,9 @@ const C1B_MIN_TRIALS_PER_SCENARIO = 2
  * 근거: docs/verify/plane-editor-c1b-verify.md §8.
  */
 const C2_MIN_CROSS_DOCUMENT_SHAPES = 3
-const C2_MIN_FORGED_SHAPES = 6
+// 위조 모양은 **고른 것**이다. 새 우회가 확인되면 D6에 모양을 더하고 이 값을 올린다 —
+// 7번째는 vnv H1(자리별 대응까지 만족시키는 padding)이다.
+const C2_MIN_FORGED_SHAPES = 7
 const C3_MIN_OPERATIONS = 6
 const COUNTERFACTUAL_POLICIES = ['textmove', 'phase1', 'naive']
 /** 커밋되는 sample-state의 문서 정체성 (안정적이어야 하므로 발급기에 맡기지 않는다). */
@@ -503,9 +505,12 @@ function deriveFindings(result) {
       `${c2.storeContract.forgedShapes}모양 중 부착된 것 ${c2.storeContract.misResolutions}건이고 승격 경로 자체가 ` +
       `${c2.storeContract.upgradePathExists ? '존재한다' : '없다'}(마이그레이션은 강등 전용). ` +
       `그중 ${c2.storeContract.forgeriesPassingLoad}모양은 자기보고 정합 검사(길이·SV)를 통과하지만 ` +
-      `해소 시점의 자리별 대응 검사가 ${c2.storeContract.forgeriesCaughtAtResolve}모양을 잡는다. ` +
+      `해소 시점의 구조 검사가 ${c2.storeContract.forgeriesCaughtAtResolve}모양을 잡는다(자리별 대응까지 ` +
+      `만족시키는 padding 포함=${c2.storeContract.correspondenceForgeryComplete} — 문서 전역 순서에서 걸린다). ` +
       `옛 파일은 로드되되 문서 정체성 입양=${c2.legacyLoad.documentAdopted}(해소=${c2.legacyLoad.method}, ` +
-      `같은 세션 대조군 해소=${c2.legacyLoad.controlResolved}), 알 수 없는 버전 거절=${c2.legacyLoad.rejectsUnknownVersion}.`,
+      `같은 세션 대조군 해소=${c2.legacyLoad.controlResolved}), 알 수 없는 버전 거절=${c2.legacyLoad.rejectsUnknownVersion}. ` +
+      `게이트와 편집기의 등가성: anchors 없는 v3 레코드 거절=${c2.legacyLoad.rejectsRecordWithoutAnchors}, ` +
+      `중복 레코드 id 거절=${c2.legacyLoad.rejectsDuplicateRecordId} — 커밋 게이트가 거절하는 모양을 편집기도 거절한다.`,
   )
 
   const c3 = result.gates.C3
@@ -729,13 +734,20 @@ const gates = {
       storeContract.upgradePathExists === false &&
       storeContract.forgedShapes >= C2_MIN_FORGED_SHAPES &&
       legacyStore.documentAdopted === false &&
+      legacyStore.promotedBySave === false &&
       legacyStore.orphaned &&
       legacyStore.controlResolved &&
-      legacyStore.rejectsUnknownVersion,
+      legacyStore.rejectsUnknownVersion &&
+      storeContract.correspondenceForgeryComplete &&
+      legacyStore.rejectsRecordWithoutAnchors &&
+      legacyStore.rejectsDuplicateRecordId,
     requirement:
       `다른 문서 부착 0 (모양 ${C2_MIN_CROSS_DOCUMENT_SHAPES}종 이상, 같은 문서 대조군은 정상 해소) + ` +
-      `채워 넣은 캡처 증거의 승격 경로 0 (위조 모양 ${C2_MIN_FORGED_SHAPES}종 이상, 오해소 0) + ` +
-      '옛 파일이 스토어의 문서 정체성을 입양하지 않을 것 (대조군은 같은 세션에서 정상 해소)',
+      `채워 넣은 캡처 증거의 승격 경로 0 (위조 모양 ${C2_MIN_FORGED_SHAPES}종 이상 — 자리별 대응을 ` +
+      '만족시키는 padding 포함, 오해소 0) + ' +
+      '옛 파일이 스토어의 문서 정체성을 입양하지 않고 load->save 로도 승격되지 않을 것 ' +
+      '(대조군은 같은 세션에서 정상 해소) + ' +
+      '**게이트가 거절하는 레코드 모양을 편집기도 거절할 것** (anchors 없는 v3 레코드 · 중복 레코드 id)',
     crossDocument: {
       shapes: reimport.shapes,
       crossDocumentShapes: reimport.crossDocumentShapes,
@@ -744,6 +756,8 @@ const gates = {
     },
     storeContract: {
       forgedShapes: storeContract.forgedShapes,
+      shapeSelection: storeContract.shapeSelection,
+      correspondenceForgeryComplete: storeContract.correspondenceForgeryComplete,
       misResolutions: storeContract.misResolutions,
       forgeriesPassingLoad: storeContract.forgeriesPassingLoad,
       forgeriesCaughtAtResolve: storeContract.forgeriesCaughtAtResolve,
@@ -759,18 +773,23 @@ const gates = {
     },
     legacyLoad: {
       documentAdopted: legacyStore.documentAdopted,
+      promotedBySave: legacyStore.promotedBySave,
       markedLegacy: legacyStore.markedLegacy,
       orphaned: legacyStore.orphaned,
       controlResolved: legacyStore.controlResolved,
       rejectsUnknownVersion: legacyStore.rejectsUnknownVersion,
       method: legacyStore.method,
+      // 게이트와 편집기의 등가성의 편집기 쪽 (I-1·I-2). 게이트 쪽은 run-link-checks.mjs C4·C8.
+      rejectsRecordWithoutAnchors: legacyStore.rejectsRecordWithoutAnchors,
+      rejectsDuplicateRecordId: legacyStore.rejectsDuplicateRecordId,
     },
     note:
       '차단 해제 조건 1·2 (docs/verify/plane-editor-c1b-verify.md §8). 레코드는 자기가 어느 문서의 ' +
       '것인지 싣고 해소 진입점이 불일치를 거절하며(D5), 캡처 증거는 파일 버전이 아니라 **다른 selector와의 ' +
-      '내부 정합 + 저장된 exact와의 자리별 대응**으로 검증되어 채워 넣기가 승격되지 않는다(D6). ' +
-      '마이그레이션 경로는 강등 전용이고, 정체성은 **입양되지 않는다** — 옛 파일은 남의 문서 옆에 놓여도 ' +
-      '미상으로 남는다(D4, vnv B3->B7 경로 차단).',
+      '내부 정합 + 저장된 exact와의 자리별 대응 + 문서 전역 순서**로 검증되어 채워 넣기가 승격되지 ' +
+      '않는다(D6). 마이그레이션 경로는 강등 전용이고, 정체성은 **입양되지 않는다** — 옛 파일은 남의 문서 ' +
+      '옆에 놓여도 미상으로 남는다(D4, vnv B3->B7 경로 차단). 그리고 커밋 게이트가 거절하는 레코드 모양은 ' +
+      '편집기도 거절한다 — 한쪽만 막으면 게이트가 통과시킨 파일이 편집기에서 터진다(vnv H3·H4).',
   },
   C3: {
     pass:

@@ -1,0 +1,12 @@
+{
+  "version": 99,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f2",
+      "body": "A store claiming the SAME document, written in a version this checker cannot read. It is discovered rather than named, so it is reported as a finding instead of stopping the judgment.",
+      "status": "open"
+    }
+  ]
+}

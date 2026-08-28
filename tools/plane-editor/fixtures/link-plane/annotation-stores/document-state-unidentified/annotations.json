@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-state-unidentified",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-state-unidentified"
+        }
+      },
+      "body": "An otherwise honest store sitting next to a document.json that carries no plaintext documentId. The plaintext field is the only surface both layers share, so the store cannot be checked against the document it sits next to.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

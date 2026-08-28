@@ -549,6 +549,12 @@ export function renderReport(result) {
                 '않으므로 이 레코드는 어느 문서에서도 미상으로 남는다 (바인딩 가능=' +
                 `${diagnostic.bindable})`,
             ],
+            [
+              'load -> save 승격 (세탁 경로)',
+              `${diagnostic.promotedBySave} — 저장을 거쳐도 v${diagnostic.savedStoreVersion} 레코드가 미상 표시를 ` +
+                `유지하고(${diagnostic.savedRecordMarkedLegacy}) 종단점 상태는 측정값 ` +
+                `\`${diagnostic.savedAnchorState}\`이다`,
+            ],
             ['출처 미상 표시', `${diagnostic.markedLegacy} (\`${diagnostic.legacyReason}\`)`],
             ['블록 문맥', diagnostic.blockContextDropped ? '비움 — 이동 복구 대상 아님' : '남아 있음'],
             ['편집', `\`${diagnostic.anchorQuote}\` -> \`${diagnostic.replacement}\` (제자리 교체)`],
@@ -564,7 +570,7 @@ export function renderReport(result) {
       )
       out.push('')
       out.push(
-        diagnostic.orphaned && !diagnostic.documentAdopted
+        diagnostic.orphaned && !diagnostic.documentAdopted && !diagnostic.promotedBySave
           ? '옛 파일은 **로드되지만 승격되지 않는다**: 스토어 옆에 있다는 사실만으로 문서 정체성을 얻지 못하고 ' +
               '(입양 금지), 출처 증거가 없으므로 문자열 구조만으로도 통과하지 않는다. 이 경로가 열려 있으면 ' +
               '문서 A의 주석 파일을 문서 B 옆에 두는 것만으로 B의 레코드가 되고, 재저장 한 번에 v3 링크 ' +
@@ -691,11 +697,35 @@ export function renderReport(result) {
           '한 앵커에 대해서는 D5가 부착 0을 확인했지만, 재임포트를 반복하거나 일부만 재임포트하는 혼합 문서는 미측정',
         ],
         [
-          '악의적 위조 (D6은 **마이그레이션 실수** 모양만 만든다)',
-          '캡처 증거의 내부 정합 검사는 "현재 상태에서 베껴 온 값"을 잡지만, 옛 문서 상태를 가진 공격자가 ' +
-            '정합한 증거를 만들어 넣는 경우는 막지 못한다. 문서 정체성도 마찬가지다 — 새 문서를 만들 때 ' +
-            'id를 지정하는 것은 호출부의 권한이므로(clientID와 같은 성질), 남의 id를 지정한 새 문서를 만드는 ' +
-            '것은 문서 상태 자체를 위조하는 것과 같다. 두 축 모두 서명·무결성 태그의 영역이고 미구현',
+          '악의적 위조 — **신뢰 경계 바깥** (레코드를 손으로 쓰는 주체. D6은 그 모양 ' +
+            `${result.gates.C2.storeContract.forgedShapes}개를 실제 파일로 만든다)`,
+          '자기보고 정합 검사(이름표 길이 합계·캡처 SV)만으로는 **부족하다**: 현재 범위의 이름표에 문서 ' +
+            '다른 곳의 이름표를 padding 해 길이를 맞추면 둘 다 통과한다(실측 B4). 그래서 해소 시점에 이름표와 ' +
+            '저장된 exact의 **자리별 대응**(내용·유일성·순서)에 더해 **문서 전역 순서**를 본다 — 자리별 ' +
+            '대응까지 만족시키도록 padding 글자를 고른 위조(실측 H1)는 문서 순서에서 걸린다. ' +
+            '**그래도 남는 것**: (a) 남의 문서의 **유효한** capture를 통째로 이식, (b) 사람이 옛 레코드에 ' +
+            'documentId를 써 넣기, (c) **죽었거나 이 문서가 모르는** 이름표로 채운 padding(내용이 ' +
+            'tombstone과 함께 사라져 반증할 사실이 없다), (d) 남의 documentId를 지정해 새 문서를 만들기 ' +
+            '(문서를 만들 때 id를 정하는 것은 호출부의 권한이므로 문서 상태 자체를 위조하는 것과 같다). ' +
+            '넷 다 전제가 같다 — 즉 **스토어 파일에 쓸 수 있는 ' +
+            '주체는 그 문서의 주석을 임의로 주장할 수 있다. 이것은 방어 실패가 아니라 신뢰 경계다**. 그 위는 ' +
+            '서명·무결성 태그의 영역으로 미구현이다. 경계 **안쪽**(일상 편집·복사·병합으로 도달하는 경로: ' +
+            '문서 복제·스토어 중복·중복 레코드 id·anchors 삭제·해석 불가 레코드 모양·옛 파일 동거·스토어를 ' +
+            '남의 문서 옆으로 옮기기·**문서 상태 없이 스토어만 옮기기**)은 게이트가 막고 매 실행 재측정하되, ' +
+            '**"전부"라고 적지 않는다**: 안쪽 목록은 지금까지 실측으로 찾아낸 것이고, 라운드마다 새 항목이 ' +
+            '추가돼 왔다(H3 -> H4 -> X1 -> X2 -> N1·N2·N6). 그래서 이제는 사례를 세는 대신 **성질**을 건다 — ' +
+            '`게이트 accept <-> 편집기 accept`를 fixture 스토어 전수에 적용하고(`run-link-checks.mjs` C9), ' +
+            '편집기 쪽은 **진짜 `loadStore`**로 잰다(계약 함수를 다시 부르면 게이트와 같은 입력을 먹여 두 층이 ' +
+            '갈리는 축이 보이지 않는다 — 실측 vnv 6차). **다만 그 성질에도 범위가 있다**: 자동으로 포함되는 ' +
+            '것은 **fixture 코퍼스에 넣은 스토어**이고(`fixtures/**` + 실사용 `sample-state`, 필터는 ' +
+            '`annotations`·`version` 두 키), 코퍼스 **밖**의 스토어는 성질이 아니라 게이트의 **발견**이 맡는다. ' +
+            '게이트가 원리적으로 볼 수 없는 축(평문과 CRDT 상태의 어긋남 · `yUpdateBase64` 내용이 열리지 ' +
+            '않음 = 문서 상태를 손으로 쓰기)은 이제 **부류로 측정한다**: 그 모양들이 fixture로 코퍼스에 ' +
+            '들어와 있어 매 실행 divergence로 세어지고(`EXPECTED_DIVERGENCE_CODES`, 3건 이상), **그 부류 ' +
+            '밖의 divergence는 0**이어야 한다. 즉 자동으로 잡히는 것은 ' +
+            '**코퍼스에 들어온 모양**이지 "모든 새 변종"이 아니다. ' +
+            '발견에는 **전제**가 있고 그 전제는 판정 JSON에 드러난다(작업공간 루트 없음 = `workspaceRoot: ' +
+            'null`이면 발견이 인자와 스토어 디렉토리로 한정된다 — 실측 C10) — README "발견의 전제" 절',
         ],
         [
           '앵커가 블록 경계를 걸치는 경우 (blockContext 없음)',

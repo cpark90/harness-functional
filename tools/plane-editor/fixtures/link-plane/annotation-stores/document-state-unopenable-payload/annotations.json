@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-state-unopenable-payload",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-state-unopenable-payload"
+        }
+      },
+      "body": "The same asymmetry reached the other way: the stored update is valid base64 but decodes to bytes that are not a Yjs update. Same gate answer, same editor answer, a different root - so it is a separate shape in the corpus.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

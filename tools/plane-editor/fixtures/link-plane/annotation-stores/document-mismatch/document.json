@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-elsewhere",
+  "yUpdateBase64": "AQTWAQAoAQRtZXRhCmRvY3VtZW50SWQBdxVkb2MtZml4dHVyZS1lbHNld2hlcmUHAQtwcm9zZW1pcnJvcgMJcGFyYWdyYXBoBwDWAQEGBADWAQJWVGhlIGRvY3VtZW50IHN0YXRlIHRoaXMgZGlyZWN0b3J5IGhvbGRzLiBUaGUgc3RvcmUgbmV4dCB0byBpdCBjbGFpbXMgYW5vdGhlciBkb2N1bWVudC4A",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "The document state this directory holds. The store next to it claims another document."
+          }
+        ]
+      }
+    ]
+  }
+}

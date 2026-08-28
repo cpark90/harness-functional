@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-state-unopenable-payload",
+  "yUpdateBase64": "bm90LWEteWpzLXVwZGF0ZQ==",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document whose stored update decodes as base64 but is not a Yjs update at all."
+          }
+        ]
+      }
+    ]
+  }
+}

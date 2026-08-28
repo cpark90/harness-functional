@@ -1,0 +1,18 @@
+{
+  "fragment": "prosemirror",
+  "yUpdateBase64": "AQTpAQAoAQRtZXRhCmRvY3VtZW50SWQBdx5kb2MtZml4dHVyZS1zdGF0ZS11bmlkZW50aWZpZWQHAQtwcm9zZW1pcnJvcgMJcGFyYWdyYXBoBwDpAQEGBADpAQJXRml4dHVyZSBkb2N1bWVudCB3aG9zZSBwbGFpbnRleHQgaWRlbnRpdHkgZmllbGQgd2FzIGRyb3BwZWQgKGFuIG9sZGVyIHdyaXRlciwgYSBtZXJnZSkuAA==",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document whose plaintext identity field was dropped (an older writer, a merge)."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-state-foreign",
+  "yUpdateBase64": "AQTRAgAoAQRtZXRhCmRvY3VtZW50SWQBdx9kb2MtZml4dHVyZS1zdGF0ZS1mb3JlaWduLW90aGVyBwELcHJvc2VtaXJyb3IDCXBhcmFncmFwaAcA0QIBBgQA0QICR1RoZSBvdGhlciBkb2N1bWVudCB3aG9zZSBDUkRUIHN0YXRlIHdhcyBzcGxpY2VkIGludG8gdGhpcyBmaWxlIGJ5IGhhbmQuAA==",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "The other document whose CRDT state was spliced into this file by hand."
+          }
+        ]
+      }
+    ]
+  }
+}

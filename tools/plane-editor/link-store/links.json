@@ -45,6 +45,22 @@
       "created_by": "developer dispatch (plane-editor C1b unblock conditions)"
     },
     {
+      "id": "ln-honest-orphan-quote-tagged-design-for-loss",
+      "from": {
+        "plane": "annotation",
+        "ref": "a6",
+        "document": "doc-sample-state",
+        "anchor": "textQuote"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-design-for-loss"
+      },
+      "type": "tagged",
+      "evidence": "the endpoint is the quoted phrase 'honest orphan' inside the sample document, not merely record a6: the sentence it sits in states the rule this plane runs on (an anchor that cannot be resolved is reported, never re-pointed)",
+      "created_by": "developer dispatch (plane-editor anchor endpoints)"
+    },
+    {
       "id": "ln-link-store-derived-from-plane-separation",
       "from": {
         "plane": "decision",
@@ -96,9 +112,25 @@
         "plane": "decision",
         "ref": "dec-link-store-outside-ontology"
       },
-      "type": "overlapsWith",
+      "type": "id:kind-overlap",
       "evidence": "both decisions scope the same Phase 2 wave; neither subsumes the other",
       "created_by": "developer dispatch (plane-editor Phase 2)"
+    },
+    {
+      "id": "ln-selector-multiplexing-block-tagged-graceful-fallback",
+      "from": {
+        "plane": "annotation",
+        "ref": "a5",
+        "document": "doc-sample-state",
+        "anchor": "blockContext"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-graceful-fallback"
+      },
+      "type": "tagged",
+      "evidence": "the endpoint is the block a5 sits in ('Selector multiplexing recovers anchors after destructive edits.'), whose whole claim is the concept: a fallback per foreseeable failure mode instead of aborting the run",
+      "created_by": "developer dispatch (plane-editor anchor endpoints)"
     }
   ]
 }

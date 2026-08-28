@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-live"
+        }
+      },
+      "body": "The second store declaring the same documentId, with the endpoint still bound. Naming only this file must not hide the orphaned twin next to it.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

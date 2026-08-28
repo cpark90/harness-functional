@@ -1,0 +1,11 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-shapeless",
+  "annotations": {
+    "f1": {
+      "body": "A file named like a store whose 'annotations' is an object, not an array. The store contract has a rule for this shape; this fixture is what makes the property measure it instead of filtering it out.",
+      "status": "open"
+    }
+  }
+}

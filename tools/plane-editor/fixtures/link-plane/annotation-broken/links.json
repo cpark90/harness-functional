@@ -6,7 +6,7 @@
       "id": "ln-fixture-broken-annotation-tagged-traceability",
       "from": {
         "plane": "annotation",
-        "ref": "a1",
+        "ref": "f1",
         "document": "doc-fixture-broken"
       },
       "to": {

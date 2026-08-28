@@ -4,7 +4,12 @@
   "documentId": "doc-fixture-broken",
   "annotations": [
     {
-      "id": "a1",
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-broken"
+        }
+      },
       "body": "The anchored block was moved, so this anchor is orphaned. The link that points here stays visible as a broken endpoint instead of being re-pointed.",
       "status": "open",
       "anchorState": "orphaned"

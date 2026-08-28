@@ -1,0 +1,20 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": null,
+        "legacy": {
+          "storeVersion": 1,
+          "reason": "legacy-v1-record"
+        }
+      },
+      "body": "A record read from a store that predates document identity and then saved again. It keeps its provenance mark and stays unidentified: sitting next to this document does not make it this document's record, so it cannot bind a link endpoint.",
+      "status": "open",
+      "anchorState": "orphaned"
+    }
+  ]
+}

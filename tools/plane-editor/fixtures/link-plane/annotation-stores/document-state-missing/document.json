@@ -1,0 +1,18 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-state-missing",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document state that carries no CRDT update at all."
+          }
+        ]
+      }
+    ]
+  }
+}

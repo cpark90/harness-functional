@@ -7,10 +7,21 @@
  *   <dir>/annotations.json  { version, document, documentId,
  *                             annotations: [{id, anchors, body, status, anchorState}] }
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { ANCHOR_STATES, captureEvidence } from './anchors.mjs'
 import { documentIdFromUpdate } from './document-id.mjs'
+import {
+  ANNOTATIONS_FILE,
+  DOCUMENT_FILE,
+  STORE_UNREADABLE_CODES,
+  STORE_VERSION,
+  StoreContractError,
+  annotationStoreContract,
+  documentStateContract,
+  plaintextDocumentId,
+  storeBindsEndpoints,
+} from './store-contract.mjs'
 
 /**
  * **버전 3 — 의미가 바뀐 버전이다** (모양만 바뀐 것이 아니다).
@@ -24,8 +35,10 @@ import { documentIdFromUpdate } from './document-id.mjs'
  *        문자가 옛 문자"로 뒤집혀 방어가 무력화된다 (실측된 회귀: vnv M4).
  *   v3 : (1) 레코드가 **어느 문서의 것인지**(`anchors.document`)를 싣는다 — 없으면 다른
  *        문서에 그대로 붙는다(실측: vnv M5). (2) 출처 증거를 시점이 아니라 **문자들의
- *        CRDT 이름표**(`capture.characterIds`)로 싣는다 — 저장된 `exact`와 길이가 맞아야
- *        하므로 현재 상태에서 베껴 넣을 수 없다. (3) 저장 시점의 종단점 상태
+ *        CRDT 이름표**(`capture.characterIds`)로 싣는다. 길이 합계만 맞추는 채워넣기는
+ *        여기서 걸리지만 **다른 곳의 이름표로 길이를 채운 padding은 통과한다**(실측: vnv
+ *        B4) — 그래서 해소 시점에 이름표와 `exact`의 자리별 대응을 한 겹 더 본다
+ *        (`src/blocks.mjs captureCorrespondence`). (3) 저장 시점의 종단점 상태
  *        (`anchorState`)를 남긴다 — orphan이 된 앵커를 링크가 조용히 가리키지 못하게.
  *
  * **옛 버전은 강등해서 읽는다(승격하지 않는다).** 로드는 하되(레코드를 잃지 않는다)
@@ -46,11 +59,26 @@ import { documentIdFromUpdate } from './document-id.mjs'
  *   - 정체성은 오직 **캡처 이벤트**에서 실린다(`captureAnchors`는 정체성 없는 문서에서
  *     캡처 자체를 거절한다).
  * 대가는 명시적이다: v1·v2 레코드는 하위호환으로 읽히되 링크 종단점이 되지 못한다.
+ *
+ * **로드가 무엇을 거절하는지는 이 파일이 아니라 `src/store-contract.mjs`가 정한다.** 그
+ * 규칙 목록은 커밋 게이트(`check_links.py`)와 **같은 답을 내야 하는** 것들이고, 스위트가
+ * fixture 전수로 그 동치를 잰다(`run-link-checks.mjs` C9). 버전 상수도 계약 모듈이
+ * 소유한다 — 여기서는 하위호환을 위해 그대로 다시 내보낸다.
+ *
+ * **스토어는 파일 하나가 아니라 디렉토리다.** 로드는 `annotations.json` 옆의
+ * `document.json`을 **먼저** 열고, 그 문서 상태가 없거나·읽히지 않거나·상태를 싣지 않았으면
+ * 거절한다(문서 축의 계약 = `documentStateContract`). 그리고 종단점을 묶는 스토어는 그
+ * 문서 상태가 정체성을 **평문으로도** 실어야 한다 — 그 평문 필드가 커밋 게이트와 공유하는
+ * 유일한 표면이고(게이트는 CRDT를 해독하지 않는다), 편집기는 그것을 CRDT 상태에 못 박는다.
+ * 이 축이 없던 동안 게이트는 문서 대조를 **건너뛰고** 종단점을 묶었고, 그 스토어는 어떤
+ * 편집기도 열 수 없었다(실측: vnv N1·N2·N6).
  */
-export const STORE_VERSION = 3
-export const SUPPORTED_STORE_VERSIONS = Object.freeze([1, 2, 3])
-export const DOCUMENT_FILE = 'document.json'
-export const ANNOTATIONS_FILE = 'annotations.json'
+export {
+  ANNOTATIONS_FILE,
+  DOCUMENT_FILE,
+  STORE_VERSION,
+  SUPPORTED_STORE_VERSIONS,
+} from './store-contract.mjs'
 
 /** 강등 사유 — 어느 세대의 레코드였는지를 orphan 사유에 그대로 싣는다. */
 export const legacyReason = (version) => `legacy-v${version}-record`
@@ -58,8 +86,11 @@ export const LEGACY_PROVENANCE_REASON = legacyReason(1)
 
 const stringify = (value) => `${JSON.stringify(value, null, 2)}\n`
 
+// v1 레코드는 selector 를 아예 싣지 않은 것도 있다(그 세대의 파일이다). 강등 경로는 그런
+// 레코드에서도 **던지지 않아야** 한다 — 게이트가 읽는 모양을 편집기가 예외로 거절하면
+// 두 층의 답이 갈린다(계약 위반이 아니라 프로그램 오류로).
 const documentSelector = (anchors) =>
-  anchors.document && typeof anchors.document.id === 'string' && anchors.document.id
+  anchors && anchors.document && typeof anchors.document.id === 'string' && anchors.document.id
     ? { id: anchors.document.id }
     : null
 
@@ -141,8 +172,8 @@ export function annotationRecord({ id, anchors, body, status, anchorState }) {
 export function downgradeAnchors(anchors, version) {
   return {
     document: documentSelector(anchors),
-    relativePosition: anchors.relativePosition,
-    textQuote: anchors.textQuote,
+    relativePosition: anchors ? anchors.relativePosition : null,
+    textQuote: anchors ? anchors.textQuote : null,
     capture: null,
     blockContext: null,
     legacy: { storeVersion: version, reason: legacyReason(version) },
@@ -209,41 +240,95 @@ export function saveStore(dir, { fragment, documentId, docUpdate, docJSON, annot
   return dir
 }
 
-export function loadStore(dir) {
-  const document = JSON.parse(readFileSync(join(dir, DOCUMENT_FILE), 'utf8'))
-  const annotations = JSON.parse(readFileSync(join(dir, ANNOTATIONS_FILE), 'utf8'))
-  const version = annotations.version
-  if (!SUPPORTED_STORE_VERSIONS.includes(version)) {
-    throw new Error(`unsupported store version: ${version}`)
+/** 스토어 옆 문서 상태 파일을 읽는다 — 판정은 하지 않고 **읽힘의 사실만** 돌려준다. */
+export function readDocumentState(dir) {
+  const path = join(dir, DOCUMENT_FILE)
+  let found = false
+  try {
+    found = statSync(path).isFile()
+  } catch {
+    found = false
   }
-  const docUpdate = new Uint8Array(Buffer.from(document.yUpdateBase64, 'base64'))
-  // 문서 정체성의 원본은 **CRDT 상태**다. 파일 필드는 사본이므로 어긋나면 계약 위반이다.
-  const documentId = documentIdFromUpdate(docUpdate)
-  for (const [where, claimed] of [
-    [DOCUMENT_FILE, document.documentId],
-    [ANNOTATIONS_FILE, annotations.documentId],
-  ]) {
-    if (typeof claimed === 'string' && claimed !== documentId) {
-      throw new Error(
-        `store contract: ${where} claims document ${JSON.stringify(claimed)} but the persisted ` +
-          'document state says otherwise',
-      )
+  if (!found) return { found: false, parsed: false, payload: null }
+  try {
+    return { found: true, parsed: true, payload: JSON.parse(readFileSync(path, 'utf8')) }
+  } catch {
+    return { found: true, parsed: false, payload: null }
+  }
+}
+
+/**
+ * **로드 경로 그대로** 스토어 디렉토리 하나를 평가하되, 첫 위반에서 던지지 않고 위반을
+ * 전부 모아 돌려준다. `loadStore`가 이 함수 위에 서 있으므로 성질 테스트
+ * (`run-link-checks.mjs` C9)는 계약 함수를 **재계산하지 않고** 진짜 편집기의 답을 잰다 —
+ * 재계산하는 성질은 성질이 아니라 자기 자신의 그림자였다(실측: vnv 6차 판정 §3(5)).
+ *
+ * 평가 순서는 게이트와 같다:
+ *   1. payload가 **통째로** 읽히는가 (버전·`annotations` 배열·v3의 자기 documentId).
+ *      여기서 걸리면 게이트도 그 스토어를 읽지 못하므로 뒤 축은 두 층 다 평가하지 않는다.
+ *   2. **문서 축** — 옆 `document.json`이 있는가·읽히는가·상태와 평문 정체성을 싣는가.
+ *   3. **payload 축** — 레코드 모양·id 유일성·정체성 일치. 대조 기준(권위 있는 문서 id)은
+ *      두 층이 공유하는 **평문 필드**이며, 편집기는 그 평문을 CRDT 상태에 못 박는다(2).
+ */
+export function inspectStore(dir, { storeFile = ANNOTATIONS_FILE } = {}) {
+  const storePath = join(dir, storeFile)
+  let payload
+  try {
+    payload = JSON.parse(readFileSync(storePath, 'utf8'))
+  } catch (error) {
+    throw new StoreContractError('store-unreadable',
+      `store contract: ${storeFile} cannot be read: ${error.message}`)
+  }
+  const shape = annotationStoreContract(payload, { documentId: null, storeFile })
+  if (shape.length > 0 && STORE_UNREADABLE_CODES.includes(shape[0].code)) {
+    return { problems: shape, payload, document: null, documentId: null, docUpdate: null }
+  }
+
+  const state = readDocumentState(dir)
+  const problems = documentStateContract(state, { bindsEndpoints: storeBindsEndpoints(payload) })
+  const plain = plaintextDocumentId(state)
+  let docUpdate = null
+  let documentId = null
+  if (state.parsed && state.payload && typeof state.payload.yUpdateBase64 === 'string' &&
+      state.payload.yUpdateBase64) {
+    try {
+      docUpdate = new Uint8Array(Buffer.from(state.payload.yUpdateBase64, 'base64'))
+      // 문서 정체성의 원본은 **CRDT 상태**다. 파일 필드는 사본이므로 어긋나면 계약 위반이다.
+      documentId = documentIdFromUpdate(docUpdate)
+    } catch {
+      docUpdate = null
+      documentId = null
+      // 필드가 **없는** 것(`document-state-unusable`)과 내용이 **열리지 않는** 것은 다른
+      // 사실이다: 앞은 게이트도 보고, 뒤는 게이트가 원리적으로 볼 수 없다(CRDT 미해독).
+      // 두 뿌리를 한 코드로 묶으면 게이트 규칙이 퇴화해도 "예상된 어긋남"으로 가려진다.
+      problems.push({
+        code: 'document-state-unopenable',
+        record: `<${DOCUMENT_FILE}>`,
+        detail: `store contract: the ${DOCUMENT_FILE} next to this store carries a ` +
+          "'yUpdateBase64' that is not a document state the editor can open",
+      })
     }
   }
-  if (version === STORE_VERSION) {
-    for (const record of annotations.annotations) {
-      const claimed = record.anchors && record.anchors.document ? record.anchors.document.id : null
-      if (typeof claimed !== 'string' || !claimed) {
-        // 출처 미상은 **미상으로 남는다**: 강등 표시를 달고 저장된 레코드는 그 상태 그대로
-        // 다시 읽힌다(입양 금지의 sticky 쪽). 표시 없이 정체성만 빠진 레코드는 계약 위반이다.
-        if (record.anchors && record.anchors.legacy) continue
-        throw new Error(`store contract: record ${record.id} carries no document identity`)
-      }
-      if (claimed !== documentId) {
-        throw new Error(`store contract: record ${record.id} belongs to another document`)
-      }
-    }
+  if (docUpdate !== null && plain !== null && plain !== documentId) {
+    problems.push({
+      code: 'document-state-mismatch',
+      record: `<${DOCUMENT_FILE}>`,
+      detail: `store contract: ${DOCUMENT_FILE} claims document ${JSON.stringify(plain)} ` +
+        'but the persisted document state says otherwise',
+    })
   }
+  // 스토어 계약은 **한 곳**에서 정한다 (`src/store-contract.mjs`): 버전 지원 · 레코드 모양 ·
+  // 레코드 id 유일성 · 스토어와 문서의 정체성 일치 · v3 레코드의 자기 정체성. 커밋 게이트가
+  // 같은 목록을 지키는지는 스위트가 fixture 전수로 대조한다(run-link-checks.mjs C9).
+  problems.push(...annotationStoreContract(payload, { documentId: plain, storeFile }))
+  return { problems, payload, document: state.payload, documentId, docUpdate }
+}
+
+export function loadStore(dir, options = {}) {
+  const { problems, payload, document, documentId, docUpdate } = inspectStore(dir, options)
+  const [first] = problems
+  if (first) throw new StoreContractError(first.code, first.detail)
+  const version = payload.version
   return {
     fragment: document.fragment,
     docUpdate,
@@ -251,6 +336,6 @@ export function loadStore(dir) {
     version,
     documentId,
     // 옛 버전은 읽되 출처 미상으로 강등한다 (조용히 승격시키지 않는다).
-    annotations: annotations.annotations.map((record) => migrateRecord(record, version)),
+    annotations: payload.annotations.map((record) => migrateRecord(record, version)),
   }
 }

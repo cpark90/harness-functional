@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-control",
+  "yUpdateBase64": "AQTSAQAoAQRtZXRhCmRvY3VtZW50SWQBdxNkb2MtZml4dHVyZS1jb250cm9sBwELcHJvc2VtaXJyb3IDCXBhcmFncmFwaAcA0gEBBgQA0gECMkZpeHR1cmUgZG9jdW1lbnQgZm9yIHRoZSBsaW5rLXBsYW5lIGNvbnRyb2wgc3RvcmUuAA==",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document for the link-plane control store."
+          }
+        ]
+      }
+    ]
+  }
+}

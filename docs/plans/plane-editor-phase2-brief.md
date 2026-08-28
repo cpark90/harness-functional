@@ -39,8 +39,15 @@ map: docs/plans/plane-editor-phase0.md                           # §4.2 접점 
 - **링크 레코드**: `{id, from, to, type, evidence?, created_by}`. `from`/`to`는 **종단점 표기**
   `{plane, ref}` — plane ∈ `annotation` | `decision` | `graph`, ref는 평면별 안정 식별자
   (annotation·decision은 레코드 id, graph는 **IRI 표기** `id:<slug>` — Phase 0 §4.2 P2).
-- **링크 타입 어휘 (v0.2 §4.3 [v0.2 B] — 신조어 금지)**: 그래프에 이미 있는 `ho:` 관계
-  어휘를 **재사용**한다(`tagged`/`derivedFrom`/`constrainedBy`/`alternativeOf`/`overlapsWith`).
+- **링크 타입 어휘 (v0.2 §4.3 [v0.2 B] — 신조어 금지)**: 그래프에 이미 있는 관계 어휘를
+  **재사용**한다. **[2026-08-28 갱신 — 목록을 박지 말 것]** 초판은 다섯 술어
+  (`tagged`/`derivedFrom`/`constrainedBy`/`alternativeOf`/`overlapsWith`)를 하드코딩했는데,
+  중앙 그래프가 `ho:Link`(가중 typed 연결) + `ho:LinkKind`로 재설계되면서 `alternativeOf`·
+  `overlapsWith`·`ho:Anchor`가 **TBox에서 폐기**돼 게이트가 red가 됐다. 그래서 어휘는
+  **현재 그래프에서 파생**한다 — 살아 있는 `owl:ObjectProperty` + `ho:LinkKind` 개체.
+  판정 기준은 **양방향**이다: 그래프에 어휘가 추가되면 링크가 그것을 쓸 수 있게 되고,
+  은퇴하면 그 어휘를 주장하는 링크가 위반이 된다. (교훈: 다른 층의 어휘를 목록으로 베끼면
+  그 층이 바뀔 때 조용히 깨진다 — 출처를 가리켜야 한다.)
   **`supersedes`는 설계결정 평면 내부 전용**이며 **그래프 종단점에는 쓸 수 없다**(B9 경계 —
   검사기가 위반을 FAIL로 잡는다).
 - **무결성 검사기 `check_links.py`** (단일 명령·비대화형·결정론):

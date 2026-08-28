@@ -5,11 +5,21 @@
   "annotations": [
     {
       "id": "a1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-control"
+        }
+      },
       "body": "Fixture annotation record. check_links.py reads the id, the store's documentId and the measured anchorState; the selectors live in the annotation plane's own store.",
       "status": "open"
     },
     {
       "id": "a2",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-control"
+        }
+      },
       "body": "Second fixture annotation record, used as the source of a link into the decision plane.",
       "status": "open",
       "anchorState": "bound"

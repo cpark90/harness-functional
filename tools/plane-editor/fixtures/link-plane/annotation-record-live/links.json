@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "plane": "link",
+  "links": [
+    {
+      "id": "ln-fixture-record-live-tagged-traceability",
+      "from": {
+        "plane": "annotation",
+        "ref": "f1",
+        "document": "doc-fixture-live"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-traceability"
+      },
+      "type": "tagged",
+      "evidence": "the endpoint record lives in a fixture annotation store passed with --annotations",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    }
+  ]
+}

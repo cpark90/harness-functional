@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-live",
+  "yUpdateBase64": "AQTjAQAoAQRtZXRhCmRvY3VtZW50SWQBdxBkb2MtZml4dHVyZS1saXZlBwELcHJvc2VtaXJyb3IDCXBhcmFncmFwaAcA4wEBBgQA4wECQUZpeHR1cmUgZG9jdW1lbnQgdGhhdCB0aGUgYW5ub3RhdGlvbiBzdG9yZXMgbmV4dCB0byBpdCBiZWxvbmcgdG8uAA==",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document that the annotation stores next to it belong to."
+          }
+        ]
+      }
+    ]
+  }
+}

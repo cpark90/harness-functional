@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-state-missing",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-state-missing"
+        }
+      },
+      "body": "An otherwise honest store sitting next to a document.json that carries no CRDT update, so there is no document for the editor to open.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

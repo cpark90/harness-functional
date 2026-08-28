@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-live"
+        }
+      },
+      "body": "One of two stores that declare the same documentId (a duplicated document carries its identity with it). Here the endpoint is orphaned.",
+      "status": "open",
+      "anchorState": "orphaned"
+    }
+  ]
+}

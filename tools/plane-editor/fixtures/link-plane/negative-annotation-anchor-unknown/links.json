@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "plane": "link",
+  "links": [
+    {
+      "id": "ln-fixture-annotation-overlaps-decision",
+      "from": {
+        "plane": "annotation",
+        "ref": "a2",
+        "document": "doc-fixture-control"
+      },
+      "to": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format-v2"
+      },
+      "type": "id:kind-overlap",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    },
+    {
+      "id": "ln-fixture-annotation-tagged-concept",
+      "from": {
+        "plane": "annotation",
+        "ref": "a1",
+        "document": "doc-fixture-control",
+        "anchor": "relativePosition"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-traceability"
+      },
+      "type": "tagged",
+      "evidence": "fixture (one mutation): 'relativePosition' is the resolution machinery, not a position an endpoint may name; the anchor spelling is a closed set",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    },
+    {
+      "id": "ln-fixture-decision-derived-from-pattern",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format-v2"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:pat-knowledge-plane-separation"
+      },
+      "type": "derivedFrom",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    },
+    {
+      "id": "ln-fixture-supersedes-store-format",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format-v2"
+      },
+      "to": {
+        "plane": "decision",
+        "ref": "dec-fixture-store-format"
+      },
+      "type": "supersedes",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    }
+  ]
+}

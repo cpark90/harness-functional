@@ -1,0 +1,11 @@
+{
+  "version": 99,
+  "document": "document.json",
+  "annotations": [
+    {
+      "id": "f1",
+      "body": "A version this checker cannot read. It is refused with an explicit reason (exit 2), never passed over in silence.",
+      "status": "open"
+    }
+  ]
+}

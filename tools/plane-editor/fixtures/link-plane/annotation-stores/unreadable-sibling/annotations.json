@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-live"
+        }
+      },
+      "body": "A readable store that happens to sit next to one this checker cannot read. Discovery must report the unreadable sibling instead of skipping it, and instead of refusing to judge this one.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

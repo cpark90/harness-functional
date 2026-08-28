@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-state-absent",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-state-absent"
+        }
+      },
+      "body": "An otherwise honest store whose directory holds no document.json at all. Moving or exporting the store alone (backup, partial checkout, a gitignored document state) reaches exactly this shape, and no editor can open what it finds there.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-live"
+        }
+      },
+      "body": "The store a caller names. Judging it must not drag in the store next to it that belongs to another document - only a store claiming the SAME document can hide a broken endpoint.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

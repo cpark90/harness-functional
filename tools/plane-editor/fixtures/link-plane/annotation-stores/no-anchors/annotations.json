@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "body": "A version 3 record with no anchors object at all. The editor refuses to load this store, so the gate must refuse it too - deleting the field is not a lighter record, it is a record that cannot say whose it is.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": null,
+        "legacy": {
+          "storeVersion": 1,
+          "reason": "legacy-v1-record"
+        }
+      },
+      "body": "The laundered copy: no identity of its own, kept as an explicit downgrade.",
+      "status": "open",
+      "anchorState": "orphaned"
+    },
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-live"
+        }
+      },
+      "body": "The honest record with the same id. Two records for one endpoint let the editor and the gate hold different records.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

@@ -225,9 +225,11 @@ export const characterIdCount = (runs) =>
 const withoutSeparators = (text) => text.split(BLOCK_SEPARATOR).join('')
 
 /**
- * 지금 문서에 **살아 있는 문자들의 내용표**: `"client:clock" -> 문자`.
+ * 지금 문서에 **살아 있는 문자들의 표**: `"client:clock" -> { character, position }`.
  * Yjs 문자열 item의 내용은 불변이므로, 어떤 이름표가 아직 살아 있다면 그 문자가 무엇인지
- * 지금 확인할 수 있다. 캡처 이름표를 **개수가 아니라 구조**로 검사하는 근거다.
+ * 지금 확인할 수 있다. `position`은 문서 전역 텍스트 오프셋이며, CRDT가 **살아남은 item의
+ * 상대 순서를 절대 바꾸지 않는다**는 성질을 검사에 쓰기 위한 값이다.
+ * 캡처 이름표를 **개수가 아니라 구조**로 검사하는 근거다.
  * 오프셋을 믿을 수 없는 블록(인라인 노드 등으로 run이 텍스트를 다 덮지 못함)은 건너뛴다.
  */
 export function liveCharacterText(blocks) {
@@ -241,7 +243,10 @@ export function liveCharacterText(blocks) {
       const parsed = parseItemId(run.itemId)
       if (!parsed) continue
       for (let offset = 0; offset < run.to - run.from; offset += 1) {
-        chars.set(`${parsed.client}${ITEM_ID_SEPARATOR}${parsed.clock + offset}`, block.text[run.from + offset])
+        chars.set(`${parsed.client}${ITEM_ID_SEPARATOR}${parsed.clock + offset}`, {
+          character: block.text[run.from + offset],
+          position: block.textFrom + run.from + offset,
+        })
       }
     }
   }
@@ -263,8 +268,19 @@ export function liveCharacterText(blocks) {
  *   2. 이름표 유일성 — 같은 이름표가 두 자리를 차지할 수 없다(런 겹침 = 위조 모양).
  *   3. 순서 보존 — CRDT는 살아남은 문자의 상대 순서를 바꾸지 않으므로, 해소 범위에서
  *      살아남은 문자들의 캡처 위치 k는 **증가 수열**이어야 한다.
- * 셋 중 하나라도 깨지면 `consistent:false`이고, 호출부는 그것을 "출처 증거 위조"로
- * 다뤄야 한다(통과 금지). 세 검사는 전부 **현재 문서에서 확인 가능한 사실**만 쓴다.
+ *   4. 순서 보존(문서 전역) — 같은 성질을 **살아 있는 캡처 문자 전부**에 적용한다. 캡처
+ *      시점의 이름표 순서 k와 지금 문서에서의 위치는 함께 증가해야 한다.
+ * 넷 중 하나라도 깨지면 `consistent:false`이고, 호출부는 그것을 "출처 증거 위조"로
+ * 다뤄야 한다(통과 금지). 네 검사는 전부 **현재 문서에서 확인 가능한 사실**만 쓴다.
+ *
+ * (4)가 필요한 이유(실측: vnv H1): padding 문자를 아무거나가 아니라 **그 자리의 글자와 같은
+ * 글자**로 고르면 (1)(2)(3)이 전부 성립한다. 살아 있지 않은 이름표는 (1)에서 건너뛰고 (3)은
+ * 해소 범위 안만 보기 때문이다. 그러나 위조자가 고른 padding 문자들은 문서 곳곳에 흩어져
+ * 있으므로 **문서 순서와 캡처 순서가 어긋난다** — 그리고 그 어긋남은 CRDT 불변식(살아남은
+ * item의 상대 순서는 변하지 않는다)에 정면으로 반하므로 정직한 레코드에서는 발생할 수 없다.
+ * 남는 구멍은 **죽었거나 이 문서가 모르는 이름표로 채운 padding**이다: 내용도 위치도 사후
+ * 확인할 수 없다(문자 내용은 tombstone과 함께 사라진다). 그 계열은 방어 대상이 아니라
+ * 신뢰 경계다 — 스토어 파일을 쓸 수 있는 주체만 도달할 수 있다(README 한계표 참조).
  */
 export function captureCorrespondence(blocks, textFrom, textTo, capturedRuns, exact) {
   const unknown = { known: false, consistent: true, preexisting: 0, fresh: 0, reason: null }
@@ -289,10 +305,21 @@ export function captureCorrespondence(blocks, textFrom, textTo, capturedRuns, ex
 
   // (1) 내용 대응 — 문서 전역. 살아 있는 이름표는 저장된 exact의 그 자리 문자여야 한다.
   const liveText = liveCharacterText(blocks)
+  const stillAlive = []
   for (const [id, position] of capturedAt) {
-    const character = liveText.get(id)
-    if (character !== undefined && character !== capturedChars[position]) {
+    const found = liveText.get(id)
+    if (found === undefined) continue
+    if (found.character !== capturedChars[position]) {
       return broken('capture-content-mismatch')
+    }
+    stillAlive.push({ position, at: found.position })
+  }
+
+  // (4) 순서 보존(문서 전역) — 살아남은 캡처 문자는 캡처 순서와 문서 순서가 같이 증가한다.
+  stillAlive.sort((a, b) => a.position - b.position)
+  for (let index = 1; index < stillAlive.length; index += 1) {
+    if (stillAlive[index].at <= stillAlive[index - 1].at) {
+      return broken('capture-order-mismatch-document')
     }
   }
 

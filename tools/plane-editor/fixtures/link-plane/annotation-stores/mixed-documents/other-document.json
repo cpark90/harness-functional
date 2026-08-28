@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-other",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-other"
+        }
+      },
+      "body": "A neighbouring store about a different document. It is listed as out of scope in the verdict instead of being judged (and instead of being dropped in silence).",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

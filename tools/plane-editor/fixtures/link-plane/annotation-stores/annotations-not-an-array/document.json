@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-shapeless",
+  "yUpdateBase64": "AQTmAQAoAQRtZXRhCmRvY3VtZW50SWQBdxVkb2MtZml4dHVyZS1zaGFwZWxlc3MHAQtwcm9zZW1pcnJvcgMJcGFyYWdyYXBoBwDmAQEGBADmAQJGRml4dHVyZSBkb2N1bWVudCBmb3IgYSBmaWxlIHRoYXQgaXMgbmFtZWQgbGlrZSBhIHN0b3JlIGJ1dCBpcyBub3Qgb25lLgA=",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document for a file that is named like a store but is not one."
+          }
+        ]
+      }
+    ]
+  }
+}

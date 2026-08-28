@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-somewhere-else"
+        }
+      },
+      "body": "The record claims one document while the store declares another. The annotation plane refuses to load this store (src/store.mjs), so the commit gate must refuse it too.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-broken",
+  "yUpdateBase64": "AQTVAQAoAQRtZXRhCmRvY3VtZW50SWQBdxJkb2MtZml4dHVyZS1icm9rZW4HAQtwcm9zZW1pcnJvcgMJcGFyYWdyYXBoBwDVAQEGBADVAQJLRml4dHVyZSBkb2N1bWVudCB3aG9zZSBhbmNob3JlZCBibG9jayB3YXMgbW92ZWQsIHNvIHRoZSBhbmNob3IgaXMgb3JwaGFuZWQuAA==",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document whose anchored block was moved, so the anchor is orphaned."
+          }
+        ]
+      }
+    ]
+  }
+}

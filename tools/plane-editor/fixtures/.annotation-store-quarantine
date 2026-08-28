@@ -1,0 +1,7 @@
+deliberately broken annotation stores: negative controls for check_links.py
+
+# Every store under fixtures/ exists to FAIL a rule, so repository-wide discovery
+# must not judge them (they would fail every gate run and hide real findings).
+# run-link-checks.mjs names them explicitly instead, one case per directory, and a
+# named directory is always judged in full. Quarantine is never silent: the reason
+# line above is printed in the checker's verdict.

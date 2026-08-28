@@ -33,13 +33,13 @@
 |---|---|---|---|
 | G1 | 문서 스키마에 annotation mark/노드 0 | PASS | plane 유무 스키마 fingerprint 동일=true, annotation 명칭 타입=0, 부착 후 doc 불변=true, Yjs 상태 불변=true, 스키마 mark 6개/노드 11개는 전부 StarterKit 콘텐츠 타입 |
 | G2 | S1–S4·S8 생존 100% + S5 오해소 0 | PASS | pipeline 생존 100.0% (30/30), stale 생존 93.3% (28/30, 드리프트 2), S5 orphan 6/6, 전 레인 오해소 0 |
-| G3 | 단일 명령·비대화형 재현 | PASS | 동일 프로세스 내 2회 반복 digest 일치=true, payload sha256=`802b6b045fd4c75c…` |
+| G3 | 단일 명령·비대화형 재현 | PASS | 동일 프로세스 내 2회 반복 digest 일치=true, payload sha256=`94f80f79b9d44aa6…` |
 | C1 | S9·S10 전 레인 오해소 0 (합산 12시행 이상) | PASS | S9(블록 통째 삭제)+S10(제자리 교체) 12시행 — 전 레인 orphaned 36, 오해소 0. Phase 1 규칙이었다면 이 범위에서만 오해소 18건 |
 | C1b | S11 전 레인 오해소 0 (시나리오마다 2시행 이상) | PASS | S11a·S11b(쌍둥이 블록 이동)+S11c(재타이핑)+S11d(원격 작성)+S11e(v1 레코드) 30시행 — 전 레인 orphaned 90, 오해소 0. 텍스트 동일성으로 이동을 추정하는 정책(textmove)이었다면 이 범위에서만 오해소 36건 |
-| C2 | 문서 정체성 바인딩 + 저장소 계약 무결성 | PASS | 다른 문서 3모양에 부착 0건 (같은 문서 대조군 해소=true), 채워 넣은 캡처 증거 6모양 중 부착 0건 (승격 경로 존재=false; 로드 통과 1모양은 해소 시점 대응 검사가 1모양 차단), 옛 파일 로드 시 정체성 입양=false · 대조군 해소=true · 알 수 없는 버전 거절=true |
+| C2 | 문서 정체성 바인딩 + 저장소 계약 무결성 | PASS | 다른 문서 3모양에 부착 0건 (같은 문서 대조군 해소=true), 채워 넣은 캡처 증거 7모양 중 부착 0건 (승격 경로 존재=false; 로드 통과 2모양은 해소 시점 대응 검사가 2모양 차단), 옛 파일 로드 시 정체성 입양=false · 대조군 해소=true · 알 수 없는 버전 거절=true |
 | C3 | 흔한 편집 조작 6종의 orphan 예산 게시 | PASS | 조작 6종 · orphan 46/60 레인측정 · 오해소 0 · 대조군(범위 안 삽입) 생존=true · 앵커 텍스트가 그대로인 시행 38건 중 제자리 밖 부착 0건 |
 | G4 | 기존 게이트 3종 회귀 | external | 이 디렉토리는 순수 추가라 `ontology/`·기존 `tools/*.py` 경로를 건드리지 않는다. `/usr/bin/python3 tools/{validate,check_determinism,lint_uniformity}.py`를 repo root에서 별도 실행해 회귀를 확인한다. |
-| G5 | 언어 정책 (한글 산문 / 영어 용어) | PASS | 손으로 쓴 파일 71개 스캔 — 정책 밖 문자 0개 (ASCII 282249자 / 한글 27607자). 산문 한글 / 용어·식별자·문서 fixture 영어. 손으로 쓴 파일 전수를 스캔해 ASCII·한글·명시 허용 기호 밖의 문자가 0인지 기계적으로 확인한다 (gr-lang: Korean/English only). |
+| G5 | 언어 정책 (한글 산문 / 영어 용어) | PASS | 손으로 쓴 파일 146개 스캔 — 정책 밖 문자 0개 (ASCII 465487자 / 한글 57826자). 산문 한글 / 용어·식별자·문서 fixture 영어. 손으로 쓴 파일 전수를 스캔해 ASCII·한글·명시 허용 기호 밖의 문자가 0인지 기계적으로 확인한다 (gr-lang: Korean/English only). |
 
 G2 세부: stale 레인이 브리프의 100% 목표를 만족하는가 = **no** (28/30 통과, 드리프트 2건). 드리프트는 오해소가 아니라 경계 한 칸 밀림이며, 원인·성격은 아래 D2에 있다.
 
@@ -439,6 +439,7 @@ PM Step과 Yjs 삭제 범위가 **어긋나는 앵커가 있다**. `y-prosemirro
 | 읽은 파일의 버전 | 1 |
 | 로드된 레코드 | 1건 (버려지지 않는다) |
 | 문서 정체성 입양 | false — 동거는 정체성의 증거가 아니다. 스토어의 documentId를 찍어 주지 않으므로 이 레코드는 어느 문서에서도 미상으로 남는다 (바인딩 가능=false) |
+| load -> save 승격 (세탁 경로) | false — 저장을 거쳐도 v3 레코드가 미상 표시를 유지하고(true) 종단점 상태는 측정값 `orphaned`이다 |
 | 출처 미상 표시 | true (`legacy-v1-record`) |
 | 블록 문맥 | 비움 — 이동 복구 대상 아님 |
 | 편집 | `Critical failure` -> `Cure` (제자리 교체) |
@@ -468,15 +469,16 @@ PM Step과 Yjs 삭제 범위가 **어긋나는 앵커가 있다**. `y-prosemirro
 
 | 스토어 모양 | 버전 | 로드 | 강등 | 해소 | 사유 |
 |---|---|---|---|---|---|
-| older version, capture refilled with the current state vector | 2 | 읽음 | yes (`legacy-v2-record`) | orphaned | `document-identity/record-has-no-document-identity` |
+| older version, capture refilled with the current state vector | 2 | 읽음 | yes (`legacy-v2-record`) | orphaned | `content-replaced/unknown/legacy-v2-record` |
 | current version, capture character ids copied from the replaced range | 3 | 읽음 | yes (`capture-inconsistent`) | orphaned | `content-replaced/unknown/capture-inconsistent` |
 | current version, capture ids copied from a same-length range typed after capture | 3 | 읽음 | yes (`capture-inconsistent-with-state-vector`) | orphaned | `content-replaced/unknown/capture-inconsistent-with-state-vector` |
 | current version, capture ids padded from elsewhere to the stored exact length | 3 | 읽음 | no | orphaned | `content-replaced/forged/capture-content-mismatch` |
+| current version, padding chosen to satisfy the per-position correspondence check | 3 | 읽음 | no | orphaned | `content-replaced/forged/capture-order-mismatch-document` |
 | current version, record claims another document | 3 | 거절 | - | - | `store contract: record b4 belongs to another document` |
 | unknown store version | 99 | 거절 | - | - | `unsupported store version: 99` |
 | control: untouched current-version record | 3 | 읽음 | no | orphaned | `content-replaced/no-surviving-characters` |
 
-앵커 `Critical failure`를 `Cure`로 제자리 교체한 문서에, 증거를 채워 넣은 스토어 6모양을 들이댔다 — 부착 0건, 승격 경로 존재=false. 로드 시점 검사(길이·SV)를 통과한 모양은 1개이고 그중 1개를 해소 시점의 자리별 대응 검사가 잡는다 — **막는 층이 둘이라는 사실 자체를 수치로 남긴다**. 채워 넣은 증거는 **한 갈래도 부착되지 않는다**: 옛 버전은 강등되고, 현재 버전이어도 캡처 증거가 저장된 exact와 어긋나면 계약 위반으로 강등되며, 다른 문서를 주장하는 레코드는 로드 자체가 거절된다. 길이·SV를 맞춘 padding 위조 1모양은 로드를 통과하지만 이름표가 exact와 자리별로 대응하지 않아 해소 시점에 걸린다.
+앵커 `Critical failure`를 `Cure`로 제자리 교체한 문서에, 증거를 채워 넣은 스토어 7모양을 들이댔다 — 부착 0건, 승격 경로 존재=false. 로드 시점 검사(길이·SV)를 통과한 모양은 2개이고 그중 2개를 해소 시점의 자리별 대응 검사가 잡는다 — **막는 층이 둘이라는 사실 자체를 수치로 남긴다**. 채워 넣은 증거는 **한 갈래도 부착되지 않는다**: 옛 버전은 강등되고, 현재 버전이어도 캡처 증거가 저장된 exact와 어긋나면 계약 위반으로 강등되며, 다른 문서를 주장하는 레코드는 로드 자체가 거절된다. 길이·SV를 맞춘 padding 위조 2모양은 로드를 통과하지만 이름표가 exact와 자리별로 대응하지 않아 해소 시점에 걸린다.
 
 ## 12. 관측 (수치에서 바로 도출)
 
@@ -487,7 +489,7 @@ PM Step과 Yjs 삭제 범위가 **어긋나는 앵커가 있다**. `y-prosemirro
 - S7(오프라인 동시 편집 후 병합) 6건: 저장 앵커 생존 6, 복구 0, orphan 0, 오해소 0, 두 복제본 수렴 6/6. 반면 병합을 받은 세션의 live 레인은 생존 0/6 (orphan 6) — y-prosemirror는 원격 업데이트를 PM step으로 옮기지 않고 문서 전체를 replace하므로(`sync-plugin.js` `_typeChanged`: `tr.replace(0, doc.content.size, …)`) Decoration이 전부 날아간다. Phase 2 필수 요구: 원격 업데이트(isChangeOrigin) 후에는 저장 앵커로 평면을 재수화(rehydrate)해야 한다.
 - S9(블록 통째 삭제)·S10(제자리 교체) 합산 12시행 — 전 레인 orphaned 36, 오해소 0. Phase 1 규칙이었다면 이 두 시나리오에서만 오해소가 18건 났다(반사실). 두 시나리오는 vnv가 스위트 밖에서 재현한 실패를 그대로 시나리오화한 것이다.
 - S11(블록이 사라진 뒤 같은 텍스트 블록이 새로 나타남) 30시행 — 전 레인 orphaned 90, 오해소 0. 같은 범위에서 대조 정책이었다면 오해소는 textmove 36건, phase1 56건, naive 56건이다. S11e(v1 레코드)는 저장 버전 3 엔진이 옛 파일을 읽었을 때의 경로이며, D4가 실제 파일로 확인한다 (로드됨=1건, 출처 미상 표시=true, 해소=orphaned).
-- 문서 정체성(C2): 같은 텍스트를 가진 다른 문서 3모양(동일 재임포트·파생본·다른 clientID)에 레코드를 들이대 부착 0건, 같은 문서를 저장 상태에서 다시 열었을 때는 정상 해소 true — "전부 거절"로 얻은 0이 아니다. 저장소 계약: 캡처 증거를 채워 넣은 스토어 6모양 중 부착된 것 0건이고 승격 경로 자체가 없다(마이그레이션은 강등 전용). 그중 1모양은 자기보고 정합 검사(길이·SV)를 통과하지만 해소 시점의 자리별 대응 검사가 1모양을 잡는다. 옛 파일은 로드되되 문서 정체성 입양=false(해소=orphaned, 같은 세션 대조군 해소=true), 알 수 없는 버전 거절=true.
+- 문서 정체성(C2): 같은 텍스트를 가진 다른 문서 3모양(동일 재임포트·파생본·다른 clientID)에 레코드를 들이대 부착 0건, 같은 문서를 저장 상태에서 다시 열었을 때는 정상 해소 true — "전부 거절"로 얻은 0이 아니다. 저장소 계약: 캡처 증거를 채워 넣은 스토어 7모양 중 부착된 것 0건이고 승격 경로 자체가 없다(마이그레이션은 강등 전용). 그중 2모양은 자기보고 정합 검사(길이·SV)를 통과하지만 해소 시점의 구조 검사가 2모양을 잡는다(자리별 대응까지 만족시키는 padding 포함=true — 문서 전역 순서에서 걸린다). 옛 파일은 로드되되 문서 정체성 입양=false(해소=orphaned, 같은 세션 대조군 해소=true), 알 수 없는 버전 거절=true. 게이트와 편집기의 등가성: anchors 없는 v3 레코드 거절=true, 중복 레코드 id 거절=true — 커밋 게이트가 거절하는 모양을 편집기도 거절한다.
 - orphan 예산(C3): 앵커 텍스트가 편집 후에도 남는 흔한 조작 6종을 정식 시나리오로 쟀다. pipeline 레인 orphan — insert-inside-anchor 0/6 · move-block-two-transactions 6/6 · move-block-one-transaction 6/6 · join-into-previous-block 0/6 · split-at-anchor-start 0/6 · delete-block-then-undo 6/6. stale 레인 orphan — insert-inside-anchor 0/6 · move-block-two-transactions 6/6 · move-block-one-transaction 6/6 · join-into-previous-block 6/6 · split-at-anchor-start 4/6 · delete-block-then-undo 6/6. 대조군을 뺀 합계 46/60 레인측정이 orphan이고 오해소는 0건이다. 앵커 텍스트가 편집에 닿지 않고 남은 시행 38건 중 제자리 밖에 붙은 것은 0건 — 살아남은 앵커가 남의 자리에 붙어서 만든 수치가 아니다.
 - 복구 경로: 주앵커 채택 86건, 블록 정체성 복구(block-identity) 0건, orphan 142건. orphan 사유 내역: block-gone/block-identity-destroyed 90 / collapsed/tombstone-evidence 28 / content-replaced/guard-rejected 20 / content-replaced/no-surviving-characters 2 / content-replaced/unknown/legacy-v1-record 2. 구조적 affix guard가 거절했는데 Phase 1 guard였다면 통과했을 시행 12건.
 - pipeline 레인에서 기대와 어긋난 시행 18건: S6/a1=orphaned, S6/a2=orphaned, S6/a3=orphaned, S6/a4=orphaned, S6/a5=orphaned, S6/a6=orphaned, S12a/a1=orphaned, S12a/a2=orphaned, S12a/a3=orphaned, S12a/a4=orphaned, S12a/a5=orphaned, S12a/a6=orphaned, S12d/a1=orphaned, S12d/a2=orphaned, S12d/a3=orphaned, S12d/a4=orphaned, S12d/a5=orphaned, S12d/a6=orphaned.
@@ -505,7 +507,7 @@ PM Step과 Yjs 삭제 범위가 **어긋나는 앵커가 있다**. `y-prosemirro
 | 복합 편집 — "여러 블록 동시 삭제", 앵커 범위를 가로지르는 동시 편집, 블록 타입 변경 중의 앵커 | 블록 정체성이 파괴되는 편집은 이제 **전부 orphan**이라 오부착 위험은 낮지만, 이 모양들의 복구율 손실은 미측정 |
 | 문서 정체성이 **없는** 문서 상태 (이 엔진 이전에 만들어진 Y.Doc) | 규칙 0이 "정체성 없는 문서에는 아무 레코드도 바인딩하지 않는다"로 흐르므로 오부착 위험은 없지만, 그런 문서를 실제로 다루는 마이그레이션 경로(문서에 정체성을 부여하는 절차)는 미설계·미측정 |
 | 문서 재임포트 **여러 앵커·여러 문서 세대** (D5는 앵커 1개를 네 모양에 들이대는 측정이다) | 한 앵커에 대해서는 D5가 부착 0을 확인했지만, 재임포트를 반복하거나 일부만 재임포트하는 혼합 문서는 미측정 |
-| 악의적 위조 (D6은 **마이그레이션 실수** 모양만 만든다) | 캡처 증거의 내부 정합 검사는 "현재 상태에서 베껴 온 값"을 잡지만, 옛 문서 상태를 가진 공격자가 정합한 증거를 만들어 넣는 경우는 막지 못한다. 문서 정체성도 마찬가지다 — 새 문서를 만들 때 id를 지정하는 것은 호출부의 권한이므로(clientID와 같은 성질), 남의 id를 지정한 새 문서를 만드는 것은 문서 상태 자체를 위조하는 것과 같다. 두 축 모두 서명·무결성 태그의 영역이고 미구현 |
+| 악의적 위조 — **신뢰 경계 바깥** (레코드를 손으로 쓰는 주체. D6은 그 모양 7개를 실제 파일로 만든다) | 자기보고 정합 검사(이름표 길이 합계·캡처 SV)만으로는 **부족하다**: 현재 범위의 이름표에 문서 다른 곳의 이름표를 padding 해 길이를 맞추면 둘 다 통과한다(실측 B4). 그래서 해소 시점에 이름표와 저장된 exact의 **자리별 대응**(내용·유일성·순서)에 더해 **문서 전역 순서**를 본다 — 자리별 대응까지 만족시키도록 padding 글자를 고른 위조(실측 H1)는 문서 순서에서 걸린다. **그래도 남는 것**: (a) 남의 문서의 **유효한** capture를 통째로 이식, (b) 사람이 옛 레코드에 documentId를 써 넣기, (c) **죽었거나 이 문서가 모르는** 이름표로 채운 padding(내용이 tombstone과 함께 사라져 반증할 사실이 없다), (d) 남의 documentId를 지정해 새 문서를 만들기 (문서를 만들 때 id를 정하는 것은 호출부의 권한이므로 문서 상태 자체를 위조하는 것과 같다). 넷 다 전제가 같다 — 즉 **스토어 파일에 쓸 수 있는 주체는 그 문서의 주석을 임의로 주장할 수 있다. 이것은 방어 실패가 아니라 신뢰 경계다**. 그 위는 서명·무결성 태그의 영역으로 미구현이다. 경계 **안쪽**(일상 편집·복사·병합으로 도달하는 경로: 문서 복제·스토어 중복·중복 레코드 id·anchors 삭제·해석 불가 레코드 모양·옛 파일 동거·스토어를 남의 문서 옆으로 옮기기·**문서 상태 없이 스토어만 옮기기**)은 게이트가 막고 매 실행 재측정하되, **"전부"라고 적지 않는다**: 안쪽 목록은 지금까지 실측으로 찾아낸 것이고, 라운드마다 새 항목이 추가돼 왔다(H3 -> H4 -> X1 -> X2 -> N1·N2·N6). 그래서 이제는 사례를 세는 대신 **성질**을 건다 — `게이트 accept <-> 편집기 accept`를 fixture 스토어 전수에 적용하고(`run-link-checks.mjs` C9), 편집기 쪽은 **진짜 `loadStore`**로 잰다(계약 함수를 다시 부르면 게이트와 같은 입력을 먹여 두 층이 갈리는 축이 보이지 않는다 — 실측 vnv 6차). **다만 그 성질에도 범위가 있다**: 자동으로 포함되는 것은 **fixture 코퍼스에 넣은 스토어**이고(`fixtures/**` + 실사용 `sample-state`, 필터는 `annotations`·`version` 두 키), 코퍼스 **밖**의 스토어는 성질이 아니라 게이트의 **발견**이 맡는다. 게이트가 원리적으로 볼 수 없는 축(평문과 CRDT 상태의 어긋남 = 문서 상태를 손으로 쓰기)은 `GATE_BLIND_CODES`로 표시해 코퍼스에 들어오면 divergence로 드러낸다. 즉 자동으로 잡히는 것은 **코퍼스에 들어온 모양**이지 "모든 새 변종"이 아니다. 발견에는 **전제**가 있고 그 전제는 판정 JSON에 드러난다(작업공간 루트 없음 = `workspaceRoot: null`이면 발견이 인자와 스토어 디렉토리로 한정된다 — 실측 C10) — README "발견의 전제" 절 |
 | 앵커가 블록 경계를 걸치는 경우 (blockContext 없음) | 캡처 기준점은 v2에서 따로 저장하므로 guard(문자 출처)는 그대로 작동하지만, 정체성 복구는 아예 시도하지 않는다(=orphan). 그 복구율 손실은 미측정 |
 | 이동을 CRDT가 보존하는 편집기·연산 (예: Yjs의 move 연산, 블록 id를 갖는 스키마) | 규칙 C의 복구 경로는 item 정체성이 살아남을 때만 발동한다. 지금 스택(y-prosemirror)에서는 D3대로 정체성이 파괴되므로 **한 번도 발동하지 않았다** — 그 경로 자체가 미측정 |
 | 경계 흡수 — 앵커 끝에 붙여 쓴 긴 삽입 | D1이 보였듯 RelativePosition은 끝 경계 삽입을 범위 안으로 흡수한다. 흡수량 상한이 없으므로 앵커가 크게 늘어날 수 있다(오부착은 아니나 범위 오염) |

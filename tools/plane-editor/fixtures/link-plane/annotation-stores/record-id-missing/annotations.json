@@ -1,0 +1,12 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "body": "A record with no id at all. Same fail-closed rule: an unevaluated record is a violation, not a missing result.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

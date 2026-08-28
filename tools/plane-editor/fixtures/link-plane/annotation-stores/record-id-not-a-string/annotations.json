@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": 7,
+      "body": "A record whose id is a number. Merge tools and hand edits reach this shape; the editor refuses the store because no endpoint can name this record. A checker that skips what it cannot evaluate signs a store the editor cannot open.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

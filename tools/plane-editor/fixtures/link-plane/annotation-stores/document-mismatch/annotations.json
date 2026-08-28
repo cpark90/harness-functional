@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-moved",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-moved"
+        }
+      },
+      "body": "An honest store that was MOVED next to another document. Nothing in this file is forged - the records match the store - but the document state sitting next to it belongs to someone else, so the editor refuses to load it and the gate must refuse it too.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

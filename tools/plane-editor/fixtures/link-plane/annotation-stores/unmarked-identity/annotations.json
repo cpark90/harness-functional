@@ -1,0 +1,16 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-live",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": null
+      },
+      "body": "A record with anchors but neither a document identity nor a provenance mark: an unidentified record that cannot say why it is unidentified.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

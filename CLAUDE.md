@@ -74,7 +74,11 @@ reads its `CODESTYLE.md`.
 
 Prefer an existing `ho:Concept`/`ho:Capability`. If you truly need a new one,
 connect it (a `skos:broader` parent or something it tags) in the same commit,
-or `validate.py` will flag it as an orphan.
+or `validate.py` will flag it as an orphan. A new **central** (`id/core/`)
+`ho:Concept` must also declare a `ho:conceptFacet`, chosen by ONTOLOGYSTYLE §3's
+ordered test (parent facet wins ties). That one is enforced by
+`tools/lint_uniformity.py`, not `validate.py` — the shapes close the value set
+but not its presence, so federated data repos stay valid.
 
 ## 에이전트 역할 (multi-agent 하네스)
 

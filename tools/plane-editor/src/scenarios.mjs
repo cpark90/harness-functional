@@ -1019,7 +1019,20 @@ export function runLegacyStoreDiagnostic() {
   const resolution = resolveAnchors(reload, loaded.anchors, { counterfactuals: false })
   // 대조군: 같은 문서·같은 세션에서 정체성을 실은 레코드는 정상 해소된다 (vacuous 방지).
   const control = resolveAnchors(reload, controlEntry.record.anchors, { counterfactuals: false })
+
+  // ★ 세탁 경로: 편집기가 **평범하게** 하는 일(load -> save)이 이 레코드를 승격시키는가.
+  // 여기가 열려 있으면 옛 파일이 저장 한 번에 v3 링크 종단점이 된다 (vnv B7).
+  saveStore(dir, {
+    fragment: store.fragment,
+    documentId: reload.documentId,
+    docUpdate: reload.encodeState(),
+    docJSON: reload.doc.toJSON(),
+    annotations: [{ ...loaded, anchorState: anchorStateOf(reload, loaded.anchors) }],
+  })
   reload.close()
+  const resaved = loadStore(dir)
+  const resavedRecord = resaved.annotations[0]
+  const promotedBySave = Boolean(resavedRecord.anchors.document)
 
   writeFileSync(
     join(dir, ANNOTATIONS_FILE),
@@ -1030,6 +1043,33 @@ export function runLegacyStoreDiagnostic() {
     loadStore(dir)
   } catch {
     rejectsUnknownVersion = true
+  }
+
+  // ★ 게이트와 편집기가 **같은 답을 내는가**(불변식 I-1·I-2). 커밋 게이트(check_links.py)가
+  // 거절하는 두 모양을 편집기도 거절해야 한다 — 반대 방향(게이트 통과 + 편집기 거절)이
+  // 실측된 결함이었다(vnv H3·H4). 여기서는 편집기 쪽만 잰다; 게이트 쪽은
+  // `run-link-checks.mjs`의 negative control이 같은 모양으로 고정한다.
+  const identityless = { id: record.id, body: record.body, status: record.status,
+    anchorState: 'bound' }
+  const refusals = {
+    // (i) anchors 를 통째로 싣지 않은 v3 레코드.
+    recordWithoutAnchors: [identityless],
+    // (ii) 같은 id 레코드 둘 — 종단점 하나에 레코드 하나.
+    duplicateRecordId: [record, { ...record, body: 'duplicate' }],
+  }
+  const editorRefuses = {}
+  for (const [shape, annotations] of Object.entries(refusals)) {
+    writeFileSync(
+      join(dir, ANNOTATIONS_FILE),
+      `${JSON.stringify({ version: STORE_VERSION, document: DOCUMENT_FILE,
+        documentId: resaved.documentId, annotations }, null, 2)}\n`,
+    )
+    try {
+      loadStore(dir)
+      editorRefuses[shape] = false
+    } catch {
+      editorRefuses[shape] = true
+    }
   }
   rmSync(dir, { recursive: true, force: true })
 
@@ -1053,10 +1093,19 @@ export function runLegacyStoreDiagnostic() {
     reason: resolution.reason,
     guardProvenance: resolution.guard.provenance,
     orphaned: resolution.method === 'orphaned',
+    // load -> save 를 거쳐도 승격되지 않는다(sticky). 저장된 레코드는 미상 표시를 그대로 들고
+    // 나가고 종단점 상태는 측정값(orphaned)이다.
+    promotedBySave,
+    savedStoreVersion: resaved.version,
+    savedRecordMarkedLegacy: Boolean(resavedRecord.anchors.legacy),
+    savedAnchorState: resavedRecord.anchorState ?? null,
     // 대조군이 살아 있어야 위 orphan이 "전부 거절"의 산물이 아님을 말할 수 있다.
     controlResolved: control.method !== 'orphaned',
     controlMethod: control.method,
     rejectsUnknownVersion,
+    // 게이트가 거절하는 모양을 편집기도 거절한다 (I-1·I-2의 편집기 쪽 절반).
+    rejectsRecordWithoutAnchors: editorRefuses.recordWithoutAnchors,
+    rejectsDuplicateRecordId: editorRefuses.duplicateRecordId,
   }
 }
 
@@ -1156,15 +1205,21 @@ export function runDocumentReimportDiagnostic() {
  *   (b) 현재 버전인데 캡처 증거가 다른 selector와 어긋남 -> 강등되어야 한다 (계약 위반)
  *   (c) 현재 버전인데 이름표를 **다른 곳에서 padding**해 길이·SV를 맞춘 파일
  *                                                        -> 로드는 통과하지만 해소에서 걸린다
+ *   (c2) 그 padding을 **그 자리의 글자와 같은 글자**로 골라 자리별 대응까지 만족시킨 파일
+ *                                                        -> 문서 전역 순서 검사에서 걸린다
  *   (d) 현재 버전인데 레코드가 다른 문서를 주장           -> 로드 자체를 거절해야 한다
  *   (e) 알 수 없는 버전                                   -> 거절 (기존 D4와 같은 축)
  *   (f) 정상 파일                                         -> 그대로 로드되고 해소된다 (대조군)
  * 모든 갈래에서 "제자리 교체"된 텍스트에 부착되면 안 된다 (misResolutions 0).
  *
- * (c)는 vnv B4가 만든 모양이다. 그것이 여기 있는 이유는 **어느 층이 막는지 구분**하기
- * 위해서다: 자기보고 정합 검사(길이·SV)는 이 모양을 통과시키고, 이름표와 저장된 exact의
- * 자리별 대응 검사가 해소 시점에 잡는다. 두 값을 따로 보고한다
+ * (c)는 vnv B4가, (c2)는 vnv H1이 만든 모양이다. 둘이 함께 있는 이유는 **어느 층이 막는지
+ * 구분**하기 위해서다: 자기보고 정합 검사(길이·SV)는 둘 다 통과시키고, 해소 시점의 구조
+ * 검사가 (c)는 내용 대응으로 (c2)는 문서 전역 순서로 잡는다. 두 값을 따로 보고한다
  * (`forgeriesPassingLoad` / `forgeriesCaughtAtResolve`).
+ *
+ * **여기 있는 모양은 고른 것이다** — `shapeSelection`이 그 목록이고, 값(`misResolutions`·
+ * `upgradePathExists`)은 그 목록에 대한 참이다. 새 우회 모양이 나오면 그것을 여기에 넣어야
+ * 매 실행 재측정된다(H1이 그렇게 들어왔다).
  */
 export function runStoreContractDiagnostic() {
   const fixture = TWIN_FIXTURE
@@ -1191,7 +1246,7 @@ export function runStoreContractDiagnostic() {
   // 붙여 저장된 exact 길이를 채우고, stateVector는 현재 값으로 준다. 두 자기보고 검사
   // (길이 합계·SV preexisting)를 **둘 다** 통과하므로 로드 시점에는 걸리지 않는다 —
   // 이름표가 exact와 자리별로 대응하는지 보는 해소 시점 검사만이 이 모양을 잡는다.
-  const { blocks: forgedBlocks } = liveBlocks(session)
+  const { index: forgedIndex, blocks: forgedBlocks } = liveBlocks(session)
   const replacedRuns = replacedAnchors.capture.characterIds ?? []
   const paddingRuns =
     rangeCharacterIds(forgedBlocks, 0, target.exact.length - characterIdCount(replacedRuns)) ?? []
@@ -1199,6 +1254,62 @@ export function runStoreContractDiagnostic() {
     stateVector: refilledStateVector,
     characterIds: [...replacedRuns, ...paddingRuns],
   }
+  // **자리별 대응까지 만족시키는 padding 위조** (vnv H1). 위 모양은 (1) 내용 대응에서
+  // 걸린다 — padding 문자가 그 자리의 글자가 아니기 때문이다. 그래서 위조자는 padding을
+  // 아무 이름표가 아니라 **그 자리의 글자와 같은 글자**로 고르고, 살아남은 교체 범위 문자를
+  // exact 안의 **부분수열 자리**에 놓는다. 그러면 내용·유일성·(범위 안) 순서가 전부 성립한다.
+  // 이 모양을 잡는 것은 문서 전역 순서 검사뿐이다: 흩어진 padding 문자들의 문서 순서는
+  // 캡처 순서와 어긋나고, 그 어긋남은 CRDT 불변식상 정직한 레코드에서 생길 수 없다.
+  const correspondingCapture = (() => {
+    const rangeAt = forgedIndex.text.indexOf(spec.replacement)
+    const survivors = rangeAt === -1
+      ? []
+      : (rangeCharacterIds(forgedBlocks, rangeAt, rangeAt + spec.replacement.length) ?? [])
+    const flatSurvivors = []
+    for (const run of survivors) {
+      for (let offset = 0; offset < run.length; offset += 1) {
+        flatSurvivors.push({ client: run.client, clock: run.clock + offset, length: 1 })
+      }
+    }
+    // exact 안에서 교체 텍스트의 글자들이 놓일 **증가 수열** 자리.
+    const slots = []
+    let cursor = 0
+    for (const character of spec.replacement) {
+      const found = target.exact.indexOf(character, cursor)
+      if (found === -1) break
+      slots.push(found)
+      cursor = found + 1
+    }
+    // 범위 밖 살아있는 문자들을 글자별로 모은다 (문서 순서대로, 한 이름표는 한 번만).
+    const pool = new Map()
+    for (let offset = 0; offset < forgedIndex.text.length; offset += 1) {
+      if (rangeAt !== -1 && offset >= rangeAt && offset < rangeAt + spec.replacement.length) continue
+      const ids = rangeCharacterIds(forgedBlocks, offset, offset + 1)
+      if (!ids || ids.length !== 1 || ids[0].length !== 1) continue
+      const character = forgedIndex.text[offset]
+      if (!pool.has(character)) pool.set(character, [])
+      pool.get(character).push(ids[0])
+    }
+    const runs = new Array(target.exact.length).fill(null)
+    slots.forEach((slot, position) => {
+      if (flatSurvivors[position]) runs[slot] = flatSurvivors[position]
+    })
+    let unfilled = 0
+    for (let position = 0; position < runs.length; position += 1) {
+      if (runs[position]) continue
+      const list = pool.get(target.exact[position]) ?? []
+      const id = list.shift()
+      if (id) runs[position] = id
+      else unfilled += 1
+    }
+    return {
+      capture: { stateVector: refilledStateVector, characterIds: runs.filter(Boolean) },
+      // 구성이 실제로 "자리별 대응을 만족시키는" 모양인지. false면 fixture가 바뀐 것이므로
+      // 이 행은 H1 계열을 대표하지 못한다 — 그래서 값을 진단에 그대로 싣는다.
+      complete: slots.length === spec.replacement.length && unfilled === 0,
+      slots,
+    }
+  })()
   // 길이까지 맞춘 위조: 캡처 **이후에** 입력된, 저장 exact와 **같은 길이**의 범위에서 이름표를
   // 베껴 온다. 길이 정합 검사만 있으면 통과하므로, state vector와의 교차 검증이 필요해진다.
   const decoyText = spec.replacement.padEnd(target.exact.length, ' ').slice(0, target.exact.length)
@@ -1220,17 +1331,15 @@ export function runStoreContractDiagnostic() {
   const writeAnnotations = (payload) =>
     writeFileSync(join(dir, ANNOTATIONS_FILE), `${JSON.stringify(payload, null, 2)}\n`)
 
-  const withoutDocument = (anchors) => {
-    const { document: _document, ...rest } = anchors
-    return rest
-  }
   const cases = [
     {
+      // 정체성은 일부러 **남겨 둔다**: 마이그레이션 실수(증거 채워넣기)가 규칙 0을 통과해
+      // guard까지 가는 최악 경로를 재기 위해서다. 정체성이 아예 없는 옛 파일은 D4가 잰다.
       shape: 'older version, capture refilled with the current state vector',
       version: STORE_VERSION - 1,
       record: {
         ...pristine,
-        anchors: { ...withoutDocument(pristine.anchors), capture: { stateVector: refilledStateVector } },
+        anchors: { ...pristine.anchors, capture: { stateVector: refilledStateVector } },
       },
     },
     {
@@ -1253,6 +1362,14 @@ export function runStoreContractDiagnostic() {
       shape: 'current version, capture ids padded from elsewhere to the stored exact length',
       version: STORE_VERSION,
       record: { ...pristine, anchors: { ...pristine.anchors, capture: paddedCapture } },
+    },
+    {
+      shape: 'current version, padding chosen to satisfy the per-position correspondence check',
+      version: STORE_VERSION,
+      record: {
+        ...pristine,
+        anchors: { ...pristine.anchors, capture: correspondingCapture.capture },
+      },
     },
     {
       shape: 'current version, record claims another document',
@@ -1325,6 +1442,13 @@ export function runStoreContractDiagnostic() {
     rows,
     misResolutions: forged.filter((row) => row.misResolved).length,
     forgedShapes: forged.length,
+    // 모양은 **고른 것**이다. 무엇을 골랐는지(선정 근거)를 값과 함께 실어야 "위조 0"이
+    // 사정거리를 넘어 읽히지 않는다: 마이그레이션 채워넣기 2 + 이름표 베끼기 2 + 자리별
+    // 대응까지 맞춘 padding 1 + 남의 문서 주장 1 + 읽을 수 없는 버전 1.
+    shapeSelection: 'migration refill, copied ids, length padding, correspondence-satisfying '
+      + 'padding (vnv H1), foreign document claim, unreadable version',
+    // H1 계열 구성이 실제로 성립했는가 (false면 fixture 변화로 그 행이 대표성을 잃는다).
+    correspondenceForgeryComplete: correspondingCapture.complete,
     // 로드 검사(길이·SV)를 통과한 위조 모양 — 0이 아니어도 된다. 잡는 층이 다를 뿐이다.
     forgeriesPassingLoad: passedLoad.length,
     forgeriesCaughtAtResolve: passedLoad.filter((row) => row.misResolved === false).length,

@@ -3165,7 +3165,7 @@
     },
     "C2": {
       "pass": true,
-      "requirement": "다른 문서 부착 0 (모양 3종 이상, 같은 문서 대조군은 정상 해소) + 채워 넣은 캡처 증거의 승격 경로 0 (위조 모양 6종 이상, 오해소 0) + 옛 파일이 스토어의 문서 정체성을 입양하지 않을 것 (대조군은 같은 세션에서 정상 해소)",
+      "requirement": "다른 문서 부착 0 (모양 3종 이상, 같은 문서 대조군은 정상 해소) + 채워 넣은 캡처 증거의 승격 경로 0 (위조 모양 7종 이상 — 자리별 대응을 만족시키는 padding 포함, 오해소 0) + 옛 파일이 스토어의 문서 정체성을 입양하지 않고 load->save 로도 승격되지 않을 것 (대조군은 같은 세션에서 정상 해소) + **게이트가 거절하는 레코드 모양을 편집기도 거절할 것** (anchors 없는 v3 레코드 · 중복 레코드 id)",
       "crossDocument": {
         "shapes": 4,
         "crossDocumentShapes": 3,
@@ -3173,10 +3173,12 @@
         "controlResolved": true
       },
       "storeContract": {
-        "forgedShapes": 6,
+        "forgedShapes": 7,
+        "shapeSelection": "migration refill, copied ids, length padding, correspondence-satisfying padding (vnv H1), foreign document claim, unreadable version",
+        "correspondenceForgeryComplete": true,
         "misResolutions": 0,
-        "forgeriesPassingLoad": 1,
-        "forgeriesCaughtAtResolve": 1,
+        "forgeriesPassingLoad": 2,
+        "forgeriesCaughtAtResolve": 2,
         "upgradePathExists": false,
         "rows": [
           {
@@ -3212,6 +3214,14 @@
             "misResolved": false
           },
           {
+            "shape": "current version, padding chosen to satisfy the per-position correspondence check",
+            "storeVersion": 3,
+            "loadRejected": false,
+            "degraded": false,
+            "method": "orphaned",
+            "misResolved": false
+          },
+          {
             "shape": "current version, record claims another document",
             "storeVersion": 3,
             "loadRejected": true,
@@ -3239,13 +3249,16 @@
       },
       "legacyLoad": {
         "documentAdopted": false,
+        "promotedBySave": false,
         "markedLegacy": true,
         "orphaned": true,
         "controlResolved": true,
         "rejectsUnknownVersion": true,
-        "method": "orphaned"
+        "method": "orphaned",
+        "rejectsRecordWithoutAnchors": true,
+        "rejectsDuplicateRecordId": true
       },
-      "note": "차단 해제 조건 1·2 (docs/verify/plane-editor-c1b-verify.md §8). 레코드는 자기가 어느 문서의 것인지 싣고 해소 진입점이 불일치를 거절하며(D5), 캡처 증거는 파일 버전이 아니라 **다른 selector와의 내부 정합 + 저장된 exact와의 자리별 대응**으로 검증되어 채워 넣기가 승격되지 않는다(D6). 마이그레이션 경로는 강등 전용이고, 정체성은 **입양되지 않는다** — 옛 파일은 남의 문서 옆에 놓여도 미상으로 남는다(D4, vnv B3->B7 경로 차단)."
+      "note": "차단 해제 조건 1·2 (docs/verify/plane-editor-c1b-verify.md §8). 레코드는 자기가 어느 문서의 것인지 싣고 해소 진입점이 불일치를 거절하며(D5), 캡처 증거는 파일 버전이 아니라 **다른 selector와의 내부 정합 + 저장된 exact와의 자리별 대응 + 문서 전역 순서**로 검증되어 채워 넣기가 승격되지 않는다(D6). 마이그레이션 경로는 강등 전용이고, 정체성은 **입양되지 않는다** — 옛 파일은 남의 문서 옆에 놓여도 미상으로 남는다(D4, vnv B3->B7 경로 차단). 그리고 커밋 게이트가 거절하는 레코드 모양은 편집기도 거절한다 — 한쪽만 막으면 게이트가 통과시킨 파일이 편집기에서 터진다(vnv H3·H4)."
     },
     "C3": {
       "pass": true,
@@ -3444,7 +3457,7 @@
       "pass": true,
       "deterministic": true,
       "repeats": 2,
-      "payloadSha256": "802b6b045fd4c75c2f6ba668bf07867f5e61b4b6710cf313bfba9b7e4260e1d0",
+      "payloadSha256": "94f80f79b9d44aa60f27eaa1a57b2db4fc6f48c98d4c576b45a100c7150b0103",
       "command": "node run-suite.mjs",
       "interactive": false,
       "browser": false
@@ -3456,9 +3469,9 @@
     "G5": {
       "pass": true,
       "status": "checked",
-      "filesScanned": 71,
-      "asciiChars": 282249,
-      "hangulChars": 27607,
+      "filesScanned": 146,
+      "asciiChars": 465487,
+      "hangulChars": 57826,
       "violations": [],
       "note": "산문 한글 / 용어·식별자·문서 fixture 영어. 손으로 쓴 파일 전수를 스캔해 ASCII·한글·명시 허용 기호 밖의 문자가 0인지 기계적으로 확인한다 (gr-lang: Korean/English only)."
     }
@@ -21631,9 +21644,15 @@
       "reason": "document-identity/record-has-no-document-identity",
       "guardProvenance": "not-evaluated",
       "orphaned": true,
+      "promotedBySave": false,
+      "savedStoreVersion": 3,
+      "savedRecordMarkedLegacy": true,
+      "savedAnchorState": "orphaned",
       "controlResolved": true,
       "controlMethod": "relative-position",
-      "rejectsUnknownVersion": true
+      "rejectsUnknownVersion": true,
+      "rejectsRecordWithoutAnchors": true,
+      "rejectsDuplicateRecordId": true
     },
     {
       "id": "D5",
@@ -21704,7 +21723,7 @@
           "captureKept": false,
           "method": "orphaned",
           "attachedText": null,
-          "reason": "document-identity/record-has-no-document-identity",
+          "reason": "content-replaced/unknown/legacy-v2-record",
           "misResolved": false
         },
         {
@@ -21747,6 +21766,19 @@
           "misResolved": false
         },
         {
+          "shape": "current version, padding chosen to satisfy the per-position correspondence check",
+          "storeVersion": 3,
+          "loadRejected": false,
+          "rejection": null,
+          "degraded": false,
+          "degradeReason": null,
+          "captureKept": true,
+          "method": "orphaned",
+          "attachedText": null,
+          "reason": "content-replaced/forged/capture-order-mismatch-document",
+          "misResolved": false
+        },
+        {
           "shape": "current version, record claims another document",
           "storeVersion": 3,
           "loadRejected": true,
@@ -21783,11 +21815,13 @@
         }
       ],
       "misResolutions": 0,
-      "forgedShapes": 6,
-      "forgeriesPassingLoad": 1,
-      "forgeriesCaughtAtResolve": 1,
+      "forgedShapes": 7,
+      "shapeSelection": "migration refill, copied ids, length padding, correspondence-satisfying padding (vnv H1), foreign document claim, unreadable version",
+      "correspondenceForgeryComplete": true,
+      "forgeriesPassingLoad": 2,
+      "forgeriesCaughtAtResolve": 2,
       "upgradePathExists": false,
-      "note": "채워 넣은 증거는 **한 갈래도 부착되지 않는다**: 옛 버전은 강등되고, 현재 버전이어도 캡처 증거가 저장된 exact와 어긋나면 계약 위반으로 강등되며, 다른 문서를 주장하는 레코드는 로드 자체가 거절된다. 길이·SV를 맞춘 padding 위조 1모양은 로드를 통과하지만 이름표가 exact와 자리별로 대응하지 않아 해소 시점에 걸린다."
+      "note": "채워 넣은 증거는 **한 갈래도 부착되지 않는다**: 옛 버전은 강등되고, 현재 버전이어도 캡처 증거가 저장된 exact와 어긋나면 계약 위반으로 강등되며, 다른 문서를 주장하는 레코드는 로드 자체가 거절된다. 길이·SV를 맞춘 padding 위조 2모양은 로드를 통과하지만 이름표가 exact와 자리별로 대응하지 않아 해소 시점에 걸린다."
     }
   ],
   "findings": [
@@ -21798,7 +21832,7 @@
     "S7(오프라인 동시 편집 후 병합) 6건: 저장 앵커 생존 6, 복구 0, orphan 0, 오해소 0, 두 복제본 수렴 6/6. 반면 병합을 받은 세션의 live 레인은 생존 0/6 (orphan 6) — y-prosemirror는 원격 업데이트를 PM step으로 옮기지 않고 문서 전체를 replace하므로(`sync-plugin.js` `_typeChanged`: `tr.replace(0, doc.content.size, …)`) Decoration이 전부 날아간다. Phase 2 필수 요구: 원격 업데이트(isChangeOrigin) 후에는 저장 앵커로 평면을 재수화(rehydrate)해야 한다.",
     "S9(블록 통째 삭제)·S10(제자리 교체) 합산 12시행 — 전 레인 orphaned 36, 오해소 0. Phase 1 규칙이었다면 이 두 시나리오에서만 오해소가 18건 났다(반사실). 두 시나리오는 vnv가 스위트 밖에서 재현한 실패를 그대로 시나리오화한 것이다.",
     "S11(블록이 사라진 뒤 같은 텍스트 블록이 새로 나타남) 30시행 — 전 레인 orphaned 90, 오해소 0. 같은 범위에서 대조 정책이었다면 오해소는 textmove 36건, phase1 56건, naive 56건이다. S11e(v1 레코드)는 저장 버전 3 엔진이 옛 파일을 읽었을 때의 경로이며, D4가 실제 파일로 확인한다 (로드됨=1건, 출처 미상 표시=true, 해소=orphaned).",
-    "문서 정체성(C2): 같은 텍스트를 가진 다른 문서 3모양(동일 재임포트·파생본·다른 clientID)에 레코드를 들이대 부착 0건, 같은 문서를 저장 상태에서 다시 열었을 때는 정상 해소 true — \"전부 거절\"로 얻은 0이 아니다. 저장소 계약: 캡처 증거를 채워 넣은 스토어 6모양 중 부착된 것 0건이고 승격 경로 자체가 없다(마이그레이션은 강등 전용). 그중 1모양은 자기보고 정합 검사(길이·SV)를 통과하지만 해소 시점의 자리별 대응 검사가 1모양을 잡는다. 옛 파일은 로드되되 문서 정체성 입양=false(해소=orphaned, 같은 세션 대조군 해소=true), 알 수 없는 버전 거절=true.",
+    "문서 정체성(C2): 같은 텍스트를 가진 다른 문서 3모양(동일 재임포트·파생본·다른 clientID)에 레코드를 들이대 부착 0건, 같은 문서를 저장 상태에서 다시 열었을 때는 정상 해소 true — \"전부 거절\"로 얻은 0이 아니다. 저장소 계약: 캡처 증거를 채워 넣은 스토어 7모양 중 부착된 것 0건이고 승격 경로 자체가 없다(마이그레이션은 강등 전용). 그중 2모양은 자기보고 정합 검사(길이·SV)를 통과하지만 해소 시점의 구조 검사가 2모양을 잡는다(자리별 대응까지 만족시키는 padding 포함=true — 문서 전역 순서에서 걸린다). 옛 파일은 로드되되 문서 정체성 입양=false(해소=orphaned, 같은 세션 대조군 해소=true), 알 수 없는 버전 거절=true. 게이트와 편집기의 등가성: anchors 없는 v3 레코드 거절=true, 중복 레코드 id 거절=true — 커밋 게이트가 거절하는 모양을 편집기도 거절한다.",
     "orphan 예산(C3): 앵커 텍스트가 편집 후에도 남는 흔한 조작 6종을 정식 시나리오로 쟀다. pipeline 레인 orphan — insert-inside-anchor 0/6 · move-block-two-transactions 6/6 · move-block-one-transaction 6/6 · join-into-previous-block 0/6 · split-at-anchor-start 0/6 · delete-block-then-undo 6/6. stale 레인 orphan — insert-inside-anchor 0/6 · move-block-two-transactions 6/6 · move-block-one-transaction 6/6 · join-into-previous-block 6/6 · split-at-anchor-start 4/6 · delete-block-then-undo 6/6. 대조군을 뺀 합계 46/60 레인측정이 orphan이고 오해소는 0건이다. 앵커 텍스트가 편집에 닿지 않고 남은 시행 38건 중 제자리 밖에 붙은 것은 0건 — 살아남은 앵커가 남의 자리에 붙어서 만든 수치가 아니다.",
     "복구 경로: 주앵커 채택 86건, 블록 정체성 복구(block-identity) 0건, orphan 142건. orphan 사유 내역: block-gone/block-identity-destroyed 90 / collapsed/tombstone-evidence 28 / content-replaced/guard-rejected 20 / content-replaced/no-surviving-characters 2 / content-replaced/unknown/legacy-v1-record 2. 구조적 affix guard가 거절했는데 Phase 1 guard였다면 통과했을 시행 12건.",
     "pipeline 레인에서 기대와 어긋난 시행 18건: S6/a1=orphaned, S6/a2=orphaned, S6/a3=orphaned, S6/a4=orphaned, S6/a5=orphaned, S6/a6=orphaned, S12a/a1=orphaned, S12a/a2=orphaned, S12a/a3=orphaned, S12a/a4=orphaned, S12a/a5=orphaned, S12a/a6=orphaned, S12d/a1=orphaned, S12d/a2=orphaned, S12d/a3=orphaned, S12d/a4=orphaned, S12d/a5=orphaned, S12d/a6=orphaned.",

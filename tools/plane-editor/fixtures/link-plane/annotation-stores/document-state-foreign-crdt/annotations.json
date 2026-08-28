@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "document": "document.json",
+  "documentId": "doc-fixture-state-foreign",
+  "annotations": [
+    {
+      "id": "f1",
+      "anchors": {
+        "document": {
+          "id": "doc-fixture-state-foreign"
+        }
+      },
+      "body": "The plaintext documentId next to this store agrees with the store, but the CRDT state in the same file belongs to another document. Only the editor can see that, because only the editor decodes the state.",
+      "status": "open",
+      "anchorState": "bound"
+    }
+  ]
+}

@@ -13,7 +13,7 @@
         "plane": "decision",
         "ref": "dec-fixture-absent"
       },
-      "type": "overlapsWith",
+      "type": "id:kind-overlap",
       "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
     },
     {

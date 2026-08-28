@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-unreadable",
+  "yUpdateBase64": "AQTlAQAoAQRtZXRhCmRvY3VtZW50SWQBdxZkb2MtZml4dHVyZS11bnJlYWRhYmxlBwELcHJvc2VtaXJyb3IDCXBhcmFncmFwaAcA5QEBBgQA5QECS0ZpeHR1cmUgZG9jdW1lbnQgZm9yIGEgc3RvcmUgd3JpdHRlbiBpbiBhIHZlcnNpb24gdGhpcyBjaGVja2VyIGNhbm5vdCByZWFkLgA=",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document for a store written in a version this checker cannot read."
+          }
+        ]
+      }
+    ]
+  }
+}

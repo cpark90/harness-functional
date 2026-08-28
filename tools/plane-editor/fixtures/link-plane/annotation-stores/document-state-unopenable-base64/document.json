@@ -1,0 +1,19 @@
+{
+  "fragment": "prosemirror",
+  "documentId": "doc-fixture-state-unopenable-base64",
+  "yUpdateBase64": "not-base64:@@@",
+  "prosemirrorJSON": {
+    "type": "doc",
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Fixture document whose stored update was damaged in transit: the field is there, the content is not base64."
+          }
+        ]
+      }
+    ]
+  }
+}
