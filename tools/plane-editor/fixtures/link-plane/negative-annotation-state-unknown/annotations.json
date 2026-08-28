@@ -6,8 +6,7 @@
     {
       "id": "a1",
       "body": "Fixture annotation record. check_links.py reads the id, the store's documentId and the measured anchorState; the selectors live in the annotation plane's own store.",
-      "status": "open",
-      "anchorState": "bound"
+      "status": "open"
     },
     {
       "id": "a2",

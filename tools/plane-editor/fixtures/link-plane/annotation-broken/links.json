@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "plane": "link",
+  "links": [
+    {
+      "id": "ln-fixture-broken-annotation-tagged-traceability",
+      "from": {
+        "plane": "annotation",
+        "ref": "a1",
+        "document": "doc-fixture-broken"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-traceability"
+      },
+      "type": "tagged",
+      "evidence": "the endpoint record reports anchorState orphaned; the checker must report it, not hide it",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    }
+  ]
+}

@@ -4,6 +4,11 @@
  * Everything is deterministic on purpose: client IDs are assigned by the
  * caller (Yjs would otherwise randomise them, and a RelativePosition encodes
  * the client ID), and no wall-clock value ever enters the state.
+ *
+ * 세션은 **문서 정체성**(`session.documentId`)을 들고 다닌다. 새로 만드는 문서에는
+ * 발급해 CRDT 상태에 넣고, 저장된 업데이트에서 여는 문서는 그 상태에서 **읽기만**
+ * 한다 (근거·성질은 `src/document-id.mjs` 머리말). 이 값이 없으면 앵커를 캡처할 수
+ * 없다 — 어느 문서로 되돌려 붙일지 증명할 수 없는 레코드가 되기 때문이다.
  */
 import './dom.mjs'
 import { readFileSync } from 'node:fs'
@@ -15,6 +20,7 @@ import { buildSchema, contentExtensions } from './schema.mjs'
 import { AnnotationPlane, attachAnnotation, annotationRecord } from './annotation-plane.mjs'
 import { buildTextIndex, posToOffset, offsetToPos } from './text-index.mjs'
 import { captureAnchors } from './anchors.mjs'
+import { documentIdOf, mintDocumentId, setDocumentId } from './document-id.mjs'
 
 export const FRAGMENT_NAME = 'prosemirror'
 
@@ -98,15 +104,30 @@ function yjsBridge(fragment) {
   })
 }
 
-export function openSession({ update = null, clientID, docJSON = FIXTURE_DOC }) {
+export function openSession({ update = null, clientID, docJSON = FIXTURE_DOC, documentId = null }) {
   if (!Number.isInteger(clientID)) throw new Error('openSession needs an explicit integer clientID')
 
   const ydoc = new Y.Doc()
   ydoc.clientID = clientID
   const fragment = ydoc.getXmlFragment(FRAGMENT_NAME)
+  let identity
   if (update) {
     Y.applyUpdate(ydoc, update)
+    // 저장된 상태에서 여는 문서: 정체성은 **읽기만** 한다.
+    identity = documentIdOf(ydoc)
+    if (documentId && identity && documentId !== identity) {
+      throw new Error('openSession: the requested documentId is not the identity stored in this document state')
+    }
+    if (documentId && !identity) {
+      throw new Error(
+        'openSession: this document state carries no identity; refusing to assign one on load ' +
+          '(that would fabricate provenance for every record that claims it)',
+      )
+    }
   } else {
+    // 새로 만드는 문서: 정체성을 1회 발급해 상태에 넣는다 (내용보다 먼저 태어난다).
+    identity = documentId ?? mintDocumentId()
+    setDocumentId(ydoc, identity)
     prosemirrorJSONToYXmlFragment(schema, docJSON, fragment)
   }
 
@@ -122,6 +143,7 @@ export function openSession({ update = null, clientID, docJSON = FIXTURE_DOC }) 
     editor,
     schema,
     clientID,
+    documentId: identity,
     mapping() {
       const state = ySyncPluginKey.getState(editor.state)
       if (!state || !state.binding) throw new Error('y-prosemirror binding is not ready')

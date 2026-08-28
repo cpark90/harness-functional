@@ -1,17 +1,29 @@
 /**
  * Anchors = Selector 다중화 (tool_suggestion v0.2 §7).
  *
- * 저장되는 selector (v2 레코드):
+ * 저장되는 selector (v3 레코드):
+ *   0. document.id — **어느 문서의 앵커인가**. 레코드가 다른 문서에 부착되는 것을
+ *      막는 유일한 장치다 (`src/document-id.mjs`; 실측된 결함 vnv M5).
  *   1. Yjs RelativePosition (start/end) — 주앵커. 편집·오프라인 병합을 견딘다.
  *   2. TextQuoteSelector (exact/prefix/suffix) — **보조 검증용**. 문자열 일치는
  *      동일성 증거가 아니므로 단독 복구 근거로 쓰지 않는다.
- *   3. capture.stateVector — 캡처 시점의 CRDT 기준점. 문자 출처·생성 판정의 원점이다.
- *      블록 경계를 걸친 앵커에도 **항상** 저장한다 (v1은 이걸 블록 문맥 안에 넣어
- *      두어서, 경계를 걸친 앵커는 출처를 아예 못 읽었다).
+ *   3. capture.characterIds — 캡처 시점에 앵커 범위를 이루던 **문자들의 CRDT 정체성**
+ *      (`{client, clock, length}` 런). "그때부터 있던 문자가 남았는가"를 이 이름표로
+ *      직접 판정한다. capture.stateVector도 함께 싣지만 그것은 **대조 정책 전용**이다.
  *   4. blockContext (블록 텍스트·블록 안 오프셋·**블록 item id**) — 블록 정체성.
  *      앵커가 블록 경계를 걸치면 null.
  *
  * 해소 규칙 (오해소 0이 절대 기준 — 조용한 오부착보다 명시적 orphan이 항상 낫다):
+ *
+ *   0. **문서 정체성 바인딩** — 해소 진입점(`resolveAnchors`)은 먼저 "이 레코드가 이
+ *      문서의 것인가"를 묻는다. 레코드의 문서 id와 세션의 문서 id가 **둘 다 있고
+ *      같을 때만** 다음 규칙으로 넘어간다. 한쪽이 없거나 다르면 selector를 아예
+ *      읽지 않고 orphan이다 — 다른 문서에서는 우연히 해소되는 것이 정상이기 때문에
+ *      (같은 clientID로 만든 문서끼리는 item id 공간이 겹친다) 여기서 막지 않으면
+ *      아래 규칙들은 애초에 잘못된 문서 위에서 계산된다.
+ *      **정체성은 동거로 얻어지지 않는다**: 문서 id를 싣지 않은 레코드는 어떤 문서 옆에
+ *      놓여도 미상으로 남는다(`src/store.mjs`의 입양 금지). 옛 주석 파일을 남의 문서
+ *      옆에 두는 것만으로 그 문서의 레코드가 되던 경로가 실측됐다(vnv B3 -> B7).
  *
  *   A. 주앵커가 살아 돌아오면 **구조적 affix guard**를 통과해야 채택한다.
  *      두 조건을 함께 요구한다.
@@ -19,13 +31,23 @@
  *            설명돼야 한다 (`head + tail >= min(길이)`, 최소 MIN_GUARD_EVIDENCE자).
  *            삽입으로 늘어난 범위·삭제로 줄어든 잔여 범위는 통과하고, 그 자리에
  *            새로 타이핑된 무관한 텍스트는 탈락한다.
- *        (2) 문자 출처 — 그 범위에 **캡처 시점부터 있던 문자**가 하나라도 남아야
- *            한다. 문자열만 보면 "가운데를 지운 잔여 텍스트"와 "그 자리에 새로 친
- *            짧은 텍스트"가 같아 보이지만(`Critical failure` -> `Cure`), CRDT는
- *            둘을 구분한다 (src/blocks.mjs `rangeOrigins`).
- *            **출처를 모르면 통과가 아니라 거절이다** (v1 레코드·증거 없는 범위).
- *            유일한 예외는 해소 텍스트가 exact와 **완전히 같을 때** — 그때는 문자가
- *            그대로이므로 추가 증거를 요구하지 않는다.
+ *        (2) 문자 출처 — 그 범위에 **캡처 때 앵커에 들어 있던 바로 그 문자**가
+ *            하나라도 남아야 한다. 문자열만 보면 "가운데를 지운 잔여 텍스트"와 "그
+ *            자리에 새로 친 짧은 텍스트"가 같아 보이지만(`Critical failure` -> `Cure`),
+ *            CRDT는 둘을 구분한다 (src/blocks.mjs `captureCorrespondence`).
+ *            **출처를 모르면 통과가 아니라 거절이다** (옛 레코드·증거 없는 범위).
+ *            해소 텍스트가 exact와 **완전히 같을 때**는 문자가 그대로이므로 추가 증거를
+ *            요구하지 않는다 — 단 출처 증거가 **위조로 반증된** 레코드에는 그 예외도
+ *            주지 않는다.
+ *            출처의 근거는 레코드가 스스로 주장하는 **시점**(state vector)이 아니라
+ *            문자들의 **이름표**(characterIds)다. 시점 값은 마이그레이션이 현재 값으로
+ *            채워 넣을 수 있어서 "모든 문자가 옛 문자"로 뒤집힌다(vnv M4).
+ *            그런데 이름표도 **개수만 세면 우회된다**: 현재 교체 범위의 이름표에 문서
+ *            다른 곳의 이름표를 padding 해 저장된 exact 길이에 맞추면 길이 검사와 SV
+ *            검사를 함께 통과한다(실측: vnv B4). 그래서 이름표는 저장된 exact와
+ *            **자리별로 대응**하는지까지 본다 — 살아 있는 이름표가 가리키는 문자는
+ *            `exact[k]`여야 하고, 이름표는 유일해야 하며, 살아남은 문자의 캡처 위치는
+ *            증가 수열이어야 한다 (`captureCorrespondence`).
  *
  *   B. 주앵커가 실패한 방식이 **삭제 증거**면 복구를 돌리지 않고 orphan으로
  *      확정한다. 삭제 증거는 세 가지다:
@@ -54,6 +76,7 @@ import {
   relativePositionToAbsolutePosition,
 } from 'y-prosemirror'
 import {
+  BLOCK_SEPARATOR,
   buildTextIndex,
   posToOffset,
   offsetToPos,
@@ -62,11 +85,13 @@ import {
 } from './text-index.mjs'
 import {
   CREATION,
+  captureCorrespondence,
+  characterIdCount,
   classifyCreation,
   encodeStateVector,
   itemFate,
   liveBlocks,
-  rangeOrigins,
+  rangeCharacterIds,
 } from './blocks.mjs'
 
 /** Characters of context stored on each side of the quote. */
@@ -151,16 +176,22 @@ function decodeRelative(session, encoded) {
   )
 }
 
-/** Capture all three selectors for the range [from, to) of the session's current doc. */
+/** Capture every selector for the range [from, to) of the session's current doc. */
 export function captureAnchors(session, from, to) {
-  const doc = session.editor.state.doc
-  const index = buildTextIndex(doc)
+  if (typeof session.documentId !== 'string' || !session.documentId) {
+    throw new Error(
+      'captureAnchors: this document has no identity, so an anchor captured here could never be ' +
+        'bound back to it — refusing to create an unbindable record',
+    )
+  }
+  const { index, blocks } = liveBlocks(session)
   const textFrom = posToOffset(index, from)
   const textTo = posToOffset(index, to)
-  const { blocks } = liveBlocks(session)
   const block = blocks.find((item) => textFrom >= item.textFrom && textTo <= item.textTo) ?? null
 
   return {
+    // 규칙 0 — 이 앵커가 속한 문서.
+    document: { id: session.documentId },
     relativePosition: {
       start: encodeRelative(session, from),
       end: encodeRelative(session, to),
@@ -170,8 +201,12 @@ export function captureAnchors(session, from, to) {
       prefix: index.text.slice(Math.max(0, textFrom - QUOTE_CONTEXT), textFrom),
       suffix: index.text.slice(textTo, Math.min(index.text.length, textTo + QUOTE_CONTEXT)),
     },
-    // 캡처 시점의 CRDT 기준점 — 블록 문맥이 없어도(경계를 걸친 앵커) 항상 남긴다.
-    capture: { stateVector: encodeStateVector(session) },
+    capture: {
+      // 대조 정책(textmove) 전용 기준점. strict는 이 값을 신뢰하지 않는다.
+      stateVector: encodeStateVector(session),
+      // 캡처 범위를 이루던 문자들의 CRDT 이름표. 읽을 수 없으면 null = 증거 없음.
+      characterIds: rangeCharacterIds(blocks, textFrom, textTo),
+    },
     // 앵커가 블록 경계를 걸치면 블록 정체성을 쓸 수 없다 -> null (복구 금지 쪽으로 안전).
     blockContext: block
       ? {
@@ -183,7 +218,7 @@ export function captureAnchors(session, from, to) {
   }
 }
 
-/** 캡처 기준점. v1(강등된) 레코드는 null이라 이후 모든 출처 판정이 "미상"으로 흐른다. */
+/** 캡처 시점 기준점 (대조 정책 전용). 강등된 레코드는 null이다. */
 function captureStateVector(anchors) {
   const stateVector = anchors.capture ? anchors.capture.stateVector : null
   return typeof stateVector === 'string' ? stateVector : null
@@ -192,8 +227,92 @@ function captureStateVector(anchors) {
 /** 출처 증거가 왜 없는지 — orphan 사유에 그대로 실어 "조용한 소실"을 막는다. */
 function missingProvenance(anchors) {
   if (anchors.legacy) return anchors.legacy.reason ?? 'legacy-record'
-  if (!captureStateVector(anchors)) return 'no-capture-state-vector'
-  return 'no-origin-evidence'
+  return captureEvidence(anchors).reason ?? 'no-origin-evidence'
+}
+
+const isNonNegativeInt = (value) => Number.isInteger(value) && value >= 0
+
+/**
+ * 캡처 증거를 **쓰기 전에 검증한다** (저장소 계약의 이빨).
+ *
+ * 레코드는 자기 출처를 스스로 주장한다 — 그 주장을 검증 없이 쓰면, 마이그레이션이
+ * 값을 현재 상태로 채워 넣는 순간 방어가 통째로 뒤집힌다(vnv M4에서 실측된 회귀).
+ * 검증은 **다른 selector와의 내부 정합**으로 한다: 캡처 문자 이름표가 덮는 문자수는
+ * 저장된 `exact`의 문자수(블록 구분자 제외)와 정확히 같아야 한다. 마이그레이션은
+ * 현재 문서 상태는 볼 수 있어도 **이미 사라진 옛 문자들의 이름표**는 만들어낼 수 없고,
+ * 현재 범위에서 베껴 오면 길이가 어긋나 여기서 걸린다.
+ *
+ * 반환의 `corrupt`는 "있는데 어긋난다"(= 계약 위반, 스토어가 강등해야 함)와 "아예
+ * 없다"(= 증거 부재, 정상적으로 있을 수 있음)를 가른다.
+ */
+export function captureEvidence(anchors) {
+  if (!anchors || typeof anchors !== 'object') {
+    return { usable: false, corrupt: false, reason: 'no-anchors', runs: null }
+  }
+  if (anchors.legacy) {
+    return { usable: false, corrupt: false, reason: anchors.legacy.reason ?? 'legacy-record', runs: null }
+  }
+  const capture = anchors.capture
+  if (!capture) return { usable: false, corrupt: false, reason: 'no-capture', runs: null }
+  const runs = capture.characterIds
+  if (runs === null || runs === undefined) {
+    return { usable: false, corrupt: false, reason: 'no-character-identity', runs: null }
+  }
+  if (
+    !Array.isArray(runs) ||
+    !runs.every(
+      (run) =>
+        run &&
+        typeof run === 'object' &&
+        isNonNegativeInt(run.client) &&
+        isNonNegativeInt(run.clock) &&
+        Number.isInteger(run.length) &&
+        run.length > 0,
+    )
+  ) {
+    return { usable: false, corrupt: true, reason: 'capture-malformed', runs: null }
+  }
+  const exact = anchors.textQuote && typeof anchors.textQuote.exact === 'string' ? anchors.textQuote.exact : null
+  if (exact === null) return { usable: false, corrupt: true, reason: 'capture-malformed', runs: null }
+  // 블록 구분자는 문서 텍스트의 투영일 뿐 CRDT 문자가 아니다 (src/blocks.mjs).
+  const separators = exact.split(BLOCK_SEPARATOR).length - 1
+  if (characterIdCount(runs) !== exact.length - separators) {
+    return { usable: false, corrupt: true, reason: 'capture-inconsistent', runs: null }
+  }
+  // 두 자기보고 값은 서로도 맞아야 한다: 캡처 문자는 캡처 시점에 **이미 있던** 문자이므로
+  // 캡처 state vector 기준으로 preexisting이어야 한다. 현재 범위에서 이름표만 베껴 오면
+  // (마이그레이션의 가장 흔한 실수) 그 문자들은 캡처 이후 것이라 여기서 걸린다.
+  const stateVector = captureStateVector(anchors)
+  if (stateVector) {
+    for (const run of runs) {
+      const first = `${run.client}:${run.clock}`
+      const last = `${run.client}:${run.clock + run.length - 1}`
+      if (
+        classifyCreation(first, stateVector) !== CREATION.PREEXISTING ||
+        classifyCreation(last, stateVector) !== CREATION.PREEXISTING
+      ) {
+        return { usable: false, corrupt: true, reason: 'capture-inconsistent-with-state-vector', runs: null }
+      }
+    }
+  }
+  return { usable: true, corrupt: false, reason: null, runs }
+}
+
+/**
+ * 규칙 0 — 이 레코드가 이 문서의 것인가. 셋 중 하나라도 어긋나면 selector를 읽지 않는다.
+ * (`bound:false`의 사유는 값이 아니라 **관계**로만 적는다 — 리포트가 결정론적이어야 한다.)
+ */
+export function documentBinding(session, anchors) {
+  const recordId = anchors && anchors.document ? anchors.document.id : null
+  const sessionId = session ? session.documentId : null
+  if (typeof recordId !== 'string' || !recordId) {
+    return { bound: false, reason: 'record-has-no-document-identity' }
+  }
+  if (typeof sessionId !== 'string' || !sessionId) {
+    return { bound: false, reason: 'document-has-no-identity' }
+  }
+  if (recordId !== sessionId) return { bound: false, reason: 'mismatch' }
+  return { bound: true, reason: null }
 }
 
 function rangeText(doc, from, to) {
@@ -257,14 +376,18 @@ function affixGuard(session, anchors, raw, policy) {
   // 구분되지 않는다. CRDT에게 물어 **캡처 때부터 있던 문자**가 남았는지 확인한다.
   // 출처를 모르면(옛 레코드·읽을 수 없는 범위) **통과가 아니라 거절**이다 — 다만
   // 해소 텍스트가 exact와 완전히 같으면 문자 자체가 그대로이므로 증거를 더 요구하지 않는다.
+  // 출처 증거가 **위조로 반증되면** 완전 일치 예외로도 통과시키지 않는다 (그 레코드의
+  // 자기보고는 함께 선다 — 한 축이 거짓이면 나머지도 근거가 못 된다).
   const origins = originEvidence(session, anchors, raw)
-  const provenance = origins.known
-    ? origins.preexisting > 0
-      ? 'surviving-characters'
-      : 'all-characters-new'
-    : identical
-      ? 'unchanged-text'
-      : `unknown/${missingProvenance(anchors)}`
+  const provenance = !origins.consistent
+    ? `forged/${origins.reason}`
+    : origins.known
+      ? origins.preexisting > 0
+        ? 'surviving-characters'
+        : 'all-characters-new'
+      : identical
+        ? 'unchanged-text'
+        : `unknown/${missingProvenance(anchors)}`
   const survived = provenance === 'surviving-characters' || provenance === 'unchanged-text'
   return {
     rule: 'structural',
@@ -280,17 +403,27 @@ function affixGuard(session, anchors, raw, policy) {
 }
 
 /**
- * 해소된 범위 안에 캡처 시점부터 살아남은 문자가 몇 개인가 (모르면 known:false).
- * 범위가 블록 경계를 넘어도 센다 — 그래야 문단 분할·경계를 걸친 앵커가 "증거 없음"
- * 으로 떨어져 정상 편집까지 orphan이 되는 일이 없다 (src/blocks.mjs `rangeOrigins`).
+ * 해소된 범위 안에 **캡처 때 앵커에 들어 있던 바로 그 문자**가 몇 개 남았는가
+ * (모르면 known:false). 범위가 블록 경계를 넘어도 센다 — 그래야 문단 분할·경계를
+ * 걸친 앵커가 "증거 없음"으로 떨어져 정상 편집까지 orphan이 되는 일이 없다.
+ *
+ * 세는 것만으로는 부족하다: 이름표는 저장된 `exact`와 **자리별로 대응**해야 하고,
+ * 살아남은 문자는 캡처 순서를 지켜야 한다(`captureCorrespondence`). 대응이 깨지면
+ * `consistent:false` — 그 레코드의 출처 주장은 위조이므로 통과시키지 않는다.
  */
 function originEvidence(session, anchors, raw) {
-  const stateVector = captureStateVector(anchors)
-  if (!stateVector || raw.from === null || raw.to === null) {
-    return { known: false, preexisting: 0, fresh: 0 }
+  const evidence = captureEvidence(anchors)
+  if (!evidence.usable || raw.from === null || raw.to === null) {
+    return { known: false, consistent: true, preexisting: 0, fresh: 0, reason: evidence.reason }
   }
   const { index, blocks } = liveBlocks(session)
-  return rangeOrigins(blocks, posToOffset(index, raw.from), posToOffset(index, raw.to), stateVector)
+  return captureCorrespondence(
+    blocks,
+    posToOffset(index, raw.from),
+    posToOffset(index, raw.to),
+    evidence.runs,
+    anchors.textQuote.exact,
+  )
 }
 
 /** All quote candidates in the current text, scored by prefix/suffix agreement. */
@@ -392,6 +525,9 @@ function resolveByBlockIdentity(session, anchors) {
   if (!context || typeof context.itemId !== 'string' || typeof context.offset !== 'number') {
     return { status: `no-provenance/${missingProvenance(anchors)}`, ...empty }
   }
+  // 출처 증거가 깨진 레코드는 블록 문맥도 믿지 않는다 (한 레코드의 자기보고는 함께 선다).
+  const evidence = captureEvidence(anchors)
+  if (evidence.corrupt) return { status: `no-provenance/${evidence.reason}`, ...empty }
   const { index, blocks } = liveBlocks(session)
   const fate = itemFate(session.ydoc, context.itemId)
   if (fate.state === 'unknown') return { status: 'stored-item-unknown', ...empty, itemState: fate.state }
@@ -517,7 +653,7 @@ function resolveWithPolicy(session, anchors, policy) {
     if (raw.status === 'resolved') {
       const reason = !guard.structural
         ? 'content-replaced/guard-rejected'
-        : guard.provenance.startsWith('unknown')
+        : guard.provenance.startsWith('unknown') || guard.provenance.startsWith('forged')
           ? `content-replaced/${guard.provenance}`
           : 'content-replaced/no-surviving-characters'
       return { ...orphaned(raw, guard, reason), policy: policy.id }
@@ -590,9 +726,34 @@ function counterfactualSlice(resolution) {
   }
 }
 
+/** 규칙 0에서 멈춘 결과 — selector를 한 번도 읽지 않았음을 모양으로 드러낸다. */
+function unbound(policy, binding) {
+  const raw = { status: 'not-evaluated', from: null, to: null, text: null }
+  const guard = {
+    rule: policy.guard,
+    accepted: false,
+    structural: false,
+    provenance: 'not-evaluated',
+    head: 0,
+    tail: 0,
+    agreement: 0,
+    required: 0,
+    survivingChars: null,
+  }
+  return {
+    ...orphaned(raw, guard, `document-identity/${binding.reason}`),
+    policy: policy.id,
+    document: binding,
+    counterfactual: null,
+  }
+}
+
 /**
  * Resolve a stored annotation record against the session's current document.
  * Never throws, never guesses: the result always names its method.
+ *
+ * 규칙 0(문서 정체성)은 **정책 밖**이다 — 어떤 해소 정책을 쓰든 남의 문서에 붙이는
+ * 것은 답이 아니므로, 대조군 계산도 하지 않고 여기서 멈춘다.
  *
  * @param {object}  options.policy          POLICIES.* (기본 strict)
  * @param {boolean} options.quoteOnTombstone true면 naive 정책으로 돈다 (하위 호환).
@@ -601,7 +762,12 @@ function counterfactualSlice(resolution) {
 export function resolveAnchors(session, anchors, options = {}) {
   const { quoteOnTombstone = false, counterfactuals = true } = options
   const policy = options.policy ?? (quoteOnTombstone ? POLICIES.naive : POLICIES.strict)
+
+  const binding = documentBinding(session, anchors)
+  if (!binding.bound) return unbound(policy, binding)
+
   const resolution = resolveWithPolicy(session, anchors, policy)
+  resolution.document = binding
 
   if (policy.id === 'strict' && counterfactuals) {
     resolution.counterfactual = {}
@@ -614,4 +780,18 @@ export function resolveAnchors(session, anchors, options = {}) {
     resolution.counterfactual = null
   }
   return resolution
+}
+
+/** 종단점 상태의 닫힌 집합. 링크 평면이 "끊긴 종단점"을 볼 수 있게 하는 값이다. */
+export const ANCHOR_STATES = Object.freeze(['bound', 'orphaned'])
+
+/**
+ * 저장 시 레코드에 실을 종단점 상태 — **측정값**이지 선언이 아니다(저장 시점에 실제로
+ * 해소해 본 결과). orphan이 된 앵커를 링크가 조용히 가리키는 것을 막으려면, 그 사실이
+ * 스토어에 남아야 한다 (`check_links.py`의 broken-endpoint 보고).
+ */
+export function anchorStateOf(session, anchors) {
+  return resolveAnchors(session, anchors, { counterfactuals: false }).method === 'orphaned'
+    ? 'orphaned'
+    : 'bound'
 }

@@ -1,16 +1,19 @@
 {
-  "version": 1,
+  "version": 3,
   "document": "document.json",
+  "documentId": "doc-fixture-control",
   "annotations": [
     {
       "id": "a1",
-      "body": "Fixture annotation record. Only the id is read by check_links.py (endpoint existence); the anchors live in the annotation plane's own store.",
-      "status": "open"
+      "body": "Fixture annotation record. check_links.py reads the id, the store's documentId and the measured anchorState; the selectors live in the annotation plane's own store.",
+      "status": "open",
+      "anchorState": "bound"
     },
     {
       "id": "a2",
       "body": "Second fixture annotation record, used as the source of a link into the decision plane.",
-      "status": "open"
+      "status": "open",
+      "anchorState": "bound"
     }
   ]
 }

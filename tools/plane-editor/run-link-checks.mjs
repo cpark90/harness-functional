@@ -15,8 +15,12 @@
  *   C3  정상 대조군    — 실제 스토어와 control fixture가 PASS(vacuous 배제용 대조군).
  *   C4  negative control — fixture별 **단 한 곳**만 망가뜨린 스토어가 기대한 사유로 FAIL.
  *   C5  판정 안정성    — 같은 스토어를 두 번 검사하면 판정 JSON이 동일.
+ *   C6  주석 스토어 버전 협상 — 남의 평면이 소유한 버전을 강요하지 않고 읽되, 읽을 수 없는
+ *       버전은 명시적 사유로 거절한다. **실제 sample-state 스토어**로 실측한다.
+ *   C7  끊긴 종단점    — orphan이 된 앵커를 가리키는 링크가 조용히 사라지거나 다른 곳을
+ *       가리키지 않고 broken-endpoint 상태로 보고된다.
  */
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import {
@@ -50,7 +54,13 @@ const NEGATIVE_CONTROLS = [
   ['negative-graph-source', 'direction-graph-source', 'graph endpoint used as the link source'],
   ['negative-tagged-range', 'link-type-range', 'tagged aimed outside its declared rdfs:range'],
   ['negative-supersedes-cycle', 'decision-supersedes-cycle', 'supersedes cycle in the decision plane'],
+  ['negative-annotation-document-missing', 'endpoint-document-missing', 'annotation endpoint without its document'],
+  ['negative-annotation-document-mismatch', 'endpoint-document-mismatch', 'annotation endpoint naming another document'],
+  ['negative-annotation-state-unknown', 'annotation-anchor-state-unknown', 'annotation record with no measured anchorState'],
 ]
+
+const ANNOTATION_STORES = join(FIXTURES, 'annotation-stores')
+const SAMPLE_ANNOTATIONS = join(PLANE_EDITOR_DIR, 'sample-state', 'annotations.json')
 
 const results = []
 
@@ -157,6 +167,108 @@ for (const [fixture, expected, description] of NEGATIVE_CONTROLS) {
     ok
       ? `${description}; exit 1 with exactly this violation`
       : `expected exactly [${expected}], got [${rules.join(', ') || 'none'}] (exit ${verdict.exitCode})`,
+  )
+}
+
+/* ---- C6 annotation store version negotiation ---- */
+
+console.log('\n== C6 annotation store version negotiation (the annotation plane owns its version) ==')
+record(
+  'the checker declares which annotation-store versions it can read',
+  Array.isArray(contract.annotationStore.readableVersions) &&
+    contract.annotationStore.readableVersions.includes(contract.annotationStore.bindingVersion) &&
+    contract.annotationStore.readableVersions.includes(contract.annotationStore.planeVersion),
+  `readable ${JSON.stringify(contract.annotationStore.readableVersions)} · binds endpoints from v` +
+    `${contract.annotationStore.bindingVersion} · the plane (${contract.annotationStore.planeModule}) ` +
+    `currently writes v${contract.annotationStore.planeVersion}`,
+)
+
+// ★ F1의 실측: **실제** 주석 스토어(run-suite.mjs가 쓴 sample-state)를 물려 PASS를 잰다.
+if (!existsSync(SAMPLE_ANNOTATIONS)) {
+  record('the real annotation store is present', false, `${SAMPLE_ANNOTATIONS} is missing — run node run-suite.mjs first`)
+} else {
+  const live = checkLinkStore({
+    storeDir: join(FIXTURES, 'annotation-live'),
+    annotations: [SAMPLE_ANNOTATIONS],
+  })
+  const store = live.annotationStores[0]
+  record(
+    'a link resolves against the REAL annotation store (sample-state)',
+    live.pass && live.exitCode === 0 && store.bindsEndpoints && store.records > 0,
+    live.pass
+      ? `v${store.version} store ${store.path} (${store.records} record(s), document ${store.documentId}), ` +
+        `${live.counts.links} link(s), ${live.violations.length} violation(s), exit ${live.exitCode}`
+      : `expected PASS, got [${live.violations.map((v) => v.rule).join(', ')}] (exit ${live.exitCode})`,
+  )
+}
+
+for (const [file, version] of [['legacy-v1.json', 1], ['legacy-v2.json', 2]]) {
+  const legacy = checkLinkStore({
+    storeDir: join(FIXTURES, 'annotation-live'),
+    annotations: [join(ANNOTATION_STORES, file)],
+  })
+  const store = legacy.annotationStores[0]
+  const rules = legacy.violations.map((v) => v.rule)
+  record(
+    `a v${version} annotation store is read, but cannot bind endpoints`,
+    store &&
+      store.version === version &&
+      store.bindsEndpoints === false &&
+      legacy.exitCode === 1 &&
+      rules.length > 0 &&
+      rules.every((rule) => rule === 'annotation-store-unbound'),
+    store
+      ? `read ${store.records} record(s) at v${store.version}; endpoints refused with ` +
+        `[${[...new Set(rules)].join(', ') || 'none'}] (exit ${legacy.exitCode})`
+      : 'the store was not read at all',
+  )
+}
+
+{
+  // 읽을 수 없는 버전은 조용히 통과하지 않고 **사유와 함께** 멈춘다 (exit 2).
+  let refused = false
+  let message = ''
+  try {
+    checkLinkStore({
+      storeDir: join(FIXTURES, 'annotation-live'),
+      annotations: [join(ANNOTATION_STORES, 'unreadable-v99.json')],
+    })
+  } catch (error) {
+    refused = true
+    message = error.message
+  }
+  record(
+    'an unreadable annotation-store version is refused with an explicit reason',
+    refused && message.includes('outside the readable set'),
+    refused ? message.split('\n')[0] : 'the checker accepted a version it cannot read',
+  )
+}
+
+/* ---- C7 broken endpoints ---- */
+
+console.log('\n== C7 broken endpoints (an orphaned anchor is a state, not a violation) ==')
+{
+  const verdict = checkLinkStore({
+    storeDir: join(FIXTURES, 'annotation-broken'),
+    annotations: [join(ANNOTATION_STORES, 'broken-endpoint.json')],
+  })
+  record(
+    'a link pointing at an orphaned anchor is reported, not hidden and not re-pointed',
+    verdict.pass &&
+      verdict.exitCode === 0 &&
+      verdict.counts.brokenEndpoints === 1 &&
+      verdict.brokenEndpoints[0].state === 'orphaned',
+    verdict.counts.brokenEndpoints === 1
+      ? `${verdict.brokenEndpoints[0].link}: ${verdict.brokenEndpoints[0].side} -> ` +
+        `${verdict.brokenEndpoints[0].endpoint} [${verdict.brokenEndpoints[0].state}], ` +
+        `still ${verdict.violations.length} violation(s), exit ${verdict.exitCode}`
+      : `expected exactly one broken endpoint, got ${verdict.counts.brokenEndpoints}`,
+  )
+  const control = checkLinkStore({ storeDir: CONTROL })
+  record(
+    'a store whose endpoints are all bound reports no broken endpoint (control)',
+    control.counts.brokenEndpoints === 0 && control.pass,
+    `${control.counts.brokenEndpoints} broken endpoint(s) in the control fixture`,
   )
 }
 

@@ -3,6 +3,13 @@
   "plane": "decision",
   "decisions": [
     {
+      "id": "dec-anchor-document-identity-binding",
+      "title": "Bind every anchor record to a document identity that lives in the CRDT state",
+      "body": "An anchor record carries the identity of the document it was captured in, and resolution refuses any record whose identity does not match the document it is offered to. The identity is minted once when a document is created and travels inside the CRDT state, so it survives editing, saving, reloading and replica merges, while a re-import or a fork receives a new one. A content hash was rejected on both counts: it changes whenever the document is edited, and two documents holding the same text are still two documents. Link endpoints in the annotation plane therefore name a pair, document and record, because a record id is only unique inside one document.",
+      "status": "accepted",
+      "decided_by": "orchestrator dispatch brief (plane-editor C1b unblock conditions); conditions set by vnv - docs/verify/plane-editor-c1b-verify.md section 8"
+    },
+    {
       "id": "dec-anchor-quote-recovery-affix",
       "title": "Recover an unresolved anchor when its quote plus one affix matches uniquely",
       "body": "Phase 1 policy for re-attaching a standoff anchor whose CRDT position no longer resolves: search the document for the stored quote, and accept a hit when the exact text is unique and at least one affix (prefix or suffix) overlaps the stored context by a few characters. Rationale at the time: string context is cheap evidence of identity and keeps recovery rates high. Superseded because an affix overlap is not evidence of identity - short shared fragments cross a small threshold by accident, so the rule re-attached anchors to other sentences under ordinary edits (whole-block deletion, in-place replacement).",
@@ -12,10 +19,17 @@
     {
       "id": "dec-anchor-recovery-crdt-evidence",
       "title": "Recover an anchor only on CRDT evidence, never on string similarity alone",
-      "body": "Recovery is attempted only when the CRDT says the block itself disappeared, and it is accepted only when a block with the stored text exists that was created after the capture state vector, and when characters that existed at capture time survive inside the resolved range. Deleted-character evidence and in-place replacement both block recovery outright. When in doubt the anchor stays orphaned; the cost in recovery rate is measured rather than assumed.",
+      "body": "Recovery is attempted only when the CRDT says the anchored block itself disappeared, and it is accepted only when the stored block item id is still live in the document. Character survival inside a resolved range is judged by the identity of the captured characters, not by string similarity. Deleted-character evidence and in-place replacement both block recovery outright. When in doubt the anchor stays orphaned; the cost in recovery rate is measured rather than assumed.",
       "status": "accepted",
       "supersedes": "dec-anchor-quote-recovery-affix",
-      "decided_by": "vnv dispatch - docs/verify/plane-editor-c1-verify.md (pass-with-notes, 2026-08-28)"
+      "decided_by": "developer dispatch (plane-editor C1 anchor rules) - tools/plane-editor/src/anchors.mjs; verified by vnv - docs/verify/plane-editor-c1-verify.md (pass-with-notes, 2026-08-28)"
+    },
+    {
+      "id": "dec-capture-evidence-internal-consistency",
+      "title": "Accept capture evidence only when it agrees with the record's other selectors",
+      "body": "Provenance is accepted only when the captured character identities cover exactly as many characters as the stored quote, and a migration may only downgrade a record, never fill in evidence it does not have. Trusting the version number written in the file was the defect: a migration that fills the capture field from the current document state revives the very mis-resolution the guard exists to stop. Character identities cannot be copied out of the current state without contradicting the stored quote, so this check has teeth that a version number does not. Records that fail it take the explicit-orphan path.",
+      "status": "accepted",
+      "decided_by": "orchestrator dispatch brief (plane-editor C1b unblock conditions); conditions set by vnv - docs/verify/plane-editor-c1b-verify.md section 8"
     },
     {
       "id": "dec-link-store-outside-ontology",

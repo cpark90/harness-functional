@@ -17,6 +17,34 @@
       "created_by": "developer dispatch (plane-editor Phase 2)"
     },
     {
+      "id": "ln-capture-evidence-derived-from-anchor-recovery",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-capture-evidence-internal-consistency"
+      },
+      "to": {
+        "plane": "decision",
+        "ref": "dec-anchor-recovery-crdt-evidence"
+      },
+      "type": "derivedFrom",
+      "evidence": "refines the same rule: the CRDT evidence it names must itself be validated before use",
+      "created_by": "developer dispatch (plane-editor C1b unblock conditions)"
+    },
+    {
+      "id": "ln-document-identity-tagged-traceability",
+      "from": {
+        "plane": "decision",
+        "ref": "dec-anchor-document-identity-binding"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-traceability"
+      },
+      "type": "tagged",
+      "evidence": "docs/verify/plane-editor-c1b-verify.md section 8, condition 1",
+      "created_by": "developer dispatch (plane-editor C1b unblock conditions)"
+    },
+    {
       "id": "ln-link-store-derived-from-plane-separation",
       "from": {
         "plane": "decision",

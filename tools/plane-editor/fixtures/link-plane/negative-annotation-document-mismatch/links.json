@@ -21,7 +21,7 @@
       "from": {
         "plane": "annotation",
         "ref": "a1",
-        "document": "doc-fixture-control"
+        "document": "doc-fixture-elsewhere"
       },
       "to": {
         "plane": "graph",
@@ -34,8 +34,8 @@
     {
       "id": "ln-fixture-decision-derived-from-pattern",
       "from": {
-        "plane": "graph",
-        "ref": "id:c-traceability"
+        "plane": "decision",
+        "ref": "dec-fixture-store-format-v2"
       },
       "to": {
         "plane": "graph",

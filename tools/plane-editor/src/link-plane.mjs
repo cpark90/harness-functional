@@ -13,9 +13,16 @@
  *   link record  : { id, from, to, type, evidence?, created_by }
  *   endpoint     : { plane, ref }   plane ∈ annotation | decision | graph
  *                  graph의 ref는 IRI 표기 `id:<slug>` (Phase 0 §4.2 P2)
+ *                  annotation의 ref는 **(document, ref) 쌍**이다 — 레코드 id는 문서 안에서만
+ *                  유일하므로(`a1`은 문서마다 있다) 문서를 빼면 종단점이 남의 문서를 가리킨다.
  *
  * 방향은 **평면 → 그래프** 한 방향뿐이다(브리프 §3c). 그래프에서 평면을 되짚는 역방향
  * 인덱스는 만들지 않으며, 그런 링크는 검사기가 `direction-graph-source`로 잡는다.
+ *
+ * **끊긴 종단점(broken endpoint)** 은 링크의 정상적인 상태다. 종단점 앵커가 orphan이 되면
+ * 링크를 지우지도(조용한 소실) 다른 곳에 다시 겨누지도(조용한 재지정) 않고, 검사기가
+ * `brokenEndpoints`로 보고한다. 그 상태는 링크가 아니라 **주석 레코드의 측정값**
+ * (`anchorState`)에서 오므로 여기에 복제해 두지 않는다 — 복제하면 그 순간부터 낡는다.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
@@ -66,16 +73,27 @@ export function linkTypes(contract = loadPlaneContract()) {
 
 /* ---- records ---- */
 
-export function endpoint(plane, ref) {
-  return { plane, ref }
+/**
+ * 종단점. 주석 평면은 문서 정체성을 **함께** 실어야 한다 (문서 없는 주석 종단점은
+ * 검사기가 `endpoint-document-missing`으로 잡는다).
+ */
+export function endpoint(plane, ref, document = null) {
+  return document ? { plane, ref, document } : { plane, ref }
 }
 
 /** 고정된 키 순서로 정규화한다 — 직렬화가 결정론적이려면 키 순서도 고정이어야 한다. */
 export function linkRecord({ id, from, to, type, evidence, created_by: createdBy }) {
+  const side = (value) => {
+    const normalised = { plane: value?.plane, ref: value?.ref }
+    if (value && value.document !== undefined && value.document !== null && value.document !== '') {
+      normalised.document = value.document
+    }
+    return normalised
+  }
   const record = {
     id,
-    from: { plane: from?.plane, ref: from?.ref },
-    to: { plane: to?.plane, ref: to?.ref },
+    from: side(from),
+    to: side(to),
     type,
   }
   if (evidence !== undefined && evidence !== null && evidence !== '') {

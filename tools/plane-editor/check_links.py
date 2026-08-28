@@ -12,6 +12,10 @@
   1. graph 종단점 IRI 실재 — `ontology_lib.instance_nodes`로 판정한다(추정 금지).
      읽기 전용 import이며 `ontology/`는 건드리지 않는다.
   2. annotation/decision 종단점 레코드 실재 — 해당 평면의 스토어 파일에서 id로 판정.
+     주석 종단점은 **(문서, 레코드 id)** 쌍으로만 해소된다: 레코드 id는 문서 안에서만
+     유일하므로(`a1`은 문서마다 있다) 문서를 빼면 종단점이 남의 문서를 가리킬 수 있다.
+     주석 스토어의 **버전은 주석 평면이 소유**하므로 이 검사기는 자기 버전을 강요하지 않고
+     읽을 수 있는 버전 집합으로 협상하며, 읽을 수 없으면 명시적 사유로 거절한다.
   3. 링크 타입 어휘 — 그래프에 이미 있는 `ho:` 관계 어휘만 재사용한다(신조어 금지).
      어휘 목록이 **살아 있는지**도 TBox에서 확인한다(vocabulary-provenance): 다섯 술어가
      `owl:ObjectProperty`로 선언돼 있어야 하고, `supersedes`는 평면 내부 전용이므로
@@ -63,7 +67,22 @@ DEFAULT_STORE = os.path.join(HERE, "link-store")
 LINKS_FILE = "links.json"
 DECISIONS_FILE = "decisions.json"
 ANNOTATIONS_FILE = "annotations.json"
+
+# 이 검사기가 **소유한** 스토어(links.json / decisions.json)의 버전.
 STORE_VERSION = 1
+
+# 주석 스토어는 남의 평면 것이다. 그 버전을 소유한 것은 `src/store.mjs`이고, 여기서는
+# "읽을 수 있는 버전"만 선언해 협상한다 (자기 버전을 강요하면 실사용 스토어가 통째로
+# exit 2가 된다 — Phase 2 판정의 F1이 그 결함이다).
+#   v1·v2 : 레코드 id는 읽히지만 **문서 정체성이 없다** -> 링크 종단점을 바인딩할 수 없다.
+#   v3    : documentId + 레코드별 anchorState 를 싣는다 -> 종단점 바인딩·끊김 보고가 가능.
+ANNOTATION_STORE_VERSIONS = (1, 2, 3)
+ANNOTATION_BINDING_VERSION = 3
+# 주석 평면의 현재 버전이 이 집합을 넘어서면 조용히 통과시키지 않고 알람을 울린다.
+ANNOTATION_PLANE_MODULE = os.path.join(HERE, "src", "store.mjs")
+ANNOTATION_VERSION_RE = re.compile(r"export\s+const\s+STORE_VERSION\s*=\s*(\d+)")
+
+ANCHOR_STATES = ("bound", "orphaned")
 
 # 평면 이름 (Phase 0 §4.2). `graph`는 지식 그래프 평면 자신이다.
 PLANES = ("annotation", "decision", "graph")
@@ -184,6 +203,15 @@ def contract() -> dict:
             "annotations": ANNOTATIONS_FILE,
         },
         "storeVersion": STORE_VERSION,
+        "anchorStates": list(ANCHOR_STATES),
+        # 주석 스토어는 남의 평면 소유다: 읽을 수 있는 버전 집합과, 종단점 바인딩에 필요한
+        # 최소 버전, 그리고 그 평면이 지금 쓰고 있는 버전(알람용)을 그대로 내보낸다.
+        "annotationStore": {
+            "readableVersions": list(ANNOTATION_STORE_VERSIONS),
+            "bindingVersion": ANNOTATION_BINDING_VERSION,
+            "planeVersion": annotation_plane_version(),
+            "planeModule": _repo_path(ANNOTATION_PLANE_MODULE),
+        },
     }
 
 
@@ -200,7 +228,7 @@ def _read_json(path: str) -> dict:
 
 
 def _read_records(path: str, key: str, required: bool) -> list:
-    """스토어 파일 하나에서 레코드 배열을 꺼낸다. `required=False`면 부재를 빈 목록으로."""
+    """**이 검사기가 소유한** 스토어에서 레코드 배열을 꺼낸다 (links / decisions)."""
     if not required and not os.path.exists(path):
         return []
     data = _read_json(path)
@@ -211,6 +239,81 @@ def _read_records(path: str, key: str, required: bool) -> list:
     if not isinstance(records, list):
         raise StoreError(f"{path}: '{key}' must be an array")
     return records
+
+
+def annotation_plane_version():
+    """주석 평면이 선언한 현재 버전 (읽을 수 없으면 None). 드리프트 알람 전용이다."""
+    if not os.path.exists(ANNOTATION_PLANE_MODULE):
+        return None
+    with open(ANNOTATION_PLANE_MODULE, encoding="utf-8") as fh:
+        match = ANNOTATION_VERSION_RE.search(fh.read())
+    return int(match.group(1)) if match else None
+
+
+def _read_annotation_store(path: str) -> dict:
+    """주석 스토어 하나를 **버전 협상**으로 읽는다.
+
+    주석 평면의 스토어 버전은 이 검사기의 것이 아니다. 그래서
+      - 읽을 수 있는 버전(`ANNOTATION_STORE_VERSIONS`)이면 읽고,
+      - 아니면 **무엇이 문제인지 적어서** 거절한다(조용한 통과 금지),
+      - 그리고 주석 평면이 이 집합을 넘어선 버전을 쓰기 시작했으면 그 사실 자체를 알람으로
+        올린다 (검사기를 가르쳐야 한다는 신호이지, 값을 베껴 오라는 뜻이 아니다).
+    """
+    data = _read_json(path)
+    version = data.get("version")
+    if version not in ANNOTATION_STORE_VERSIONS:
+        plane = annotation_plane_version()
+        hint = ""
+        if plane is not None and plane not in ANNOTATION_STORE_VERSIONS:
+            hint = (f" — the annotation plane ({_repo_path(ANNOTATION_PLANE_MODULE)}) now writes "
+                    f"version {plane}; teach this checker to read it instead of assuming a shape")
+        raise StoreError(
+            f"cannot read the annotation store {_repo_path(path)}: version {version!r} is outside "
+            f"the readable set {list(ANNOTATION_STORE_VERSIONS)}{hint}")
+    records = data.get("annotations")
+    if not isinstance(records, list):
+        raise StoreError(f"{path}: 'annotations' must be an array")
+    document_id = data.get("documentId")
+    if version >= ANNOTATION_BINDING_VERSION and not isinstance(document_id, str):
+        raise StoreError(
+            f"{_repo_path(path)}: a version {version} annotation store must declare its "
+            "'documentId' — link endpoints are bound to (document, record)")
+    return {
+        "path": path,
+        "version": version,
+        "documentId": document_id if isinstance(document_id, str) else None,
+        "records": records,
+    }
+
+
+def annotation_index(paths: list) -> dict:
+    """주석 스토어들을 읽어 종단점 해소용 색인을 만든다.
+
+    bound     : (documentId, recordId) -> {anchorState, store}
+    unbound   : recordId -> store  (문서 정체성이 없는 옛 스토어 = 바인딩 불가)
+    documents : 선언된 documentId 집합
+    """
+    bound, unbound, stores = {}, {}, []
+    for path in paths:
+        store = _read_annotation_store(path)
+        stores.append(store)
+        for record in store["records"]:
+            if not isinstance(record, dict) or not isinstance(record.get("id"), str):
+                continue
+            if store["documentId"] is None:
+                unbound.setdefault(record["id"], store)
+            else:
+                bound[(store["documentId"], record["id"])] = {
+                    "anchorState": record.get("anchorState"),
+                    "store": store,
+                }
+    return {
+        "bound": bound,
+        "unbound": unbound,
+        "stores": stores,
+        "documents": sorted({store["documentId"] for store in stores if store["documentId"]}),
+        "records": len(bound) + len(unbound),
+    }
 
 
 # --- 위반 수집 -----------------------------------------------------------------
@@ -327,11 +430,36 @@ class GraphView:
 
 # --- 링크 평면 검사 -------------------------------------------------------------
 
-def check_links(links, decision_ids, annotation_ids, view: GraphView) -> list:
+def _resolve_annotation(document, ref, index: dict):
+    """주석 종단점 = (문서, 레코드). 실패 사유를 규칙 코드까지 붙여 돌려준다."""
+    if document is None:
+        return None, ("endpoint-document-missing",
+                      "an annotation endpoint must name its document ('document': "
+                      "<documentId>) — a record id is only unique inside one document")
+    entry = index["bound"].get((document, ref))
+    if entry is not None:
+        return entry, None
+    elsewhere = sorted({doc for (doc, rid) in index["bound"] if rid == ref})
+    if elsewhere:
+        return None, ("endpoint-document-mismatch",
+                      f"record {ref!r} exists, but in document(s) {', '.join(elsewhere)} — "
+                      f"not in {document}")
+    if ref in index["unbound"]:
+        store = index["unbound"][ref]
+        return None, ("annotation-store-unbound",
+                      f"record {ref!r} lives in {_repo_path(store['path'])}, a version "
+                      f"{store['version']} store that declares no documentId, so it cannot "
+                      "bind a link endpoint; migrate it to a document-bound store")
+    return None, ("record-endpoint-missing",
+                  f"no record {ref!r} in document {document} "
+                  f"(loaded documents: {', '.join(index['documents']) or 'none'})")
+
+
+def check_links(links, decision_ids, annotations: dict, view: GraphView) -> tuple:
     out: list = []
+    broken: list = []
     seen: set = set()
     ids = []
-    known = {"decision": decision_ids, "annotation": annotation_ids}
     all_types = set(GRAPH_LINK_TYPES) | set(DECISION_INTERNAL_TYPES)
 
     for index, record in enumerate(links):
@@ -346,9 +474,11 @@ def check_links(links, decision_ids, annotation_ids, view: GraphView) -> list:
         endpoints = {}
         for side in ("from", "to"):
             ep = record.get(side)
-            if not isinstance(ep, dict) or set(ep) != {"plane", "ref"}:
+            if not isinstance(ep, dict) or not {"plane", "ref"} <= set(ep) \
+                    or not set(ep) <= {"plane", "ref", "document"}:
                 out.append(_violation("link-endpoint-plane", shown,
-                                      f"'{side}' must be {{plane, ref}}", _endpoint_str(ep)))
+                                      f"'{side}' must be {{plane, ref}} (+ 'document' for the "
+                                      "annotation plane)", _endpoint_str(ep)))
                 continue
             plane, ref = ep.get("plane"), ep.get("ref")
             if plane not in PLANES:
@@ -360,7 +490,18 @@ def check_links(links, decision_ids, annotation_ids, view: GraphView) -> list:
                 out.append(_violation("link-endpoint-plane", shown,
                                       "'ref' must be a non-empty string", _endpoint_str(ep)))
                 continue
-            endpoints[side] = (plane, ref, _endpoint_str(ep))
+            document = ep.get("document")
+            if "document" in ep and plane != "annotation":
+                out.append(_violation("link-endpoint-plane", shown,
+                                      f"only annotation endpoints carry a 'document' "
+                                      f"(the {plane} plane is not per-document)",
+                                      _endpoint_str(ep)))
+                continue
+            if document is not None and (not isinstance(document, str) or not document.strip()):
+                out.append(_violation("link-endpoint-plane", shown,
+                                      "'document' must be a non-empty string", _endpoint_str(ep)))
+                continue
+            endpoints[side] = (plane, ref, _endpoint_str(ep), document)
 
         # 단방향 (§3c): 평면 -> 그래프만 연다. graph가 출발점이면 역방향 인덱스다.
         if endpoints.get("from") and endpoints["from"][0] == "graph":
@@ -371,21 +512,49 @@ def check_links(links, decision_ids, annotation_ids, view: GraphView) -> list:
         # 종단점 실재 판정. 양쪽 다 해소 실패면 orphan-link 하나로만 보고한다.
         resolved = {}
         missing = {}
-        for side, (plane, ref, shown_ep) in endpoints.items():
+        for side, (plane, ref, shown_ep, document) in endpoints.items():
             if plane == "graph":
                 iri = view.resolve(ref)
                 if iri is None:
-                    missing[side] = (shown_ep, "graph ref must be written id:<slug> "
-                                               "or id:<domain>/<slug>")
+                    missing[side] = (shown_ep, "graph-endpoint-missing",
+                                     "graph ref must be written id:<slug> or id:<domain>/<slug>")
                 elif not view.exists(iri):
-                    missing[side] = (shown_ep, "no such individual in the knowledge graph")
+                    missing[side] = (shown_ep, "graph-endpoint-missing",
+                                     "no such individual in the knowledge graph")
                 else:
                     resolved[side] = ("graph", iri, shown_ep)
+            elif plane == "annotation":
+                entry, failure = _resolve_annotation(document, ref, annotations)
+                if failure is not None:
+                    missing[side] = (shown_ep, failure[0], failure[1])
+                    continue
+                resolved[side] = (plane, ref, shown_ep)
+                state = entry["anchorState"]
+                if state not in ANCHOR_STATES:
+                    # v3 스토어는 종단점 상태를 **측정해서** 실어야 한다. 없으면 링크가
+                    # "붙어 있다"고 조용히 가정하게 되므로 그것 자체가 위반이다.
+                    out.append(_violation(
+                        "annotation-anchor-state-unknown", shown,
+                        f"{side}: record {ref!r} does not declare a measured anchorState "
+                        f"({' | '.join(ANCHOR_STATES)}); a link may not assume its endpoint "
+                        "is still bound", shown_ep))
+                elif state == "orphaned":
+                    # 위반이 **아니다** — 끊긴 종단점은 정상적인 상태다. 다만 조용히 사라지지
+                    # 않도록 보고한다 (조용한 재지정 금지 = 이 상태가 존재하는 이유).
+                    broken.append({
+                        "link": shown,
+                        "side": side,
+                        "endpoint": shown_ep,
+                        "document": document,
+                        "record": ref,
+                        "state": state,
+                    })
             else:
-                if ref in known[plane]:
+                if ref in decision_ids:
                     resolved[side] = (plane, ref, shown_ep)
                 else:
-                    missing[side] = (shown_ep, f"no such record in the {plane} plane")
+                    missing[side] = (shown_ep, "record-endpoint-missing",
+                                     f"no such record in the {plane} plane")
 
         if len(missing) == 2 and len(endpoints) == 2:
             out.append(_violation(
@@ -393,9 +562,7 @@ def check_links(links, decision_ids, annotation_ids, view: GraphView) -> list:
                 "both endpoints are unresolvable — the link references nothing",
                 f"{endpoints['from'][2]} -> {endpoints['to'][2]}"))
         else:
-            for side, (shown_ep, reason) in sorted(missing.items()):
-                rule = ("graph-endpoint-missing"
-                        if endpoints[side][0] == "graph" else "record-endpoint-missing")
+            for side, (shown_ep, rule, reason) in sorted(missing.items()):
                 out.append(_violation(rule, shown, f"{side}: {reason}", shown_ep))
 
         # 타입 어휘.
@@ -410,7 +577,7 @@ def check_links(links, decision_ids, annotation_ids, view: GraphView) -> list:
 
         if link_type in DECISION_INTERNAL_TYPES:
             # supersedes 경계 (B9): 설계결정 평면 내부에서만 성립한다.
-            for side, (plane, _ref, shown_ep) in sorted(endpoints.items()):
+            for side, (plane, _ref, shown_ep, _document) in sorted(endpoints.items()):
                 if plane != "decision":
                     out.append(_violation(
                         "supersedes-boundary", shown,
@@ -429,7 +596,8 @@ def check_links(links, decision_ids, annotation_ids, view: GraphView) -> list:
                         f"is not of that type", target[2]))
 
     _check_order("link", [i for i in ids if i], out)
-    return out
+    broken.sort(key=lambda row: (row["link"], row["side"]))
+    return out, broken
 
 
 def check_vocabulary(view: GraphView) -> list:
@@ -560,11 +728,7 @@ def run(store_dir: str, annotation_paths: list) -> dict:
     if not annotation_paths:
         default = os.path.join(store_dir, ANNOTATIONS_FILE)
         annotation_paths = [default] if os.path.exists(default) else []
-    annotation_ids = set()
-    for path in annotation_paths:
-        for record in _read_records(path, "annotations", required=True):
-            if isinstance(record, dict) and isinstance(record.get("id"), str):
-                annotation_ids.add(record["id"])
+    annotations = annotation_index(annotation_paths)
 
     decision_ids = {r["id"] for r in decisions
                     if isinstance(r, dict) and isinstance(r.get("id"), str)}
@@ -574,7 +738,8 @@ def run(store_dir: str, annotation_paths: list) -> dict:
 
     violations = []
     violations += check_vocabulary(view)
-    violations += check_links(links, decision_ids, annotation_ids, view)
+    link_violations, broken = check_links(links, decision_ids, annotations, view)
+    violations += link_violations
     violations += check_decisions(decisions, links, cap_contract)
     violations.sort(key=lambda v: (v["rule"], v["record"], v["endpoint"], v["detail"]))
 
@@ -583,9 +748,25 @@ def run(store_dir: str, annotation_paths: list) -> dict:
         "counts": {
             "links": len(links),
             "decisions": len(decisions),
-            "annotationRecords": len(annotation_ids),
+            "annotationRecords": annotations["records"],
+            "annotationStores": len(annotations["stores"]),
+            "brokenEndpoints": len(broken),
             "graphNodes": len(view.nodes),
         },
+        "annotationStores": [
+            {
+                "path": _repo_path(store["path"]),
+                "version": store["version"],
+                "documentId": store["documentId"],
+                "records": len(store["records"]),
+                # 문서 정체성이 없는 스토어는 읽히지만 종단점을 바인딩하지 못한다 (명시).
+                "bindsEndpoints": store["documentId"] is not None,
+            }
+            for store in annotations["stores"]
+        ],
+        # 끊긴 종단점은 **위반이 아니라 상태**다. 그래서 pass에는 영향을 주지 않고, 대신
+        # 언제나 출력에 실린다 — 조용히 사라지지도, 다른 곳을 가리키지도 않게.
+        "brokenEndpoints": broken,
         "cap": cap_contract,
         "violations": violations,
         "pass": not violations,
@@ -600,6 +781,16 @@ def _print_text(result: dict) -> None:
           f"{counts['graphNodes']} graph individual(s)")
     print(f"  text cap (from the tool layer): {result['cap']['tokens']} tokens "
           f"[{result['cap']['estimator']}]")
+    for store in result["annotationStores"]:
+        bound = (f"document {store['documentId']}" if store["bindsEndpoints"]
+                 else "no documentId — cannot bind endpoints")
+        print(f"  annotation store v{store['version']}: {store['path']} "
+              f"({store['records']} record(s), {bound})")
+    if result["brokenEndpoints"]:
+        print(f"\n! {len(result['brokenEndpoints'])} link(s) point at a broken endpoint "
+              "(the anchor is orphaned — the link is kept and shown, never re-pointed):")
+        for row in result["brokenEndpoints"]:
+            print(f"    - {row['link']}  {row['side']} -> {row['endpoint']}  [{row['state']}]")
     if result["violations"]:
         print(f"\n✗ {len(result['violations'])} violation(s):")
         for v in result["violations"]:

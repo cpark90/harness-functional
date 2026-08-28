@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "plane": "link",
+  "links": [
+    {
+      "id": "ln-fixture-live-annotation-tagged-traceability",
+      "from": {
+        "plane": "annotation",
+        "ref": "a1",
+        "document": "doc-sample-state"
+      },
+      "to": {
+        "plane": "graph",
+        "ref": "id:c-traceability"
+      },
+      "type": "tagged",
+      "evidence": "resolved against the real annotation store written by run-suite.mjs (sample-state/annotations.json)",
+      "created_by": "fixture (tools/plane-editor/fixtures/link-plane)"
+    }
+  ]
+}

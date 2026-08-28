@@ -34,6 +34,7 @@ import {
   openSession,
 } from './src/session.mjs'
 import {
+  COMMON_OPERATIONS,
   SCENARIOS,
   runScenario,
   runBoundaryDiagnostic,
@@ -41,9 +42,12 @@ import {
   runDocumentReimportDiagnostic,
   runLegacyStoreDiagnostic,
   runMoveIdentityDiagnostic,
+  runStoreContractDiagnostic,
   scenarioFixture,
 } from './src/scenarios.mjs'
 import { checkLanguagePolicy } from './src/language.mjs'
+import { anchorStateOf } from './src/anchors.mjs'
+import { documentMetaKeys } from './src/document-id.mjs'
 import { saveStore } from './src/store.mjs'
 import { renderReport } from './src/report.mjs'
 
@@ -59,7 +63,17 @@ const C1_MIN_TRIALS = 12
  */
 const IDENTITY_ADVERSARIAL = ['S11a', 'S11b', 'S11c', 'S11d', 'S11e']
 const C1B_MIN_TRIALS_PER_SCENARIO = 2
+/**
+ * C2 = 차단 해제 조건 1·2 (문서 정체성 바인딩 / 저장소 계약 무결성),
+ * C3 = 조건 3의 앞부분 (흔한 편집 조작의 orphan 예산 게시).
+ * 근거: docs/verify/plane-editor-c1b-verify.md §8.
+ */
+const C2_MIN_CROSS_DOCUMENT_SHAPES = 3
+const C2_MIN_FORGED_SHAPES = 6
+const C3_MIN_OPERATIONS = 6
 const COUNTERFACTUAL_POLICIES = ['textmove', 'phase1', 'naive']
+/** 커밋되는 sample-state의 문서 정체성 (안정적이어야 하므로 발급기에 맡기지 않는다). */
+const SAMPLE_DOCUMENT_ID = 'doc-sample-state'
 const LANES = ['live', 'pipeline', 'stale']
 const OUTCOMES = ['survived', 'recovered', 'drifted', 'orphaned', 'wrong']
 const DETERMINISM_REPEATS = 2
@@ -104,6 +118,10 @@ function schemaPurityGate() {
   const yAfter = Buffer.from(session.encodeState()).toString('base64')
   const records = annotationRecords(session.editor.state)
   const decorations = decoratedRanges(session.editor.state)
+  // 문서 메타는 **문서 자신의 식별자 하나뿐**이어야 한다. 주석·앵커 데이터가 문서 상태로
+  // 새는 것을 여기서 기계적으로 막는다 (문서 정체성을 CRDT에 넣은 대가의 검사).
+  const metaKeys = documentMetaKeys(session.ydoc)
+  const metaIsIdentityOnly = metaKeys.length === 1 && metaKeys[0] === 'documentId'
   session.close()
 
   const namedTypes = annotationNamedTypes(withPlane)
@@ -112,6 +130,7 @@ function schemaPurityGate() {
     namedTypes.length === 0 &&
     docBefore === docAfter &&
     yBefore === yAfter &&
+    metaIsIdentityOnly &&
     records.length === FIXTURE_ANCHORS.length &&
     decorations.length === FIXTURE_ANCHORS.length
 
@@ -122,6 +141,8 @@ function schemaPurityGate() {
       annotationNamedTypes: namedTypes,
       documentUnchanged: docBefore === docAfter,
       yStateUnchanged: yBefore === yAfter,
+      documentMetaKeys: metaKeys,
+      metaIsIdentityOnly,
       planeRecords: records.length,
       planeDecorations: decorations.length,
       markCount: Object.keys(withPlane.marks).length,
@@ -243,6 +264,94 @@ function policyCounts(scenarios) {
   }
 }
 
+/**
+ * orphan 예산 — **흔한 편집 조작마다** 앵커가 얼마나 끊기는지. 정밀도(오해소 0)만 재는
+ * 게이트는 재현율을 얼마든지 깎을 수 있으므로, 대가를 같은 리포트에 게시한다.
+ * 목표는 orphan을 줄이는 것이 아니라 **보이게 하는 것**이라 값 자체는 게이트가 아니다.
+ */
+function orphanBudget(scenarios, policyRows) {
+  const byId = new Map(scenarios.map((scenario) => [scenario.id, scenario]))
+  const operations = COMMON_OPERATIONS.map(({ id, operation, control }) => {
+    const scenario = byId.get(id)
+    const lanes = {}
+    for (const lane of ['pipeline', 'stale']) {
+      const totals = scenario.lanes[lane]
+      lanes[lane] = {
+        measured: totals.measured,
+        resolvedAsExpected: totals.survived + totals.recovered,
+        orphaned: totals.orphaned,
+        wrong: totals.wrong,
+        orphanRate: totals.measured === 0 ? null : totals.orphaned / totals.measured,
+      }
+    }
+    const forgoneRecoveries = Object.fromEntries(
+      COUNTERFACTUAL_POLICIES.map((cf) => [
+        cf,
+        policyRows.forgoneTrials.filter((row) => row.scenario === id && row.policy === cf).length,
+      ]),
+    )
+    return {
+      id,
+      operation,
+      control,
+      title: scenario.title,
+      trials: scenario.trials.length,
+      quoteStillInDocument: scenario.trials.filter(
+        (trial) => trial.extra && trial.extra.quoteStillInDocument,
+      ).length,
+      lanes,
+      forgoneRecoveries,
+    }
+  })
+  const sum = (pick) =>
+    operations.filter((op) => !op.control).reduce((total, op) => total + pick(op), 0)
+  return {
+    operations,
+    measuredOperations: operations.length,
+    controlResolved: operations
+      .filter((op) => op.control)
+      .every((op) => op.lanes.pipeline.resolvedAsExpected === op.lanes.pipeline.measured),
+    orphanedLaneMeasurements: sum((op) => op.lanes.pipeline.orphaned + op.lanes.stale.orphaned),
+    laneMeasurements: sum((op) => op.lanes.pipeline.measured + op.lanes.stale.measured),
+    wrongLaneMeasurements: sum((op) => op.lanes.pipeline.wrong + op.lanes.stale.wrong),
+  }
+}
+
+/**
+ * 부착 **위치**의 정밀도 — 텍스트가 같아도 남의 자리면 오부착이다.
+ *
+ * 대상은 "앵커 텍스트가 편집에 **닿지 않았고**(기대 텍스트 = 원래 exact) 문서에 그대로
+ * 남아 있는" 시행뿐이다. 범위 안 삽입(S2)·부분 삭제(S4)처럼 앵커 자신의 텍스트가 바뀌는
+ * 편집은 "원래 문자열의 출현 자리"라는 기준 자체가 성립하지 않으므로 제외한다 (그 시행의
+ * 정확성은 기대 텍스트 비교가 이미 판정한다).
+ */
+function placementCounts(scenarios) {
+  const counts = { measured: 0, atKnownOccurrence: 0, attachedOutsideQuote: 0, outside: [] }
+  for (const scenario of scenarios) {
+    for (const trial of scenario.trials) {
+      if (!trial.extra || !trial.extra.quoteStillInDocument) continue
+      if (trial.expected.kind !== 'text' || trial.expected.text !== trial.anchorQuote) continue
+      for (const lane of ['pipeline', 'stale']) {
+        const result = trial.lanes[lane]
+        if (!result.measured || result.atKnownOccurrence === null || result.atKnownOccurrence === undefined) continue
+        counts.measured += 1
+        if (result.atKnownOccurrence) counts.atKnownOccurrence += 1
+        else {
+          counts.attachedOutsideQuote += 1
+          counts.outside.push({
+            scenario: scenario.id,
+            anchorId: trial.anchorId,
+            lane,
+            landedOffset: result.landedOffset,
+            occurrences: result.quoteOccurrences,
+          })
+        }
+      }
+    }
+  }
+  return counts
+}
+
 function bystanderCounts(scenarios) {
   const counts = { total: 0, ok: 0, residual: 0, orphaned: 0, wrong: 0 }
   for (const scenario of scenarios) {
@@ -284,6 +393,7 @@ function measure() {
       runMoveIdentityDiagnostic(),
       runLegacyStoreDiagnostic(),
       runDocumentReimportDiagnostic(),
+      runStoreContractDiagnostic(),
     ],
   }
 }
@@ -385,6 +495,31 @@ function deriveFindings(result) {
       `(로드됨=${legacy.recordsLoaded}건, 출처 미상 표시=${legacy.markedLegacy}, 해소=${legacy.method}).`,
   )
 
+  const c2 = result.gates.C2
+  findings.push(
+    `문서 정체성(C2): 같은 텍스트를 가진 다른 문서 ${c2.crossDocument.crossDocumentShapes}모양(동일 재임포트·파생본·다른 clientID)에 ` +
+      `레코드를 들이대 부착 ${c2.crossDocument.attachments}건, 같은 문서를 저장 상태에서 다시 열었을 때는 정상 해소 ` +
+      `${c2.crossDocument.controlResolved} — "전부 거절"로 얻은 0이 아니다. 저장소 계약: 캡처 증거를 채워 넣은 스토어 ` +
+      `${c2.storeContract.forgedShapes}모양 중 부착된 것 ${c2.storeContract.misResolutions}건이고 승격 경로 자체가 ` +
+      `${c2.storeContract.upgradePathExists ? '존재한다' : '없다'}(마이그레이션은 강등 전용). ` +
+      `그중 ${c2.storeContract.forgeriesPassingLoad}모양은 자기보고 정합 검사(길이·SV)를 통과하지만 ` +
+      `해소 시점의 자리별 대응 검사가 ${c2.storeContract.forgeriesCaughtAtResolve}모양을 잡는다. ` +
+      `옛 파일은 로드되되 문서 정체성 입양=${c2.legacyLoad.documentAdopted}(해소=${c2.legacyLoad.method}, ` +
+      `같은 세션 대조군 해소=${c2.legacyLoad.controlResolved}), 알 수 없는 버전 거절=${c2.legacyLoad.rejectsUnknownVersion}.`,
+  )
+
+  const c3 = result.gates.C3
+  const opRate = (op, lane) =>
+    `${op.operation} ${op.lanes[lane].orphaned}/${op.lanes[lane].measured}`
+  findings.push(
+    `orphan 예산(C3): 앵커 텍스트가 편집 후에도 남는 흔한 조작 ${c3.measuredOperations}종을 정식 시나리오로 쟀다. ` +
+      `pipeline 레인 orphan — ${c3.operations.map((op) => opRate(op, 'pipeline')).join(' · ')}. ` +
+      `stale 레인 orphan — ${c3.operations.map((op) => opRate(op, 'stale')).join(' · ')}. ` +
+      `대조군을 뺀 합계 ${c3.orphanedLaneMeasurements}/${c3.laneMeasurements} 레인측정이 orphan이고 오해소는 ` +
+      `${c3.wrongLaneMeasurements}건이다. 앵커 텍스트가 편집에 닿지 않고 남은 시행 ${c3.placement.measured}건 중 ` +
+      `제자리 밖에 붙은 것은 ${c3.placement.attachedOutsideQuote}건 — 살아남은 앵커가 남의 자리에 붙어서 만든 수치가 아니다.`,
+  )
+
   const reasons = Object.entries(result.policy.orphanReasons)
     .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
     .map(([reason, count]) => `${reason} ${count}`)
@@ -431,14 +566,20 @@ function deriveFindings(result) {
  * ------------------------------------------------------------------ */
 
 function writeSampleStore() {
-  const session = openSession({ clientID: 1 })
+  // 커밋되는 산출물이라 문서 정체성을 **명시**한다 (발급 순서에 흔들리지 않게).
+  const session = openSession({ clientID: 1, documentId: SAMPLE_DOCUMENT_ID })
   const attached = attachFixtureAnnotations(session)
   const dir = path('sample-state')
   saveStore(dir, {
     fragment: FRAGMENT_NAME,
+    documentId: session.documentId,
     docUpdate: session.encodeState(),
     docJSON: session.doc.toJSON(),
-    annotations: attached.map((entry) => entry.record),
+    annotations: attached.map((entry) => ({
+      ...entry.record,
+      // 선언이 아니라 **측정**: 저장 시점에 실제로 해소해 본 결과를 싣는다.
+      anchorState: anchorStateOf(session, entry.record.anchors),
+    })),
   })
   session.close()
   return dir
@@ -485,6 +626,12 @@ for (const lane of LANES) {
 }
 const policy = policyCounts(payload.scenarios)
 const bystanders = bystanderCounts(payload.scenarios)
+const budget = orphanBudget(payload.scenarios, policy)
+const placements = placementCounts(payload.scenarios)
+const diagnostic = (id) => payload.diagnostics.find((item) => item.id === id)
+const reimport = diagnostic('D5')
+const storeContract = diagnostic('D6')
+const legacyStore = diagnostic('D4')
 
 const language = checkLanguagePolicy(HERE)
 const pipelineGate = gateSlice(payload.scenarios, 'pipeline', GATING_SURVIVAL)
@@ -573,6 +720,85 @@ const gates = {
       'S11e=v1 레코드 하위호환). 넷의 뿌리는 하나다: "블록 텍스트가 같고 캡처 이후 생겼다"는 ' +
       '이동의 증거가 아니다 — D3가 그것을 byte 단위로 보인다.',
   },
+  C2: {
+    pass:
+      reimport.crossDocumentAttachments === 0 &&
+      reimport.crossDocumentShapes >= C2_MIN_CROSS_DOCUMENT_SHAPES &&
+      reimport.controlResolved &&
+      storeContract.misResolutions === 0 &&
+      storeContract.upgradePathExists === false &&
+      storeContract.forgedShapes >= C2_MIN_FORGED_SHAPES &&
+      legacyStore.documentAdopted === false &&
+      legacyStore.orphaned &&
+      legacyStore.controlResolved &&
+      legacyStore.rejectsUnknownVersion,
+    requirement:
+      `다른 문서 부착 0 (모양 ${C2_MIN_CROSS_DOCUMENT_SHAPES}종 이상, 같은 문서 대조군은 정상 해소) + ` +
+      `채워 넣은 캡처 증거의 승격 경로 0 (위조 모양 ${C2_MIN_FORGED_SHAPES}종 이상, 오해소 0) + ` +
+      '옛 파일이 스토어의 문서 정체성을 입양하지 않을 것 (대조군은 같은 세션에서 정상 해소)',
+    crossDocument: {
+      shapes: reimport.shapes,
+      crossDocumentShapes: reimport.crossDocumentShapes,
+      attachments: reimport.crossDocumentAttachments,
+      controlResolved: reimport.controlResolved,
+    },
+    storeContract: {
+      forgedShapes: storeContract.forgedShapes,
+      misResolutions: storeContract.misResolutions,
+      forgeriesPassingLoad: storeContract.forgeriesPassingLoad,
+      forgeriesCaughtAtResolve: storeContract.forgeriesCaughtAtResolve,
+      upgradePathExists: storeContract.upgradePathExists,
+      rows: storeContract.rows.map((row) => ({
+        shape: row.shape,
+        storeVersion: row.storeVersion,
+        loadRejected: row.loadRejected,
+        degraded: row.degraded,
+        method: row.method,
+        misResolved: row.misResolved,
+      })),
+    },
+    legacyLoad: {
+      documentAdopted: legacyStore.documentAdopted,
+      markedLegacy: legacyStore.markedLegacy,
+      orphaned: legacyStore.orphaned,
+      controlResolved: legacyStore.controlResolved,
+      rejectsUnknownVersion: legacyStore.rejectsUnknownVersion,
+      method: legacyStore.method,
+    },
+    note:
+      '차단 해제 조건 1·2 (docs/verify/plane-editor-c1b-verify.md §8). 레코드는 자기가 어느 문서의 ' +
+      '것인지 싣고 해소 진입점이 불일치를 거절하며(D5), 캡처 증거는 파일 버전이 아니라 **다른 selector와의 ' +
+      '내부 정합 + 저장된 exact와의 자리별 대응**으로 검증되어 채워 넣기가 승격되지 않는다(D6). ' +
+      '마이그레이션 경로는 강등 전용이고, 정체성은 **입양되지 않는다** — 옛 파일은 남의 문서 옆에 놓여도 ' +
+      '미상으로 남는다(D4, vnv B3->B7 경로 차단).',
+  },
+  C3: {
+    pass:
+      budget.measuredOperations >= C3_MIN_OPERATIONS &&
+      budget.controlResolved &&
+      budget.wrongLaneMeasurements === 0 &&
+      placements.attachedOutsideQuote === 0 &&
+      budget.operations.every(
+        (op) => op.lanes.pipeline.orphanRate !== null && op.lanes.stale.orphanRate !== null,
+      ),
+    requirement:
+      `흔한 편집 조작 ${C3_MIN_OPERATIONS}종 이상을 정식 시나리오로 측정하고 조작별 orphan율을 게시 ` +
+      '(값 자체는 기준이 아니다). 같은 범위에서 오해소 0 · 앵커 텍스트가 남은 시행의 부착 위치 오류 0 · ' +
+      '대조군(범위 안 삽입)은 살아남을 것 — 전부 orphan으로 만들어 "0"을 얻는 길을 막는다.',
+    minOperations: C3_MIN_OPERATIONS,
+    ...budget,
+    placement: {
+      measured: placements.measured,
+      atKnownOccurrence: placements.atKnownOccurrence,
+      attachedOutsideQuote: placements.attachedOutsideQuote,
+      outside: placements.outside,
+    },
+    note:
+      '차단 해제 조건 3의 앞부분 (docs/verify/plane-editor-c1b-verify.md §8). 이동·병합·분할·undo는 ' +
+      '앵커 텍스트가 문서에 그대로 남는데도 앵커가 끊기는 조작이라, 기대값을 orphan으로 낮추지 않고 ' +
+      '손실이 표에 남게 둔다. 끊긴 종단점을 링크가 어떻게 보는지는 링크 평면 쪽(check_links.py의 ' +
+      'broken-endpoint 보고)이 진다.',
+  },
   G3: {
     pass: deterministic,
     deterministic,
@@ -632,6 +858,8 @@ const result = {
     forgoneTrials: policy.forgoneTrials,
   },
   bystanders,
+  placement: placements,
+  orphanBudget: budget,
   gates,
   scenarios: payload.scenarios,
   diagnostics: payload.diagnostics,
@@ -640,7 +868,14 @@ const result = {
 result.findings = deriveFindings(result)
 
 const overallPass =
-  gates.G1.pass && gates.G2.pass && gates.C1.pass && gates.C1b.pass && gates.G3.pass && gates.G5.pass
+  gates.G1.pass &&
+  gates.G2.pass &&
+  gates.C1.pass &&
+  gates.C1b.pass &&
+  gates.C2.pass &&
+  gates.C3.pass &&
+  gates.G3.pass &&
+  gates.G5.pass
 
 writeFileSync(path('schema-dump.json'), `${JSON.stringify(payload.schema.fingerprint, null, 2)}\n`)
 writeFileSync(path('suite-result.json'), `${JSON.stringify(result, null, 2)}\n`)
@@ -657,6 +892,11 @@ const lines = [
   `     S5 orphan/wrong   : pipeline ${s5Pipeline.orphaned}/${s5Pipeline.wrong}, stale ${s5Stale.orphaned}/${s5Stale.wrong}`,
   `  C1 adversarial S9,S10: ${gates.C1.pass ? 'PASS' : 'FAIL'} (trials ${adversarial.trials}, orphan(all lanes) ${adversarial.orphanedAllLanes}, wrong(all lanes) ${adversarial.wrongAllLanes})`,
   `  C1b block identity S11: ${gates.C1b.pass ? 'PASS' : 'FAIL'} (trials ${identityAdversarial.trials}, orphan(all lanes) ${identityAdversarial.orphanedAllLanes}, wrong(all lanes) ${identityAdversarial.wrongAllLanes})`,
+  `  C2 document binding  : ${gates.C2.pass ? 'PASS' : 'FAIL'} (cross-document attachments ${reimport.crossDocumentAttachments}/${reimport.crossDocumentShapes} shapes, ` +
+    `store-contract forgeries promoted ${storeContract.misResolutions}/${storeContract.forgedShapes})`,
+  `  C3 orphan budget     : ${gates.C3.pass ? 'PASS' : 'FAIL'} (common operations ${budget.measuredOperations}, ` +
+    `orphaned ${budget.orphanedLaneMeasurements}/${budget.laneMeasurements} lane measurements, wrong ${budget.wrongLaneMeasurements}, ` +
+    `attached outside the quote ${placements.attachedOutsideQuote}/${placements.measured})`,
   `     blocked mis-resolutions: textmove ${policy.blocked.textmove}, phase1 ${policy.blocked.phase1}, naive ${policy.blocked.naive} (counterfactual, whole suite)`,
   `     recoveries forgone     : textmove ${policy.forgone.textmove} (safety cost — orphan instead of a guessed move)`,
   `  G3 determinism       : ${gates.G3.pass ? 'PASS' : 'FAIL'} (sha256 ${digests[0].slice(0, 16)}…)`,

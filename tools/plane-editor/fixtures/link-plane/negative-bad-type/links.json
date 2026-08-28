@@ -6,7 +6,8 @@
       "id": "ln-fixture-annotation-overlaps-decision",
       "from": {
         "plane": "annotation",
-        "ref": "a2"
+        "ref": "a2",
+        "document": "doc-fixture-control"
       },
       "to": {
         "plane": "decision",
@@ -19,7 +20,8 @@
       "id": "ln-fixture-annotation-tagged-concept",
       "from": {
         "plane": "annotation",
-        "ref": "a1"
+        "ref": "a1",
+        "document": "doc-fixture-control"
       },
       "to": {
         "plane": "graph",

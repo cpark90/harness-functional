@@ -202,6 +202,29 @@ export function renderReport(result) {
             `전 레인 orphaned ${result.gates.C1b.orphanedAllLanes}, 오해소 ${result.gates.C1b.wrongAllLanes}. ` +
             `텍스트 동일성으로 이동을 추정하는 정책(textmove)이었다면 이 범위에서만 오해소 ${result.gates.C1b.blockedMisResolutions.textmove}건`,
         ],
+        [
+          'C2',
+          '문서 정체성 바인딩 + 저장소 계약 무결성',
+          yesNo(result.gates.C2.pass),
+          `다른 문서 ${result.gates.C2.crossDocument.crossDocumentShapes}모양에 부착 ` +
+            `${result.gates.C2.crossDocument.attachments}건 (같은 문서 대조군 해소=${result.gates.C2.crossDocument.controlResolved}), ` +
+            `채워 넣은 캡처 증거 ${result.gates.C2.storeContract.forgedShapes}모양 중 부착 ` +
+            `${result.gates.C2.storeContract.misResolutions}건 (승격 경로 존재=${result.gates.C2.storeContract.upgradePathExists}; ` +
+            `로드 통과 ${result.gates.C2.storeContract.forgeriesPassingLoad}모양은 해소 시점 대응 검사가 ` +
+            `${result.gates.C2.storeContract.forgeriesCaughtAtResolve}모양 차단), ` +
+            `옛 파일 로드 시 정체성 입양=${result.gates.C2.legacyLoad.documentAdopted} · ` +
+            `대조군 해소=${result.gates.C2.legacyLoad.controlResolved} · ` +
+            `알 수 없는 버전 거절=${result.gates.C2.legacyLoad.rejectsUnknownVersion}`,
+        ],
+        [
+          'C3',
+          `흔한 편집 조작 ${result.gates.C3.minOperations}종의 orphan 예산 게시`,
+          yesNo(result.gates.C3.pass),
+          `조작 ${result.gates.C3.measuredOperations}종 · orphan ${result.gates.C3.orphanedLaneMeasurements}/` +
+            `${result.gates.C3.laneMeasurements} 레인측정 · 오해소 ${result.gates.C3.wrongLaneMeasurements} · ` +
+            `대조군(범위 안 삽입) 생존=${result.gates.C3.controlResolved} · 앵커 텍스트가 그대로인 시행 ` +
+            `${result.gates.C3.placement.measured}건 중 제자리 밖 부착 ${result.gates.C3.placement.attachedOutsideQuote}건`,
+        ],
         ['G4', '기존 게이트 3종 회귀', result.gates.G4.status, result.gates.G4.note],
         [
           'G5',
@@ -290,8 +313,15 @@ export function renderReport(result) {
       ['규칙', '발동', '없었다면 (반사실)'],
       [
         [
+          '0. 문서 정체성 바인딩 — 레코드의 문서 id와 지금 문서의 id가 **둘 다 있고 같을 때만** ' +
+            'selector를 읽는다 (`src/document-id.mjs`)',
+          `다른 문서 ${result.gates.C2.crossDocument.crossDocumentShapes}모양에 부착 ` +
+            `${result.gates.C2.crossDocument.attachments}건 (D5)`,
+          '같은 clientID로 만든 다른 문서·재임포트본·파생본에 레코드가 그대로 붙는다 (실측: vnv M5)',
+        ],
+        [
           'A. 구조적 affix guard — 해소 텍스트가 exact의 앞·뒤 조각으로 설명되고(head+tail ≥ min 길이), ' +
-            '캡처 때부터 있던 문자가 하나라도 남아야 채택',
+            '캡처 때 앵커에 들어 있던 **바로 그 문자**(문자 정체성)가 하나라도 남아야 채택',
           `거절 ${policy.guardRejections}건 (Phase 1 guard였다면 통과했을 시행)`,
           '해당 시행이 전부 무관한 텍스트에 부착 = 오해소',
         ],
@@ -407,8 +437,52 @@ export function renderReport(result) {
     out.push('')
   }
 
+  /* ---- orphan budget (조건 3) ---- */
+  const budget = result.orphanBudget
+  out.push('## 5. orphan 예산 — 흔한 편집 조작마다 앵커가 얼마나 끊기는가')
+  out.push('')
+  out.push(
+    '정밀도(오해소 0)만 재는 게이트는 재현율을 얼마든지 깎을 수 있다. 그래서 **앵커 텍스트가 편집 후에도 ' +
+      '문서에 그대로 남는** 조작들을 정식 시나리오로 넣고, 그 orphan율을 여기에 게시한다. ' +
+      '목표는 orphan을 줄이는 것이 아니라 **보이게 하는 것**이므로 값 자체는 게이트가 아니다 ' +
+      '(게이트는 "측정했는가 · 오해소 0인가 · 대조군은 살아남는가"만 본다).',
+  )
+  out.push('')
+  out.push(
+    table(
+      ['조작', '시나리오', '시행', 'pipeline orphan', 'stale orphan', '앵커 텍스트 잔존', '더 약한 정책이었다면 살렸을 복구'],
+      budget.operations.map((op) => [
+        `\`${op.operation}\`${op.control ? ' (대조군)' : ''}`,
+        `${op.id} ${op.title}`,
+        String(op.trials),
+        `${op.lanes.pipeline.orphaned}/${op.lanes.pipeline.measured} (${pct(op.lanes.pipeline.orphaned, op.lanes.pipeline.measured)})`,
+        `${op.lanes.stale.orphaned}/${op.lanes.stale.measured} (${pct(op.lanes.stale.orphaned, op.lanes.stale.measured)})`,
+        `${op.quoteStillInDocument}/${op.trials}`,
+        `textmove ${op.forgoneRecoveries.textmove} · phase1 ${op.forgoneRecoveries.phase1} · naive ${op.forgoneRecoveries.naive}`,
+      ]),
+    ),
+  )
+  out.push('')
+  out.push(
+    `대조군을 뺀 ${budget.operations.filter((op) => !op.control).length}개 조작의 합계: ` +
+      `orphan ${budget.orphanedLaneMeasurements}/${budget.laneMeasurements} 레인측정 ` +
+      `(${pct(budget.orphanedLaneMeasurements, budget.laneMeasurements)}), 오해소 ${budget.wrongLaneMeasurements}. ` +
+      `앵커 텍스트가 편집에 닿지 않고 문서에 그대로 남은 시행 ${result.placement.measured}건은 ` +
+      `**전부 자기 자리에** 붙었다 (제자리 밖 부착 ${result.placement.attachedOutsideQuote}건) — ` +
+      'orphan이 아닌 것들이 "아무 데나" 붙어서 생긴 값이 아니라는 뜻이다.',
+  )
+  out.push('')
+  out.push(
+    '두 레인의 값이 다른 것이 핵심 정보다: **편집 세션이 살아 있으면**(pipeline = 저장 시 재캡처) ' +
+      '병합·분할은 끊기지 않고, **옛 레코드를 들이대는 경로**(stale = 오프라인 협업·다른 프로세스 편집)에서만 ' +
+      '끊긴다. 이동과 undo는 두 레인 모두 끊긴다 — 블록 정체성이 파괴되는 편집이기 때문이다(D3). ' +
+      '링크 종단점은 이 값을 "끊긴 종단점(broken endpoint)" 상태로 보게 된다 ' +
+      '(`link-store/README.md`, `check_links.py`의 broken-endpoint 보고).',
+  )
+  out.push('')
+
   /* ---- diagnostics ---- */
-  let section = 5
+  let section = 6
   for (const diagnostic of result.diagnostics) {
     out.push(`## ${section}. ${diagnostic.id} — ${diagnostic.title}`)
     out.push('')
@@ -469,21 +543,75 @@ export function renderReport(result) {
             ['현재 저장 버전', String(diagnostic.currentVersion)],
             ['읽은 파일의 버전', String(diagnostic.loadedVersion)],
             ['로드된 레코드', `${diagnostic.recordsLoaded}건 (버려지지 않는다)`],
+            [
+              '문서 정체성 입양',
+              `${diagnostic.documentAdopted} — 동거는 정체성의 증거가 아니다. 스토어의 documentId를 찍어 주지 ` +
+                '않으므로 이 레코드는 어느 문서에서도 미상으로 남는다 (바인딩 가능=' +
+                `${diagnostic.bindable})`,
+            ],
             ['출처 미상 표시', `${diagnostic.markedLegacy} (\`${diagnostic.legacyReason}\`)`],
             ['블록 문맥', diagnostic.blockContextDropped ? '비움 — 이동 복구 대상 아님' : '남아 있음'],
             ['편집', `\`${diagnostic.anchorQuote}\` -> \`${diagnostic.replacement}\` (제자리 교체)`],
             ['해소 결과', `${diagnostic.method}${diagnostic.attachedText ? ` -> \`${diagnostic.attachedText}\`` : ''}`],
             ['사유', `\`${diagnostic.reason}\` (guard 출처 판정 \`${diagnostic.guardProvenance}\`)`],
+            [
+              '대조군 (같은 문서·같은 세션, 정체성을 실은 레코드)',
+              `${diagnostic.controlResolved} (\`${diagnostic.controlMethod}\`) — 위 orphan은 "전부 거절"의 산물이 아니다`,
+            ],
             ['알 수 없는 버전 거절', String(diagnostic.rejectsUnknownVersion)],
           ],
         ),
       )
       out.push('')
       out.push(
-        diagnostic.orphaned
-          ? '옛 파일은 **로드되지만 승격되지 않는다**: 출처 증거가 없으므로 문자열 구조만으로 통과시키지 않고 ' +
-              'orphan 사유를 남긴다. 이 경로가 열려 있으면 강화된 guard가 옛 레코드에서만 조용히 무력화된다.'
-          : '**옛 레코드가 문자열만으로 통과했다** — 하위호환 구멍이다.',
+        diagnostic.orphaned && !diagnostic.documentAdopted
+          ? '옛 파일은 **로드되지만 승격되지 않는다**: 스토어 옆에 있다는 사실만으로 문서 정체성을 얻지 못하고 ' +
+              '(입양 금지), 출처 증거가 없으므로 문자열 구조만으로도 통과하지 않는다. 이 경로가 열려 있으면 ' +
+              '문서 A의 주석 파일을 문서 B 옆에 두는 것만으로 B의 레코드가 되고, 재저장 한 번에 v3 링크 ' +
+              '종단점으로 승격된다 (실측된 세탁 경로: vnv B3 -> B7).'
+          : '**옛 레코드가 남의 문서 정체성을 얻었거나 문자열만으로 통과했다** — 하위호환 구멍이다.',
+      )
+      out.push('')
+    } else if (diagnostic.id === 'D5') {
+      out.push(
+        table(
+          ['문서 모양', '레코드의 문서인가', '저장 item의 상태', '해소', '사유/부착 텍스트'],
+          diagnostic.rows.map((row) => [
+            row.shape,
+            row.recordBelongsToThisDocument ? 'yes' : 'no',
+            row.storedItemStateInThisDocument,
+            row.method,
+            row.attachedText ? `\`${row.attachedText}\`` : `\`${row.reason}\``,
+          ]),
+        ),
+      )
+      out.push('')
+      out.push(
+        `남의 문서 ${diagnostic.crossDocumentShapes}모양에 부착된 건수 **${diagnostic.crossDocumentAttachments}**, ` +
+          `같은 문서(저장 상태에서 재로드) 대조군 해소 **${diagnostic.controlResolved}**. ${diagnostic.note}`,
+      )
+      out.push('')
+    } else if (diagnostic.id === 'D6') {
+      out.push(
+        table(
+          ['스토어 모양', '버전', '로드', '강등', '해소', '사유'],
+          diagnostic.rows.map((row) => [
+            row.shape,
+            String(row.storeVersion),
+            row.loadRejected ? '거절' : '읽음',
+            row.loadRejected ? '-' : row.degraded ? `yes (\`${row.degradeReason}\`)` : 'no',
+            row.method ?? '-',
+            `\`${row.loadRejected ? row.rejection : (row.reason ?? '-')}\``,
+          ]),
+        ),
+      )
+      out.push('')
+      out.push(
+        `앵커 \`${diagnostic.anchorQuote}\`를 \`${diagnostic.replacement}\`로 제자리 교체한 문서에, ` +
+          `증거를 채워 넣은 스토어 ${diagnostic.forgedShapes}모양을 들이댔다 — 부착 ${diagnostic.misResolutions}건, ` +
+          `승격 경로 존재=${diagnostic.upgradePathExists}. 로드 시점 검사(길이·SV)를 통과한 모양은 ` +
+          `${diagnostic.forgeriesPassingLoad}개이고 그중 ${diagnostic.forgeriesCaughtAtResolve}개를 해소 시점의 ` +
+          `자리별 대응 검사가 잡는다 — **막는 층이 둘이라는 사실 자체를 수치로 남긴다**. ${diagnostic.note}`,
       )
       out.push('')
     } else if (diagnostic.pairs) {
@@ -554,8 +682,20 @@ export function renderReport(result) {
           '블록 정체성이 파괴되는 편집은 이제 **전부 orphan**이라 오부착 위험은 낮지만, 이 모양들의 복구율 손실은 미측정',
         ],
         [
-          '문서 재임포트 **여러 앵커·여러 문서 세대** (D5는 앵커 1개짜리 단발 측정이다)',
-          '한 앵커에 대해서는 D5가 orphan을 확인했지만, 재임포트를 반복하거나 일부만 재임포트하는 혼합 문서는 미측정',
+          '문서 정체성이 **없는** 문서 상태 (이 엔진 이전에 만들어진 Y.Doc)',
+          '규칙 0이 "정체성 없는 문서에는 아무 레코드도 바인딩하지 않는다"로 흐르므로 오부착 위험은 없지만, ' +
+            '그런 문서를 실제로 다루는 마이그레이션 경로(문서에 정체성을 부여하는 절차)는 미설계·미측정',
+        ],
+        [
+          '문서 재임포트 **여러 앵커·여러 문서 세대** (D5는 앵커 1개를 네 모양에 들이대는 측정이다)',
+          '한 앵커에 대해서는 D5가 부착 0을 확인했지만, 재임포트를 반복하거나 일부만 재임포트하는 혼합 문서는 미측정',
+        ],
+        [
+          '악의적 위조 (D6은 **마이그레이션 실수** 모양만 만든다)',
+          '캡처 증거의 내부 정합 검사는 "현재 상태에서 베껴 온 값"을 잡지만, 옛 문서 상태를 가진 공격자가 ' +
+            '정합한 증거를 만들어 넣는 경우는 막지 못한다. 문서 정체성도 마찬가지다 — 새 문서를 만들 때 ' +
+            'id를 지정하는 것은 호출부의 권한이므로(clientID와 같은 성질), 남의 id를 지정한 새 문서를 만드는 ' +
+            '것은 문서 상태 자체를 위조하는 것과 같다. 두 축 모두 서명·무결성 태그의 영역이고 미구현',
         ],
         [
           '앵커가 블록 경계를 걸치는 경우 (blockContext 없음)',

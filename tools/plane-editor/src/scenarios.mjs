@@ -38,19 +38,24 @@ import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import * as Y from 'yjs'
+import { ySyncPluginKey } from 'y-prosemirror'
 import {
   FRAGMENT_NAME,
   FIXTURE_ANCHORS,
   MAIN_FIXTURE,
   TWIN_FIXTURE,
   S11_FIXTURE,
+  buildTextIndex,
+  offsetToPos,
   openSession,
   locate,
+  posToOffset,
   previousTextblockStart,
   attachFixtureAnnotations,
   liveRange,
 } from './session.mjs'
-import { POLICIES, resolveAnchors, captureAnchors } from './anchors.mjs'
+import { POLICIES, anchorStateOf, resolveAnchors, captureAnchors } from './anchors.mjs'
+import { characterIdCount, itemFate, liveBlocks, rangeCharacterIds } from './blocks.mjs'
 import {
   ANNOTATIONS_FILE,
   DOCUMENT_FILE,
@@ -292,6 +297,32 @@ function storedAnchorsFor(scenario) {
   return (anchors) => downgradeAnchors(anchors, scenario.storeVersion)
 }
 
+const offsetsOf = (text, needle) => {
+  const out = []
+  if (!needle) return out
+  let at = text.indexOf(needle)
+  while (at !== -1) {
+    out.push(at)
+    at = text.indexOf(needle, at + 1)
+  }
+  return out
+}
+
+/**
+ * 텍스트 동일성만으로는 부착 **위치**를 검사하지 못한다 (같은 문장이 두 번 나오는 문서에서는
+ * 남의 자리에 붙어도 "기대 텍스트와 같다"가 성립한다). 그래서 레인마다 실제로 붙은 오프셋과
+ * 문서 안 exact 출현 위치를 같이 싣는다 — 어느 출현에도 해당하지 않으면 `atKnownOccurrence`
+ * 가 false다 (집계는 run-suite의 `attachedOutsideQuote`).
+ */
+function placement(index, occurrences, resolution) {
+  const landedOffset = resolution.from === null ? null : posToOffset(index, resolution.from)
+  return {
+    landedOffset,
+    quoteOccurrences: occurrences,
+    atKnownOccurrence: landedOffset === null ? null : occurrences.includes(landedOffset),
+  }
+}
+
 function runPerAnchor(scenario) {
   const fixture = scenarioFixture(scenario)
   const asStored = storedAnchorsFor(scenario)
@@ -316,6 +347,8 @@ function runPerAnchor(scenario) {
     const pipelineResolution =
       saved.mode === 'recaptured' ? resolveAnchors(reload, asStored(saved.anchors)) : staleResolution
     const bystanders = bystanderReport(reload, attached, spec.id, asStored)
+    const index = buildTextIndex(reload.doc)
+    const occurrences = offsetsOf(index.text, target.exact)
     reload.close()
 
     trials.push(
@@ -326,12 +359,19 @@ function runPerAnchor(scenario) {
         expected,
         lanes: {
           live: liveLane(expected, snapshot),
-          pipeline: resolutionLane('pipeline', expected, pipelineResolution, { mode: saved.mode }),
-          stale: resolutionLane('stale', expected, staleResolution, { mode: 'as-attached' }),
+          pipeline: resolutionLane('pipeline', expected, pipelineResolution, {
+            mode: saved.mode,
+            ...placement(index, occurrences, pipelineResolution),
+          }),
+          stale: resolutionLane('stale', expected, staleResolution, {
+            mode: 'as-attached',
+            ...placement(index, occurrences, staleResolution),
+          }),
         },
         bystanders,
         extra: {
           docTextAfterEdit: docText,
+          quoteStillInDocument: occurrences.length > 0,
           ...(scenario.storeVersion === undefined ? {} : { recordStoreVersion: scenario.storeVersion }),
         },
       }),
@@ -383,6 +423,35 @@ function twinBlockIndex(session, target) {
 
 /** 블록 하나를 지우면 그 뒤 블록들의 index가 하나씩 앞으로 당겨진다. */
 const shiftAfterDelete = (index, deleted) => (index > deleted ? index - 1 : index)
+
+/* ------------------------------------------------------------------ *
+ * S12 편집 헬퍼 — "흔한 편집 조작" (orphan 예산 계측용)
+ * ------------------------------------------------------------------ */
+
+/** 편집기의 블록 이동 명령/드래그 = 삭제와 삽입이 **한 트랜잭션**. */
+const moveBlockOneTransaction = (session, index) => {
+  const node = session.doc.child(index)
+  const { from, to } = blockRange(session, index)
+  session.dispatch((tr) => {
+    tr.delete(from, to)
+    return tr.insert(tr.doc.content.size, node)
+  })
+}
+
+/** 줄 처음에서 Backspace = 앞 블록과 병합 (경계 문자 두 개를 지운다). */
+const joinWithPrevious = (session, blockIndex) => {
+  if (blockIndex <= 0) throw new Error('S12: the anchored block has no previous block to join into')
+  const boundary = blockRange(session, blockIndex).from
+  session.dispatch((tr) => tr.delete(boundary - 1, boundary + 1))
+}
+
+/**
+ * y-prosemirror는 자기 plugin key를 트랜잭션 origin으로 쓴다. 그 origin을 추적하지 않으면
+ * UndoManager가 **아무것도 되돌리지 않아서** undo 시나리오가 조용히 "그냥 삭제"로 퇴화한다
+ * (되돌아왔는지는 시나리오가 문서 텍스트로 검증한다).
+ */
+const undoManagerFor = (session) =>
+  new Y.UndoManager(session.fragment, { trackedOrigins: new Set([ySyncPluginKey]) })
 
 /* ------------------------------------------------------------------ *
  * scenario definitions
@@ -530,9 +599,13 @@ export const SCENARIOS = [
       const dir = mkdtempSync(join(tmpdir(), 'plane-editor-s8-'))
       saveStore(dir, {
         fragment: FRAGMENT_NAME,
+        documentId: author.documentId,
         docUpdate: author.encodeState(),
         docJSON: author.doc.toJSON(),
-        annotations: attached.map((item) => item.record),
+        annotations: attached.map((item) => ({
+          ...item.record,
+          anchorState: anchorStateOf(author, item.record.anchors),
+        })),
       })
       author.close()
 
@@ -674,7 +747,78 @@ export const SCENARIOS = [
       session.dispatch((tr) => tr.insertText(spec.replacement, t.from))
     },
   },
+
+  /* ---------------------------------------------------------------- *
+   * S12 — **흔한 편집 조작의 orphan 예산**.
+   *
+   * S9~S11은 "앵커의 문자를 지운 뒤"라서 orphan이 정답인 계열이다. 여기 넷은 반대다:
+   * 편집이 끝나도 앵커 텍스트가 문서에 **그대로 남아 있는데** 앵커가 끊긴다. 그래서
+   * 기대값을 orphan으로 낮추지 않고 `textExpectation`으로 두어, 통과가 아니라 **손실이
+   * 표에 남게** 한다 (S6와 같은 취급).
+   *
+   * 목표는 orphan을 줄이는 것이 아니라 **보이게 하는 것**이다. 정밀도(오해소 0)만 재는
+   * 게이트는 재현율을 얼마든지 깎을 수 있으므로, 이 조작들의 orphan율을 REPORT에 게시해
+   * 대가가 항상 같이 읽히게 한다 (`run-suite.mjs`의 orphan 예산 표).
+   * ---------------------------------------------------------------- */
+  {
+    id: 'S12a',
+    title: '앵커 담은 블록 이동 (한 트랜잭션 = 편집기 이동 명령)',
+    target: 'orphan 예산 계측 (앵커 텍스트는 문서에 그대로 남는다)',
+    gating: false,
+    commonOperation: 'move-block-one-transaction',
+    expected: (t) => textExpectation(t.exact),
+    edit: (session, t) => moveBlockOneTransaction(session, t.blockIndex),
+  },
+  {
+    id: 'S12b',
+    title: '앞 블록과 병합 (줄 처음에서 Backspace)',
+    target: 'orphan 예산 계측',
+    gating: false,
+    commonOperation: 'join-into-previous-block',
+    expected: (t) => textExpectation(t.exact),
+    edit: (session, t) => joinWithPrevious(session, t.blockIndex),
+  },
+  {
+    id: 'S12c',
+    title: '앵커 시작점에서 문단 분할 (Enter)',
+    target: 'orphan 예산 계측',
+    gating: false,
+    commonOperation: 'split-at-anchor-start',
+    expected: (t) => textExpectation(t.exact),
+    edit: (session, t) => session.dispatch((tr) => tr.split(t.from)),
+  },
+  {
+    id: 'S12d',
+    title: '앵커 담은 블록 삭제 후 undo',
+    target: 'orphan 예산 계측 (문서는 완전히 복원된다)',
+    gating: false,
+    commonOperation: 'delete-block-then-undo',
+    expected: (t) => textExpectation(t.exact),
+    edit: (session, t) => {
+      const undo = undoManagerFor(session)
+      const before = session.text()
+      deleteBlock(session, t.blockIndex)
+      undo.undo()
+      if (session.text() !== before) {
+        // undo가 실제로 되돌리지 않았다면 이 시나리오는 "그냥 삭제"의 다른 이름일 뿐이다.
+        throw new Error('S12d: undo did not restore the document — the scenario would be vacuous')
+      }
+    },
+  },
 ]
+
+/**
+ * orphan 예산 표의 대상 = 편집 후에도 앵커 텍스트가 문서에 남는 **흔한 조작**들.
+ * S2(범위 안 삽입)는 살아남아야 하는 대조군이고, S6은 같은 이동의 2-트랜잭션 모양이다.
+ */
+export const COMMON_OPERATIONS = Object.freeze([
+  { id: 'S2', operation: 'insert-inside-anchor', control: true },
+  { id: 'S6', operation: 'move-block-two-transactions', control: false },
+  { id: 'S12a', operation: 'move-block-one-transaction', control: false },
+  { id: 'S12b', operation: 'join-into-previous-block', control: false },
+  { id: 'S12c', operation: 'split-at-anchor-start', control: false },
+  { id: 'S12d', operation: 'delete-block-then-undo', control: false },
+])
 
 /* ------------------------------------------------------------------ *
  * D1 — non-gating boundary diagnostic (Phase 2 design input)
@@ -774,6 +918,7 @@ const D3_DOC = {
   ].map((text) => ({ type: 'paragraph', content: [{ type: 'text', text }] })),
 }
 const D3_ANCHOR = { id: 'd3', quote: 'disputed clause', occurrence: 0, body: 'identity diagnostic' }
+const D3_DOCUMENT_ID = 'doc-move-identity-diagnostic'
 
 /**
  * "블록을 옮겼다"와 "같은 문장을 지웠다 다시 쳤다"가 CRDT 층에서 구별되는지 직접 잰다.
@@ -784,7 +929,9 @@ const D3_ANCHOR = { id: 'd3', quote: 'disputed clause', occurrence: 0, body: 'id
 export function runMoveIdentityDiagnostic() {
   const digest = (bytes) => createHash('sha256').update(Buffer.from(bytes)).digest('hex')
   const run = (label, edit) => {
-    const session = openSession({ clientID: CLIENT.AUTHOR, docJSON: D3_DOC })
+    // 세 갈래는 **편집만** 달라야 하는 대조 실험이므로 문서 정체성도 같은 값으로 고정한다
+    // (발급기에 맡기면 문서마다 다른 id가 상태에 섞여 업데이트 해시 비교가 무의미해진다).
+    const session = openSession({ clientID: CLIENT.AUTHOR, docJSON: D3_DOC, documentId: D3_DOCUMENT_ID })
     const entry = attachFixtureAnnotations(session, [D3_ANCHOR])[0]
     edit(session)
     const update = digest(session.encodeState())
@@ -823,14 +970,24 @@ export function runMoveIdentityDiagnostic() {
 /**
  * S11e는 강등 함수를 직접 불러 v1 레코드를 흉내 내지만, 실제 위험은 **디스크에 남아
  * 있는 파일**이다. 여기서는 Phase 1이 쓰던 모양 그대로 v1 파일을 만들어 `loadStore`로
- * 읽고, 그 레코드가 (a) 버려지지 않고 로드되며 (b) 출처 미상으로 표시되고 (c) 제자리
- * 교체 편집에서 orphan이 되는지를 확인한다. 알 수 없는 버전은 여전히 거절해야 한다.
+ * 읽고, 그 레코드가 (a) 버려지지 않고 로드되며 (b) 출처 미상으로 표시되고 (c) 문서
+ * 정체성을 **입양하지 않으며** (d) 어떤 편집에서도 부착되지 않는지를 확인한다.
+ * 알 수 없는 버전은 여전히 거절해야 한다.
+ *
+ * (c)가 이 진단의 핵심축이다: 옛 파일이 스토어의 documentId를 찍어 받으면, 남의 문서
+ * 옆에 놓인 주석 파일이 그 문서의 레코드가 되고 재저장으로 v3 종단점까지 승격된다
+ * (실측: vnv B3 -> B7). 그래서 "동거는 정체성이 아니다"를 파일 경로에서 못 박는다.
+ *
+ * 대신 **vacuous 방지 대조군**을 같은 세션에 둔다: 같은 문서에서 정체성을 싣고 캡처된
+ * 레코드는 정상 해소된다. 그것이 없으면 "전부 orphan"으로도 이 진단이 통과한다.
  */
 export function runLegacyStoreDiagnostic() {
   const fixture = TWIN_FIXTURE
   const spec = fixture.anchors.find((anchor) => anchor.id === 'b4') ?? fixture.anchors[0]
+  // 대조군 앵커: 편집이 닿지 않는 다른 앵커. 같은 문서·같은 세션에서 정상 해소돼야 한다.
+  const controlSpec = fixture.anchors.find((anchor) => anchor.id !== spec.id)
   const session = openSession({ clientID: CLIENT.AUTHOR, docJSON: fixture.doc })
-  const entry = attachFixtureAnnotations(session, [spec])[0]
+  const [entry, controlEntry] = attachFixtureAnnotations(session, [spec, controlSpec])
   const target = entry.target
   session.dispatch((tr) => tr.delete(target.from, target.to))
   session.dispatch((tr) => tr.insertText(spec.replacement, target.from))
@@ -840,7 +997,7 @@ export function runLegacyStoreDiagnostic() {
 
   const dir = mkdtempSync(join(tmpdir(), 'plane-editor-d4-'))
   const record = annotationRecord(entry.record)
-  // Phase 1이 쓰던 파일 모양: version 1 + 세 번째 selector 없음. (store.mjs는 이제 v2만 쓴다.)
+  // Phase 1이 쓰던 파일 모양: version 1 + 세 번째 selector 없음 + 문서 정체성 없음.
   const legacyRecord = {
     id: record.id,
     anchors: { relativePosition: record.anchors.relativePosition, textQuote: record.anchors.textQuote },
@@ -860,6 +1017,8 @@ export function runLegacyStoreDiagnostic() {
   const reload = openSession({ update: store.docUpdate, clientID: CLIENT.RELOAD, docJSON: fixture.doc })
   const loaded = store.annotations[0]
   const resolution = resolveAnchors(reload, loaded.anchors, { counterfactuals: false })
+  // 대조군: 같은 문서·같은 세션에서 정체성을 실은 레코드는 정상 해소된다 (vacuous 방지).
+  const control = resolveAnchors(reload, controlEntry.record.anchors, { counterfactuals: false })
   reload.close()
 
   writeFileSync(
@@ -876,11 +1035,14 @@ export function runLegacyStoreDiagnostic() {
 
   return {
     id: 'D4',
-    title: '옛 저장 파일(v1) 하위호환 — 로드는 되지만 출처는 미상',
-    question: '옛 파일이 그대로 로드될 때, 출처 증거 없는 레코드가 문자열만으로 통과하는가?',
+    title: '옛 저장 파일(v1) 하위호환 — 로드는 되지만 출처는 미상이고, 정체성을 입양하지 않는다',
+    question: '남의 문서 옆에 놓인 옛 주석 파일이 그 문서의 레코드가 되는가?',
     currentVersion: STORE_VERSION,
     loadedVersion: store.version,
     recordsLoaded: store.annotations.length,
+    // 동거는 정체성의 증거가 아니다 — 스토어의 documentId를 찍어 주지 않는다(입양 금지).
+    documentAdopted: Boolean(loaded.anchors.document),
+    bindable: Boolean(loaded.anchors.document),
     markedLegacy: Boolean(loaded.anchors.legacy),
     legacyReason: loaded.anchors.legacy ? loaded.anchors.legacy.reason : null,
     blockContextDropped: loaded.anchors.blockContext === null,
@@ -891,6 +1053,9 @@ export function runLegacyStoreDiagnostic() {
     reason: resolution.reason,
     guardProvenance: resolution.guard.provenance,
     orphaned: resolution.method === 'orphaned',
+    // 대조군이 살아 있어야 위 orphan이 "전부 거절"의 산물이 아님을 말할 수 있다.
+    controlResolved: control.method !== 'orphaned',
+    controlMethod: control.method,
     rejectsUnknownVersion,
   }
 }
@@ -900,44 +1065,278 @@ export function runLegacyStoreDiagnostic() {
  * ------------------------------------------------------------------ */
 
 /**
- * 협업 문서를 내보냈다 다시 들여오면(또는 백업에서 새로 만들면) 텍스트는 같아도 CRDT
- * 정체성은 전부 새것이다. 이 경로는 "캡처 이후 새로 생긴 블록"이 문서 전체가 되므로
- * 텍스트 기반 복구에 가장 위험하다. strict가 여기서 무엇을 하는지 명시적으로 잰다.
+ * 협업 문서를 내보냈다 다시 들여오거나(재임포트), 복사해 파생본을 만들면 텍스트는 같아도
+ * **다른 문서**다. 이 프로토타입은 clientID를 호출부가 고정 상수로 주므로 두 문서의 item id
+ * 공간이 통째로 겹친다 = 레코드가 남의 문서에서 "그냥 해소되는" 것이 기본값이다
+ * (실측된 결함: vnv M5, 3케이스 중 2건 부착).
+ *
+ * 그래서 규칙 0(문서 정체성)이 있고, 이 진단이 그것을 **양방향으로** 잰다: 남의 문서 네 모양에
+ * 부착 0 + 같은 문서(저장 후 재로드)에서는 정상 해소. 뒤쪽이 없으면 "전부 거절"로도 0을 만들 수
+ * 있으므로 vacuous 방지에 반드시 필요하다.
+ *
+ * 값 자체(문서 id 문자열)는 싣지 않고 **관계**만 싣는다 — 발급 순서에 흔들리지 않는 결정론.
  */
 export function runDocumentReimportDiagnostic() {
   const fixture = TWIN_FIXTURE
   const spec = fixture.anchors[0]
   const author = openSession({ clientID: CLIENT.AUTHOR, docJSON: fixture.doc })
   const entry = attachFixtureAnnotations(author, [spec])[0]
+  const authored = author.encodeState()
   author.close()
 
-  // 같은 ProseMirror 문서를 새 Y.Doc으로 다시 만든다 (다른 client, 완전히 새 item).
-  const reimported = openSession({ clientID: CLIENT.REPLICA_B, docJSON: fixture.doc })
-  const measure = (policy) => {
-    const resolution = resolveAnchors(reimported, entry.record.anchors, { policy, counterfactuals: false })
-    return { method: resolution.method, text: resolution.text, reason: resolution.reason }
+  const forked = {
+    ...fixture.doc,
+    content: [
+      ...fixture.doc.content,
+      { type: 'paragraph', content: [{ type: 'text', text: 'A tail block that only the forked document has.' }] },
+    ],
   }
-  const strict = measure(undefined)
-  const textmove = measure(POLICIES.textmove)
-  const phase1 = measure(POLICIES.phase1)
-  reimported.close()
+  const shapes = [
+    ['same document reloaded from its own state (control)', { update: authored, clientID: CLIENT.RELOAD }],
+    ['identical re-import, same clientID', { clientID: CLIENT.AUTHOR, docJSON: fixture.doc }],
+    ['forked document, same clientID', { clientID: CLIENT.AUTHOR, docJSON: forked }],
+    ['different document, different clientID', { clientID: CLIENT.REPLICA_B, docJSON: forked }],
+  ]
 
+  const rows = []
+  for (const [label, options] of shapes) {
+    const session = openSession({ docJSON: fixture.doc, ...options })
+    const sameDocument = session.documentId === entry.record.anchors.document.id
+    const measure = (policy) => {
+      const resolution = resolveAnchors(session, entry.record.anchors, { policy, counterfactuals: false })
+      return { method: resolution.method, text: resolution.text, reason: resolution.reason }
+    }
+    const strict = measure(undefined)
+    const storedItemState = itemFate(session.ydoc, entry.record.anchors.blockContext.itemId).state
+    rows.push({
+      shape: label,
+      recordBelongsToThisDocument: sameDocument,
+      storedItemStateInThisDocument: storedItemState,
+      method: strict.method,
+      attachedText: strict.text,
+      reason: strict.reason,
+      // 남의 문서에 붙었는가 (0이어야 한다) / 제 문서에서 살아났는가 (대조군)
+      crossDocumentAttachment: !sameDocument && strict.method !== 'orphaned',
+      sameDocumentResolved: sameDocument && strict.method !== 'orphaned',
+    })
+    session.close()
+  }
+
+  const crossDocumentAttachments = rows.filter((row) => row.crossDocumentAttachment).length
+  const control = rows.find((row) => row.recordBelongsToThisDocument)
   return {
     id: 'D5',
-    title: '문서 재임포트 (같은 텍스트, 완전히 새 CRDT 정체성)',
-    question: '텍스트가 같은 새 문서에 옛 앵커 레코드를 들이대면 어디에 붙는가?',
-    pairs: [
-      ['앵커', `\`${entry.target.exact}\` (문서 텍스트는 그대로, item은 전부 새것)`],
-      ['strict (현행)', `${strict.method} — \`${strict.reason}\``],
-      ['textmove (대조)', `${textmove.method}${textmove.text ? ` -> \`${textmove.text}\`` : ` — \`${textmove.reason}\``}`],
-      ['phase1 (대조)', `${phase1.method}${phase1.text ? ` -> \`${phase1.text}\`` : ` — \`${phase1.reason}\``}`],
-    ],
-    orphaned: strict.method === 'orphaned',
+    title: '문서 정체성 바인딩 (재임포트·파생본에 레코드를 들이댄다)',
+    question: '같은 텍스트를 가진 **다른 문서**에 옛 앵커 레코드를 들이대면 어디에 붙는가?',
+    rows,
+    shapes: rows.length,
+    crossDocumentShapes: rows.length - 1,
+    crossDocumentAttachments,
+    controlResolved: Boolean(control && control.sameDocumentResolved),
     note:
-      strict.method === 'orphaned'
-        ? '재임포트본에서는 저장된 item id를 store가 아예 모른다(`stored-item-unknown`). 텍스트가 100% 같아도 ' +
-          '복구하지 않는다 — 같은 문장이 여러 번 나오는 문서에서 "아무 데나" 붙는 경로가 이것이었다.'
-        : '**재임포트본에 부착됐다** — 정체성 증거 없이 텍스트만으로 붙은 것이므로 규칙 C의 구멍이다.',
+      crossDocumentAttachments === 0
+        ? '남의 문서 세 모양 어디에도 붙지 않는다 — 레코드와 문서가 각자 지닌 정체성이 어긋나면 ' +
+          'selector를 아예 읽지 않는다(`document-identity/mismatch`). 같은 문서를 저장 상태에서 다시 ' +
+          '열었을 때는 정상 해소되므로 "전부 거절"로 얻은 0이 아니다.'
+        : '**남의 문서에 부착됐다** — 문서 정체성 바인딩의 구멍이다.',
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * D6 — 저장소 계약: 마이그레이션은 **강등 전용**인가
+ * ------------------------------------------------------------------ */
+
+/**
+ * v1을 v2로 올리면서 캡처 증거를 **현재 값으로 채워 넣는** 마이그레이션은 가장 자연스러운
+ * 마이그레이션이고, 그 순간 강화된 guard가 통째로 무력화된다(vnv M4에서 실측). 파일 안 정수인
+ * `version`은 방어가 아니다 — 그 값도 마이그레이션이 쓴다.
+ *
+ * 그래서 이 진단은 **실제 파일**을 만들어 `loadStore`로 읽는다:
+ *   (a) 옛 버전 + 캡처 시점 값을 지금 것으로 채운 파일   -> 강등되어야 한다
+ *   (b) 현재 버전인데 캡처 증거가 다른 selector와 어긋남 -> 강등되어야 한다 (계약 위반)
+ *   (c) 현재 버전인데 이름표를 **다른 곳에서 padding**해 길이·SV를 맞춘 파일
+ *                                                        -> 로드는 통과하지만 해소에서 걸린다
+ *   (d) 현재 버전인데 레코드가 다른 문서를 주장           -> 로드 자체를 거절해야 한다
+ *   (e) 알 수 없는 버전                                   -> 거절 (기존 D4와 같은 축)
+ *   (f) 정상 파일                                         -> 그대로 로드되고 해소된다 (대조군)
+ * 모든 갈래에서 "제자리 교체"된 텍스트에 부착되면 안 된다 (misResolutions 0).
+ *
+ * (c)는 vnv B4가 만든 모양이다. 그것이 여기 있는 이유는 **어느 층이 막는지 구분**하기
+ * 위해서다: 자기보고 정합 검사(길이·SV)는 이 모양을 통과시키고, 이름표와 저장된 exact의
+ * 자리별 대응 검사가 해소 시점에 잡는다. 두 값을 따로 보고한다
+ * (`forgeriesPassingLoad` / `forgeriesCaughtAtResolve`).
+ */
+export function runStoreContractDiagnostic() {
+  const fixture = TWIN_FIXTURE
+  const spec = fixture.anchors.find((anchor) => anchor.id === 'b4') ?? fixture.anchors[0]
+
+  // 앵커를 걸고 그 자리를 다른 짧은 단어로 **제자리 교체**한다 (M4가 되살린 오해소 모양).
+  const session = openSession({ clientID: CLIENT.AUTHOR, docJSON: fixture.doc })
+  const entry = attachFixtureAnnotations(session, [spec])[0]
+  const target = entry.target
+  const pristine = annotationRecord({ ...entry.record, anchorState: 'bound' })
+  session.dispatch((tr) => tr.delete(target.from, target.to))
+  session.dispatch((tr) => tr.insertText(spec.replacement, target.from))
+  const docUpdate = session.encodeState()
+  const docJSON = session.doc.toJSON()
+  const documentId = session.documentId
+  // 마이그레이션이 볼 수 있는 것 = **편집 후 현재 상태**. 그 값으로 증거를 채워 본다.
+  const refilledStateVector = Buffer.from(Y.encodeStateVector(session.ydoc)).toString('base64')
+  const replacedAnchors = captureAnchors(
+    session,
+    target.from,
+    target.from + spec.replacement.length,
+  )
+  // **padding 위조** (vnv B4): 지금 교체 범위의 살아있는 이름표에 문서 **다른 곳**의 이름표를
+  // 붙여 저장된 exact 길이를 채우고, stateVector는 현재 값으로 준다. 두 자기보고 검사
+  // (길이 합계·SV preexisting)를 **둘 다** 통과하므로 로드 시점에는 걸리지 않는다 —
+  // 이름표가 exact와 자리별로 대응하는지 보는 해소 시점 검사만이 이 모양을 잡는다.
+  const { blocks: forgedBlocks } = liveBlocks(session)
+  const replacedRuns = replacedAnchors.capture.characterIds ?? []
+  const paddingRuns =
+    rangeCharacterIds(forgedBlocks, 0, target.exact.length - characterIdCount(replacedRuns)) ?? []
+  const paddedCapture = {
+    stateVector: refilledStateVector,
+    characterIds: [...replacedRuns, ...paddingRuns],
+  }
+  // 길이까지 맞춘 위조: 캡처 **이후에** 입력된, 저장 exact와 **같은 길이**의 범위에서 이름표를
+  // 베껴 온다. 길이 정합 검사만 있으면 통과하므로, state vector와의 교차 검증이 필요해진다.
+  const decoyText = spec.replacement.padEnd(target.exact.length, ' ').slice(0, target.exact.length)
+  appendParagraph(session, decoyText)
+  const decoyIndex = buildTextIndex(session.doc)
+  const decoyAt = decoyIndex.text.lastIndexOf(decoyText)
+  const decoyAnchors = captureAnchors(
+    session,
+    offsetToPos(decoyIndex, decoyAt),
+    offsetToPos(decoyIndex, decoyAt + decoyText.length),
+  )
+  session.close()
+
+  const dir = mkdtempSync(join(tmpdir(), 'plane-editor-d6-'))
+  writeFileSync(
+    join(dir, DOCUMENT_FILE),
+    `${JSON.stringify({ fragment: FRAGMENT_NAME, documentId, yUpdateBase64: Buffer.from(docUpdate).toString('base64'), prosemirrorJSON: docJSON }, null, 2)}\n`,
+  )
+  const writeAnnotations = (payload) =>
+    writeFileSync(join(dir, ANNOTATIONS_FILE), `${JSON.stringify(payload, null, 2)}\n`)
+
+  const withoutDocument = (anchors) => {
+    const { document: _document, ...rest } = anchors
+    return rest
+  }
+  const cases = [
+    {
+      shape: 'older version, capture refilled with the current state vector',
+      version: STORE_VERSION - 1,
+      record: {
+        ...pristine,
+        anchors: { ...withoutDocument(pristine.anchors), capture: { stateVector: refilledStateVector } },
+      },
+    },
+    {
+      shape: 'current version, capture character ids copied from the replaced range',
+      version: STORE_VERSION,
+      record: {
+        ...pristine,
+        anchors: { ...pristine.anchors, capture: { ...pristine.anchors.capture, characterIds: replacedAnchors.capture.characterIds } },
+      },
+    },
+    {
+      shape: 'current version, capture ids copied from a same-length range typed after capture',
+      version: STORE_VERSION,
+      record: {
+        ...pristine,
+        anchors: { ...pristine.anchors, capture: { ...pristine.anchors.capture, characterIds: decoyAnchors.capture.characterIds } },
+      },
+    },
+    {
+      shape: 'current version, capture ids padded from elsewhere to the stored exact length',
+      version: STORE_VERSION,
+      record: { ...pristine, anchors: { ...pristine.anchors, capture: paddedCapture } },
+    },
+    {
+      shape: 'current version, record claims another document',
+      version: STORE_VERSION,
+      record: { ...pristine, anchors: { ...pristine.anchors, document: { id: `${documentId}-fork` } } },
+    },
+    { shape: 'unknown store version', version: 99, record: pristine },
+    { shape: 'control: untouched current-version record', version: STORE_VERSION, record: pristine },
+  ]
+
+  const rows = []
+  for (const testCase of cases) {
+    writeAnnotations({
+      version: testCase.version,
+      document: DOCUMENT_FILE,
+      ...(testCase.version === STORE_VERSION ? { documentId } : {}),
+      annotations: [testCase.record],
+    })
+    let loaded = null
+    let rejected = null
+    try {
+      loaded = loadStore(dir)
+    } catch (error) {
+      rejected = String(error.message)
+    }
+    if (loaded === null) {
+      rows.push({
+        shape: testCase.shape,
+        storeVersion: testCase.version,
+        loadRejected: true,
+        rejection: rejected,
+        degraded: null,
+        method: null,
+        attachedText: null,
+        reason: null,
+        misResolved: false,
+      })
+      continue
+    }
+    const record = loaded.annotations[0]
+    const reload = openSession({ update: loaded.docUpdate, clientID: CLIENT.RELOAD, docJSON: fixture.doc })
+    const resolution = resolveAnchors(reload, record.anchors, { counterfactuals: false })
+    reload.close()
+    rows.push({
+      shape: testCase.shape,
+      storeVersion: testCase.version,
+      loadRejected: false,
+      rejection: null,
+      degraded: Boolean(record.anchors.legacy),
+      degradeReason: record.anchors.legacy ? record.anchors.legacy.reason : null,
+      captureKept: Boolean(record.anchors.capture),
+      method: resolution.method,
+      attachedText: resolution.text,
+      reason: resolution.reason,
+      misResolved: resolution.method !== 'orphaned',
+    })
+  }
+  rmSync(dir, { recursive: true, force: true })
+
+  const forged = rows.filter((row) => !row.shape.startsWith('control'))
+  // 로드 시점(자기보고 정합)과 해소 시점(구조 대응)을 **가려서** 센다. padding 위조는
+  // 로드에서 안 걸리고 해소에서 걸리므로, 한 숫자로 뭉치면 어느 층이 막았는지 사라진다.
+  const passedLoad = forged.filter((row) => row.loadRejected === false && row.degraded === false)
+  return {
+    id: 'D6',
+    title: '저장소 계약 — 마이그레이션은 강등 전용인가 (캡처 증거 채워넣기 시험)',
+    question: '레코드가 스스로 주장하는 캡처 증거를 파일 버전만 보고 믿어도 되는가?',
+    anchorQuote: target.exact,
+    replacement: spec.replacement,
+    rows,
+    misResolutions: forged.filter((row) => row.misResolved).length,
+    forgedShapes: forged.length,
+    // 로드 검사(길이·SV)를 통과한 위조 모양 — 0이 아니어도 된다. 잡는 층이 다를 뿐이다.
+    forgeriesPassingLoad: passedLoad.length,
+    forgeriesCaughtAtResolve: passedLoad.filter((row) => row.misResolved === false).length,
+    // "승격 경로"는 위조 증거가 로드를 통과하고 **부착까지 간** 경우를 말한다.
+    upgradePathExists: passedLoad.some((row) => row.misResolved),
+    note:
+      forged.every((row) => row.misResolved === false)
+        ? '채워 넣은 증거는 **한 갈래도 부착되지 않는다**: 옛 버전은 강등되고, 현재 버전이어도 캡처 증거가 ' +
+          '저장된 exact와 어긋나면 계약 위반으로 강등되며, 다른 문서를 주장하는 레코드는 로드 자체가 거절된다. ' +
+          `길이·SV를 맞춘 padding 위조 ${passedLoad.length}모양은 로드를 통과하지만 이름표가 exact와 ` +
+          '자리별로 대응하지 않아 해소 시점에 걸린다.'
+        : '**채워 넣은 증거가 그대로 쓰였다** — 마이그레이션이 승격 경로를 갖고 있다는 뜻이다.',
   }
 }
 

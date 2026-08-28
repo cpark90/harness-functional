@@ -1,13 +1,17 @@
 {
-  "version": 2,
+  "version": 3,
   "document": "document.json",
+  "documentId": "doc-sample-state",
   "annotations": [
     {
       "id": "a1",
       "anchors": {
+        "document": {
+          "id": "doc-sample-state"
+        },
         "relativePosition": {
-          "start": "AAEbAA==",
-          "end": "AAElAA=="
+          "start": "AAEcAA==",
+          "end": "AAEmAA=="
         },
         "textQuote": {
           "exact": "Alpha beta",
@@ -15,23 +19,34 @@
           "suffix": " gamma delta epsilon zeta eta th"
         },
         "capture": {
-          "stateVector": "AQGGAw=="
+          "stateVector": "AQGHAw==",
+          "characterIds": [
+            {
+              "client": 1,
+              "clock": 28,
+              "length": 10
+            }
+          ]
         },
         "blockContext": {
           "text": "Alpha beta gamma delta epsilon zeta eta theta.",
           "offset": 0,
-          "itemId": "1:25"
+          "itemId": "1:26"
         }
       },
       "body": "Block-head anchor: probes left-boundary bias.",
-      "status": "open"
+      "status": "open",
+      "anchorState": "bound"
     },
     {
       "id": "a2",
       "anchors": {
+        "document": {
+          "id": "doc-sample-state"
+        },
         "relativePosition": {
-          "start": "AAEsAA==",
-          "end": "AAE5AA=="
+          "start": "AAEtAA==",
+          "end": "AAE6AA=="
         },
         "textQuote": {
           "exact": "delta epsilon",
@@ -39,23 +54,34 @@
           "suffix": " zeta eta theta.\nThe standoff mo"
         },
         "capture": {
-          "stateVector": "AQGGAw=="
+          "stateVector": "AQGHAw==",
+          "characterIds": [
+            {
+              "client": 1,
+              "clock": 45,
+              "length": 13
+            }
+          ]
         },
         "blockContext": {
           "text": "Alpha beta gamma delta epsilon zeta eta theta.",
           "offset": 17,
-          "itemId": "1:25"
+          "itemId": "1:26"
         }
       },
       "body": "Mid-block multi-word anchor, shares its block with a1.",
-      "status": "open"
+      "status": "open",
+      "anchorState": "bound"
     },
     {
       "id": "a3",
       "anchors": {
+        "document": {
+          "id": "doc-sample-state"
+        },
         "relativePosition": {
-          "start": "AAFPAA==",
-          "end": "AAFdAA=="
+          "start": "AAFQAA==",
+          "end": "AAFeAA=="
         },
         "textQuote": {
           "exact": "standoff model",
@@ -63,23 +89,34 @@
           "suffix": " keeps annotations outside the d"
         },
         "capture": {
-          "stateVector": "AQGGAw=="
+          "stateVector": "AQGHAw==",
+          "characterIds": [
+            {
+              "client": 1,
+              "clock": 80,
+              "length": 14
+            }
+          ]
         },
         "blockContext": {
           "text": "The standoff model keeps annotations outside the document body.",
           "offset": 4,
-          "itemId": "1:73"
+          "itemId": "1:74"
         }
       },
       "body": "Anchor whose first word repeats elsewhere in the document.",
-      "status": "open"
+      "status": "open",
+      "anchorState": "bound"
     },
     {
       "id": "a4",
       "anchors": {
+        "document": {
+          "id": "doc-sample-state"
+        },
         "relativePosition": {
-          "start": "AAGgAQA=",
-          "end": "AAGyAQA="
+          "start": "AAGhAQA=",
+          "end": "AAGzAQA="
         },
         "textQuote": {
           "exact": "classical weakness",
@@ -87,23 +124,34 @@
           "suffix": " of every standoff scheme.\nSelec"
         },
         "capture": {
-          "stateVector": "AQGGAw=="
+          "stateVector": "AQGHAw==",
+          "characterIds": [
+            {
+              "client": 1,
+              "clock": 161,
+              "length": 18
+            }
+          ]
         },
         "blockContext": {
           "text": "Anchor drift is the classical weakness of every standoff scheme.",
           "offset": 20,
-          "itemId": "1:138"
+          "itemId": "1:139"
         }
       },
       "body": "Plain mid-block anchor.",
-      "status": "open"
+      "status": "open",
+      "anchorState": "bound"
     },
     {
       "id": "a5",
       "anchors": {
+        "document": {
+          "id": "doc-sample-state"
+        },
         "relativePosition": {
-          "start": "AAHOAQA=",
-          "end": "AAHjAQA="
+          "start": "AAHPAQA=",
+          "end": "AAHkAQA="
         },
         "textQuote": {
           "exact": "Selector multiplexing",
@@ -111,23 +159,34 @@
           "suffix": " recovers anchors after destruct"
         },
         "capture": {
-          "stateVector": "AQGGAw=="
+          "stateVector": "AQGHAw==",
+          "characterIds": [
+            {
+              "client": 1,
+              "clock": 207,
+              "length": 21
+            }
+          ]
         },
         "blockContext": {
           "text": "Selector multiplexing recovers anchors after destructive edits.",
           "offset": 0,
-          "itemId": "1:204"
+          "itemId": "1:205"
         }
       },
       "body": "Block-head anchor in a block with no other anchor.",
-      "status": "open"
+      "status": "open",
+      "anchorState": "bound"
     },
     {
       "id": "a6",
       "anchors": {
+        "document": {
+          "id": "doc-sample-state"
+        },
         "relativePosition": {
-          "start": "AAGxAgA=",
-          "end": "AAG+AgA="
+          "start": "AAGyAgA=",
+          "end": "AAG/AgA="
         },
         "textQuote": {
           "exact": "honest orphan",
@@ -135,16 +194,24 @@
           "suffix": " record.\nKeeping an honest orpha"
         },
         "capture": {
-          "stateVector": "AQGGAw=="
+          "stateVector": "AQGHAw==",
+          "characterIds": [
+            {
+              "client": 1,
+              "clock": 306,
+              "length": 13
+            }
+          ]
         },
         "blockContext": {
           "text": "Wrong resolution is worse than an honest orphan record.",
           "offset": 34,
-          "itemId": "1:269"
+          "itemId": "1:270"
         }
       },
       "body": "Adversarial anchor: the exact quote occurs twice in the document, so quote recovery must be disambiguated by prefix/suffix or refused.",
-      "status": "open"
+      "status": "open",
+      "anchorState": "bound"
     }
   ]
 }
