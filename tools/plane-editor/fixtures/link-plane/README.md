@@ -64,6 +64,28 @@ node tools/plane-editor/run-link-checks.mjs      # 아래 표를 한 번에 재�
 그래서 링크 fixture가 둘이다: 종단점 해소 층의 사유를 재려면 링크가 필요하고(`annotation-record-live`),
 **스토어 계약 층**만 남기려면 링크가 하나도 없어야 한다(`annotation-store-contract`).
 
+### 디스크에 굳힐 수 없는 대조군 4개 — 바인더 **단독** 판정 (스위트 C4b)
+
+위 표는 전부 **커밋 게이트**를 재는 대조군이다. `bind-links`의 산출만 읽는 소비자를 재는
+자리는 따로 있다: 아래 네 모양은 게이트가 exit 1로 잡는데도 바인더가 초록을 내던 자리다
+(실측 vnv 8차 W1·W3·W4 + 9차 X2·X3). 넷 다 실제 CRDT 문서 상태(또는 그 **사본**)를 요구해
+디렉토리로 굳히지 못하므로, `run-link-checks.mjs`가 임시 작업공간에 **실제 세션으로 매 실행
+짓는다**.
+기준은 위와 같다 — 게이트 exit 1 + 위반 정확히 1건, 그리고 **바인더도** exit 1 + 바인딩 0 +
+사유 정확히 1건.
+
+| 대조군 (C4b) | 무엇을 재나 | 게이트 사유 | 바인더 사유 |
+|---|---|---|---|
+| 종단점 `anchor: "constructor"` | 해소표가 **상속**하던 이름 — 좌표 없는 "bound" 행이 나오던 자리 | `link-endpoint-plane` | `anchor-part-has-no-resolver:constructor` |
+| 같은 문서를 선언한 스토어 둘 (사본 이름 `aaa-copy`·`zzz-copy` **두 순서**) | 후보가 둘일 때 고르지 않는지 — 예전에는 디렉토리 이름 순서로 답이 뒤집혔다 | `annotation-store-duplicate-document` | `document-declared-by-2-annotation-stores` |
+| 그래프에 없는 링크 타입 | 게이트의 **전역** 판정이 빨강이면 바인더도 빨강인지 | `link-type-unknown` | `link-plane-refused-by-the-gate:link-type-unknown` |
+| 종단점 `anchor: ""` (falsy 값) | 앵커 종단점을 **키의 존재**로 세는지 — 예전에는 truthiness 로 갈라 종단점이 조용히 사라졌다(`anchorEndpoints 0 · unbound 0`) | `link-endpoint-plane` | `anchor-part-has-no-resolver:` (이름이 빈 문자열이므로 접미사도 비어 있다) |
+
+네 대조군 모두 사유뿐 아니라 **종단점이 세어졌는지**(`anchorEndpoints 1 · recordEndpoints 0`)를
+함께 잰다 — 사유 개수만 보면 "종단점이 아예 없어서 사유도 없다"와 "사유 하나로 거절했다"를
+가르지 못하기 때문이다. 코퍼스 크기(게이트 30 + 바인더 4 = 34)도 매 실행 세며, 줄어들면 그
+자리에서 FAIL한다(직전 바닥값은 33이었다).
+
 `control/annotations.json`은 검사기가 실제로 읽는 것만 담은 최소 주석 스토어다: 스토어의
 `documentId`, 레코드 `id`, 레코드가 스스로 싣는 `anchors.document`, 그리고 저장 시점에
 **측정된** `anchorState`. 나머지 selector는 주석 평면 자신의 스토어에 있다. 실사용 스토어

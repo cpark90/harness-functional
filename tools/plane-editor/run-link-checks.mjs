@@ -30,13 +30,17 @@
  *       어휘를 하나 더하면 같은 스토어가 red -> green(새 어휘를 코드 변경 없이 인정), 하나
  *       지우면 green -> red(실재하지 않는 어휘는 여전히 위반). 원본 `ontology/`는 무수정이며
  *       그 사실도 byte 비교로 잰다.
- *   C10 발견의 **전제**를 실측한다: 격리 표식·파일 이름으로 쌍둥이 스토어를 가릴 수 있는가,
- *       작업공간 루트가 없으면 무엇이 달라지는가, 그리고 남의 문서 옆으로 **옮겨진** 스토어에
- *       대해 게이트와 **진짜 loadStore**가 같은 답을 내는가.
+ *   C10 발견의 **전제**를 실측한다: 격리 표식·파일 이름·**디렉토리 심링크**·**훑기에서 빼는
+ *       이름**(`.git`·`node_modules`)으로 쌍둥이 스토어를 가릴 수 있는가(그리고 그 대가로 같은
+ *       실체를 두 이름으로 보아 **가짜 중복**이 생기지는 않는가 · 무관한 스토어가 판정에 새어
+ *       들지는 않는가), 작업공간 루트가 없으면 무엇이 달라지는가, 그리고 남의 문서 옆으로
+ *       **옮겨진** 스토어에 대해 게이트와 **진짜 loadStore**가 같은 답을 내는가.
  *   C12 ★ 종단점 바인딩: 문서 **위치**를 가리키는 종단점이 실제로 그 위치의 텍스트로
  *       해소되는가(기대 문자열과 대조), 게이트가 초록을 줘도 `loadStore`가 거절하면 바인딩이
- *       **0 + 사유**인가, 앵커가 orphan이면 조용히 사라지지 않고 보고되는가, 그리고 게이트가
- *       인정하는 앵커 부분과 바인더가 해소할 수 있는 부분이 **같은 집합**인가.
+ *       **0 + 사유**인가, 앵커가 orphan이면 조용히 사라지지 않고 보고되는가, 게이트가
+ *       인정하는 앵커 부분과 바인더가 해소할 수 있는 부분이 **같은 집합**인가, 평면이
+ *       통째로 거절돼도 **종단점별 사유**가 남는가(전역 사유가 개별 진단을 덮지 않는다),
+ *       그리고 그 사유가 **주장하는 범위**가 정확한가(게이트가 볼 수 있는 것까지만).
  */
 import {
   cpSync,
@@ -47,8 +51,10 @@ import {
   readdirSync,
   renameSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs'
+import { spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 
@@ -60,7 +66,7 @@ import {
   GATE_RULE_OF,
   PER_STORE_GATE_RULES,
 } from './src/store-contract.mjs'
-import { ANCHOR_PART_RESOLVERS, bindLinkStore } from './src/link-binding.mjs'
+import { ANCHOR_PART_RESOLVERS, bindLinkStore, resolverFor } from './src/link-binding.mjs'
 
 import {
   DEFAULT_STORE_DIR,
@@ -172,6 +178,79 @@ const NEGATIVE_CONTROLS = [
     ['unreadable-sibling/annotations.json']],
 ]
 
+/**
+ * 바인더 **단독** 판정의 negative control (C4b). 위 표가 커밋 게이트를 재는 자리라면, 이
+ * 표는 `bind-links`의 산출만 읽는 소비자를 재는 자리다 — 네 모양 다 게이트는 exit 1로
+ * 잡았는데 바인더는 초록을 냈었다(실측: vnv 8차 W1 · W3 · W4, 9차 X2·X3).
+ *
+ *   - 앵커 이름이 해소표가 **상속**하던 키 (`constructor`) -> 좌표 없는 "bound" 행
+ *   - 같은 문서를 선언한 스토어가 둘 -> 발견 순서로 한쪽을 골라 **답이 이름 순서로 뒤집혔다**
+ *   - 게이트의 **전역** 판정이 빨강 (`link-type-unknown`) -> 바인더는 PASS
+ *   - 앵커 이름이 **falsy 값** (`""`) -> 종단점 집합에서 조용히 사라짐(`anchorEndpoints 0`)
+ *
+ * 기준은 C4와 같은 모양이다: 게이트 exit 1 + 위반 정확히 1건, 그리고 **바인더도** exit 1 +
+ * 바인딩 0 + 사유 정확히 1건. 넷째 모양 때문에 기준을 하나 더 잰다 — **앵커 종단점으로 세어
+ * 졌는가**(`anchorEndpoints 1 · recordEndpoints 0`): 사유 개수만 보면 "종단점이 아예 없어서
+ * 사유도 없다"와 "사유 하나로 거절했다"를 가르지 못한다. fixture 디렉토리로 굳히지 못하는
+ * 이유는 넷 다 실제 CRDT 문서 상태(또는 그 사본)를 요구하기 때문이다 — 그래서 임시 작업공간에
+ * 실제 세션으로 짓는다.
+ */
+const SCRATCH_LINE = 'The disputed clause survives here.'
+const BINDER_NEGATIVE_CONTROLS = [
+  {
+    name: 'an endpoint anchor spelled like a key the resolver table would INHERIT (`constructor`)',
+    gateRule: 'link-endpoint-plane',
+    reason: 'anchor-part-has-no-resolver:constructor',
+    variants: ['single'],
+    build: (ws, variant, clientID) => {
+      const documentId = honestStore(join(ws, 'main'), clientID, SCRATCH_LINE)
+      return linkStoreAt(join(ws, 'link'), documentId, 'ln-binder-inherited-anchor', 'constructor')
+    },
+  },
+  {
+    // 사본 이름이 원본(`main`)보다 앞서기도, 뒤서기도 한다. 발견 순서로 고르던 시절에는 이
+    // 두 이름이 같은 링크에 **다른 문장**을 물렸다 — 이제 둘 다 거절이어야 한다.
+    name: 'a second annotation store declaring the same document (backup copy, either name order)',
+    gateRule: 'annotation-store-duplicate-document',
+    reason: 'document-declared-by-2-annotation-stores',
+    variants: ['aaa-copy', 'zzz-copy'],
+    build: (ws, variant, clientID) => {
+      const documentId = honestStore(join(ws, 'main'), clientID, SCRATCH_LINE)
+      reboundCopy(join(ws, 'main'), join(ws, variant), clientID + 1, 'Closing block')
+      return linkStoreAt(join(ws, 'link'), documentId, 'ln-binder-ambiguous-document', 'textQuote')
+    },
+  },
+  {
+    name: 'a link type outside the graph vocabulary (the gate refuses the whole link plane)',
+    gateRule: 'link-type-unknown',
+    reason: 'link-plane-refused-by-the-gate:link-type-unknown',
+    variants: ['single'],
+    build: (ws, variant, clientID) => {
+      const documentId = honestStore(join(ws, 'main'), clientID, SCRATCH_LINE)
+      return linkStoreAt(join(ws, 'link'), documentId, 'ln-binder-red-gate', 'textQuote',
+        { type: 'inventedRelation' })
+    },
+  },
+  {
+    // 넷째 자리: 앵커 이름이 **falsy 값**이다. 바인더가 `if (!ep.anchor)`로 갈랐던 동안 이
+    // 종단점은 앵커 종단점 집합에서 조용히 사라져(`anchorEndpoints 0 · unbound 0`) 게이트를
+    // 무르게 한 반사실에서 `pass: true · exit 0`이 나왔다 — 단독 fail-closed의 유일한 예외였다
+    // (실측: vnv 9차 X2·X3). 기대 사유의 접미사가 비어 있는 것은 **이름이 빈 문자열이기
+    // 때문**이다(사유 형식은 `anchor-part-has-no-resolver:<파일에 적힌 이름 그대로>`이고,
+    // 행 자체가 `anchor: ""`를 싣는다). 게이트는 처음부터 키의 존재로 판정했다("anchor" in ep).
+    name: 'an endpoint whose anchor key carries a falsy value (the empty string)',
+    gateRule: 'link-endpoint-plane',
+    reason: 'anchor-part-has-no-resolver:',
+    variants: ['single'],
+    build: (ws, variant, clientID) => {
+      const documentId = honestStore(join(ws, 'main'), clientID, SCRATCH_LINE)
+      return linkStoreAt(join(ws, 'link'), documentId, 'ln-binder-falsy-anchor', '')
+    },
+  },
+]
+/** 코퍼스는 줄지 않는다 (게이트 30 + 바인더 4 = 34; 직전 바닥값은 33이었다). */
+const NEGATIVE_CONTROL_FLOOR = 34
+
 const ANNOTATION_STORES = join(FIXTURES, 'annotation-stores')
 const SAMPLE_ANNOTATIONS = join(PLANE_EDITOR_DIR, 'sample-state', 'annotations.json')
 
@@ -180,6 +259,92 @@ const results = []
 function record(name, ok, detail) {
   results.push({ name, ok, detail })
   console.log(`${ok ? '  ok  ' : '  FAIL'}  ${name} — ${detail}`)
+}
+
+/* ---- 실제 세션으로 스토어를 짓는 헬퍼 (C4b·C10·C12 공용) ----
+ *
+ * 여기 있는 것은 **fixture 디렉토리로 굳힐 수 없는** 모양을 위한 것이다: 문서 상태(CRDT)를
+ * 실제로 만들어야 하거나(정직한 v3 스토어), 같은 문서를 선언한 스토어가 둘이어야 하는 경우.
+ * 임시 작업공간은 검사가 끝나면 지우고, **경로를 출력에 찍지 않는다**(출력 결정론).
+ */
+
+const para = (text) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
+const docOf = (...texts) => ({ type: 'doc', content: texts.map(para) })
+const stringify = (value) => `${JSON.stringify(value, null, 2)}\n`
+
+/**
+ * 실제 세션으로 만든 정직한 v3 스토어 (문서 상태 + 살아 있는 앵커 하나).
+ * `destroy`를 주면 캡처 **뒤에** 그 블록을 지워 앵커를 orphan으로 만든다 — 저장되는
+ * `anchorState`는 그때 **측정된** 값이다(선언이 아니다).
+ */
+const honestStore = (dir, clientID, line, { destroy = false } = {}) => {
+  const session = openSession({ clientID, docJSON: docOf('Opening block.', line, 'Closing block.') })
+  const target = locate(session, { quote: line.slice(0, 12) })
+  const anchors = captureAnchors(session, target.from, target.to)
+  if (destroy) session.dispatch((tr) => tr.delete(target.blockOuterFrom, target.blockOuterTo))
+  saveStore(dir, {
+    fragment: 'prosemirror',
+    documentId: session.documentId,
+    docUpdate: session.encodeState(),
+    docJSON: session.editor.getJSON(),
+    annotations: [{
+      id: 'a1',
+      anchors,
+      body: 'honest',
+      status: 'open',
+      anchorState: anchorStateOf(session, anchors),
+    }],
+  })
+  const { documentId } = session
+  session.close()
+  return documentId
+}
+
+/**
+ * 같은 문서를 선언한 **사본** 스토어 — 백업·export·두 번째 체크아웃으로 일상에서 생긴다.
+ * 사본의 레코드 `a1`은 같은 문서의 **다른 문장**에 다시 앵커된다: 두 스토어가 같은 답을
+ * 냈다면 "고르지 않는다"는 성질이 공허해지므로, 고를 경우 답이 실제로 갈리게 만들어 둔다.
+ */
+const reboundCopy = (fromDir, toDir, clientID, quote) => {
+  const store = loadStore(fromDir)
+  const session = openSession({ update: store.docUpdate, clientID })
+  const target = locate(session, { quote })
+  const anchors = captureAnchors(session, target.from, target.to)
+  saveStore(toDir, {
+    fragment: 'prosemirror',
+    documentId: store.documentId,
+    docUpdate: store.docUpdate,
+    docJSON: store.docJSON,
+    annotations: store.annotations.map((item) => (item.id === 'a1'
+      ? { ...item, anchors, body: 'rebound copy', anchorState: anchorStateOf(session, anchors) }
+      : item)),
+  })
+  session.close()
+  return toDir
+}
+
+/**
+ * 링크 하나짜리 스토어. `anchor`를 주면 그 종단점이 문서 **위치**를 가리킨다.
+ *
+ * 키를 쓸지 말지는 `anchor !== null`로 정한다 — truthiness로 정하면 `''`·`0` 같은 falsy 값을
+ * 실은 종단점을 **지을 수 없어** 그 자리를 대조군으로 잴 수 없다(두 층 다 키의 존재로 판정하는데
+ * 대조군 생성기만 truthiness면 그 축이 영원히 비어 있다).
+ */
+const linkStoreAt = (dir, documentId, linkId, anchor = null, { type = 'tagged' } = {}) => {
+  mkdirSync(dir, { recursive: true })
+  writeFileSync(join(dir, LINKS_FILE), stringify({
+    version: 1,
+    plane: 'link',
+    links: [{
+      id: linkId,
+      from: { plane: 'annotation', ref: 'a1', document: documentId, ...(anchor !== null ? { anchor } : {}) },
+      to: { plane: 'graph', ref: 'id:c-traceability' },
+      type,
+      created_by: 'run-link-checks scratch workspace',
+    }],
+  }))
+  writeFileSync(join(dir, DECISIONS_FILE), stringify({ version: 1, plane: 'decision', decisions: [] }))
+  return dir
 }
 
 /* ---- C0 contract surface ---- */
@@ -298,6 +463,71 @@ for (const [fixture, expected, description, annotationFiles] of NEGATIVE_CONTROL
     ok
       ? `${description}; exit 1 with exactly this violation`
       : `expected exactly [${expected}], got [${rules.join(', ') || 'none'}] (exit ${verdict.exitCode})`,
+  )
+}
+
+/* ---- C4b 바인더 negative control — `bind-links` **단독**으로도 빨간 자리 ---- */
+
+console.log('\n== C4b binder negative controls (the binder ALONE must be red here) ==')
+{
+  const scratch = mkdtempSync(join(tmpdir(), 'plane-editor-binder-negative-'))
+  let clientID = 70
+  try {
+    let index = 0
+    for (const control of BINDER_NEGATIVE_CONTROLS) {
+      index += 1
+      const seen = []
+      for (const variant of control.variants) {
+        const ws = join(scratch, `c${index}-${variant}`)
+        mkdirSync(join(ws, '.git'), { recursive: true })
+        clientID += 2
+        const linkDir = control.build(ws, variant, clientID)
+        const verdict = checkLinkStore({ storeDir: linkDir })
+        const bound = bindLinkStore({ storeDir: linkDir })
+        const rules = verdict.violations.map((v) => v.rule)
+        const reasons = bound.unbound.map((row) => row.reason)
+        seen.push({
+          variant,
+          // 게이트 쪽 기준은 C4와 같다: exit 1 + 위반 **정확히 1건**.
+          gateOk: !verdict.pass && verdict.exitCode === 1 && rules.length === 1 &&
+            rules[0] === control.gateRule,
+          // 바인더 쪽 기준: 바인딩 0 · 사유 **정확히 1건** · 그 사유가 기대한 것 (pass=false).
+          // 그리고 그 종단점이 **앵커 종단점으로 세어졌는가** — falsy 앵커가 record 종단점으로
+          // 조용히 강등되던 자리를 매 실행 잰다(넷째 대조군이 없으면 이 값은 늘 참이었다).
+          binderOk: !bound.pass && bound.counts.bound === 0 && bound.counts.orphaned === 0 &&
+            reasons.length === 1 && reasons[0] === control.reason &&
+            bound.counts.anchorEndpoints === 1 && bound.counts.recordEndpoints === 0,
+          rules: [...new Set(rules)].sort(),
+          reasons: [...new Set(reasons)].sort(),
+          bound: bound.counts.bound,
+          endpoints: `${bound.counts.anchorEndpoints} anchor / ${bound.counts.recordEndpoints} record`,
+        })
+      }
+      const ok = seen.every((row) => row.gateOk && row.binderOk)
+      const orders = control.variants.length > 1
+        ? ` · both discovery orders (${control.variants.join(', ')}) give the same answer`
+        : ''
+      record(
+        `${control.name} → binder refuses: ${control.reason}`,
+        ok,
+        ok
+          ? `gate exit 1 with exactly [${control.gateRule}]; binder exit 1 with 0 binding(s), ` +
+            `1 anchor endpoint counted and exactly one reason${orders}`
+          : seen.map((row) => `[${row.variant}] gate [${row.rules.join(', ') || 'none'}] · binder ` +
+              `${row.bound} binding(s), ${row.endpoints}, reasons ` +
+              `[${row.reasons.join(', ') || 'none'}]`).join(' ; '),
+      )
+    }
+  } finally {
+    rmSync(scratch, { recursive: true, force: true })
+  }
+  // 코퍼스가 줄지 않는지 매 실행 센다 (선언이 아니라 값).
+  const corpus = NEGATIVE_CONTROLS.length + BINDER_NEGATIVE_CONTROLS.length
+  record(
+    'the negative-control corpus is counted every run, and it does not shrink',
+    corpus >= NEGATIVE_CONTROL_FLOOR && BINDER_NEGATIVE_CONTROLS.length >= 4,
+    `${NEGATIVE_CONTROLS.length} gate control(s) + ${BINDER_NEGATIVE_CONTROLS.length} binder ` +
+      `control(s) = ${corpus} (floor ${NEGATIVE_CONTROL_FLOOR})`,
   )
 }
 
@@ -707,61 +937,10 @@ if (existsSync(SAMPLE_ANNOTATIONS)) {
   )
 }
 
-/* ---- C10 발견의 전제 (격리 표식 · 파일 이름 · 작업공간 루트) ---- */
+/* ---- C10 발견의 전제 (격리 표식 · 파일 이름 · 심링크 · 빼는 이름 · 작업공간 루트) ---- */
 
-/* ---- 실제 세션으로 스토어를 짓는 헬퍼 (C10·C12 공용) ---- */
-
-const para = (text) => ({ type: 'paragraph', content: [{ type: 'text', text }] })
-const docOf = (...texts) => ({ type: 'doc', content: texts.map(para) })
-const stringify = (value) => `${JSON.stringify(value, null, 2)}\n`
-
-/**
- * 실제 세션으로 만든 정직한 v3 스토어 (문서 상태 + 살아 있는 앵커 하나).
- * `destroy`를 주면 캡처 **뒤에** 그 블록을 지워 앵커를 orphan으로 만든다 — 저장되는
- * `anchorState`는 그때 **측정된** 값이다(선언이 아니다).
- */
-const honestStore = (dir, clientID, line, { destroy = false } = {}) => {
-  const session = openSession({ clientID, docJSON: docOf('Opening block.', line, 'Closing block.') })
-  const target = locate(session, { quote: line.slice(0, 12) })
-  const anchors = captureAnchors(session, target.from, target.to)
-  if (destroy) session.dispatch((tr) => tr.delete(target.blockOuterFrom, target.blockOuterTo))
-  saveStore(dir, {
-    fragment: 'prosemirror',
-    documentId: session.documentId,
-    docUpdate: session.encodeState(),
-    docJSON: session.editor.getJSON(),
-    annotations: [{
-      id: 'a1',
-      anchors,
-      body: 'honest',
-      status: 'open',
-      anchorState: anchorStateOf(session, anchors),
-    }],
-  })
-  const { documentId } = session
-  session.close()
-  return documentId
-}
-
-/** 링크 하나짜리 스토어. `anchor`를 주면 그 종단점이 문서 **위치**를 가리킨다. */
-const linkStoreAt = (dir, documentId, linkId, anchor = null) => {
-  mkdirSync(dir, { recursive: true })
-  writeFileSync(join(dir, LINKS_FILE), stringify({
-    version: 1,
-    plane: 'link',
-    links: [{
-      id: linkId,
-      from: { plane: 'annotation', ref: 'a1', document: documentId, ...(anchor ? { anchor } : {}) },
-      to: { plane: 'graph', ref: 'id:c-traceability' },
-      type: 'tagged',
-      created_by: 'run-link-checks scratch workspace',
-    }],
-  }))
-  writeFileSync(join(dir, DECISIONS_FILE), stringify({ version: 1, plane: 'decision', decisions: [] }))
-  return dir
-}
-
-console.log('\n== C10 the premises of discovery, measured (quarantine marker, file name, workspace root) ==')
+console.log('\n== C10 the premises of discovery, measured (quarantine marker, file name, ' +
+  'symlink, skipped directory name, workspace root) ==')
 {
   const scratch = mkdtempSync(join(tmpdir(), 'plane-editor-scope-'))
   try {
@@ -937,6 +1116,155 @@ console.log('\n== C10 the premises of discovery, measured (quarantine marker, fi
         return { documentId, storeDir: join(ws, 'b') }
       },
     )
+
+    /* ---- (8)-(9) 심링크 축 — 발견은 이름 공간을 따라간다, 실체는 하나로 센다 ----
+     *
+     * 위 (1)·(2)는 격리 표식·파일 이름으로 스토어를 숨길 수 없음을 보인다. **심링크는?**
+     * 정직한 스토어를 작업공간 밖에 두고 이름만 링크로 들여오면, 발견이 심링크를 따라가지
+     * 않던 동안에는 사본 하나만 범위에 남아 **사본의 답**이 초록으로 나갔다(실측: vnv 9차 Y6).
+     * 두 방향을 함께 잰다 — 숨을 수 없다(8)와, 그 대가로 **가짜 중복**이 생기지 않는다(9).
+     */
+    const hidden = join(scratch, 'symlink-ws')
+    mkdirSync(join(hidden, '.git'), { recursive: true })
+    const outsideStore = join(scratch, 'symlink-outside', 'honest')
+    const hiddenDocument = honestStore(outsideStore, 45, 'The disputed clause survives here.')
+    // 사본은 작업공간 **안의 실디렉토리**이고, 같은 문서를 선언하되 상태가 다르다(사본을 고른
+    // 답과 정직한 답이 실제로 갈리게 해 둔다 — 갈리지 않으면 이 검사가 공허해진다).
+    cpSync(outsideStore, join(hidden, 'zzz-copy'), { recursive: true })
+    {
+      const copy = JSON.parse(readFileSync(join(hidden, 'zzz-copy', 'annotations.json'), 'utf8'))
+      copy.annotations[0].anchorState = 'orphaned'
+      writeFileSync(join(hidden, 'zzz-copy', 'annotations.json'), stringify(copy))
+    }
+    symlinkSync(outsideStore, join(hidden, 'main'))  // 정직한 쪽은 심링크로만 보인다
+    const hiddenLinks = linkStoreAt(join(hidden, 'link'), hiddenDocument, 'ln-symlink-hidden', 'textQuote')
+    const hiddenVerdict = checkLinkStore({ storeDir: hiddenLinks })
+    const hiddenBinding = bindLinkStore({ storeDir: hiddenLinks })
+    record(
+      'a store that is only visible through a directory symlink is still discovered (and judged)',
+      !hiddenVerdict.pass && hiddenVerdict.exitCode === 1 &&
+        hiddenVerdict.annotationStores.length === 2 &&
+        hiddenVerdict.violations.some((v) => v.rule === 'annotation-store-duplicate-document') &&
+        !hiddenBinding.pass && hiddenBinding.counts.bound === 0 &&
+        hiddenBinding.unbound.length === 1 &&
+        hiddenBinding.unbound[0].reason === 'document-declared-by-2-annotation-stores',
+      `${hiddenVerdict.annotationStores.length} store(s) judged, ` +
+        `[${hiddenVerdict.violations.map((v) => v.rule).join(', ') || 'none'}] (exit ` +
+        `${hiddenVerdict.exitCode}); binder ${hiddenBinding.counts.bound} binding(s), ` +
+        `[${hiddenBinding.unbound.map((row) => row.reason).join(', ') || 'none'}]`,
+    )
+
+    // (9) 반대 방향의 대가: 같은 실체를 **두 이름**(심링크와 그 대상)으로 보아도 스토어는
+    //     하나다. 경로가 realpath로 정규화되지 않으면 심링크를 따라가는 순간 정직한 트리가
+    //     전부 `annotation-store-duplicate-document`가 된다 — 이전 wave가 인자 중복에서 세운
+    //     지점(vnv P1b 위양성)이 여기서도 유지되는지를 값으로 잰다. 심링크 이름을 원본보다
+    //     **앞서게**(`aaa-mirror`) 두어 훑는 순서도 흔든다.
+    const mirror = join(scratch, 'symlink-mirror')
+    mkdirSync(join(mirror, '.git'), { recursive: true })
+    const mirrorDocument = honestStore(join(mirror, 'main'), 46, 'The disputed clause survives here.')
+    symlinkSync(join(mirror, 'main'), join(mirror, 'aaa-mirror'))
+    const mirrorLinks = linkStoreAt(join(mirror, 'link'), mirrorDocument, 'ln-symlink-mirror', 'textQuote')
+    const mirrorVerdict = checkLinkStore({
+      storeDir: mirrorLinks,
+      // 같은 파일을 두 경로로 **명시** 지목하기까지 한다 (인자 축의 정규화도 함께 잰다).
+      annotations: [join(mirror, 'aaa-mirror', 'annotations.json'), join(mirror, 'main', 'annotations.json')],
+    })
+    const mirrorBinding = bindLinkStore({ storeDir: mirrorLinks })
+    record(
+      'the same store under two names (a symlink and its target) is ONE store, not a duplicate',
+      mirrorVerdict.pass && mirrorVerdict.exitCode === 0 &&
+        mirrorVerdict.annotationStores.length === 1 &&
+        mirrorBinding.pass && mirrorBinding.counts.bound === 1 &&
+        mirrorBinding.counts.ambiguousDocuments === 0 &&
+        mirrorBinding.counts.annotationStores === 1,
+      `${mirrorVerdict.annotationStores.length} store(s) judged, ` +
+        `[${mirrorVerdict.violations.map((v) => v.rule).join(', ') || 'none'}] (exit ` +
+        `${mirrorVerdict.exitCode}); binder ${mirrorBinding.counts.bound} binding(s) with ` +
+        `${mirrorBinding.counts.ambiguousDocuments} ambiguous document(s)`,
+    )
+
+    /* ---- (10)-(12) 훑기에서 **이름으로** 빼는 트리 (`SCAN_SKIP_DIRS`) ----
+     *
+     * `.git`·`node_modules`는 판정 대상이 아니다 — 훑는 비용이 나머지 트리를 다 합친 것보다
+     * 크기 때문이다(실측: 이 저장소에서 디렉토리 146 -> 1116 · 파일 697 -> 8992 · 게이트 왕복
+     * 0.35s -> 0.39s). 그런데 그 이름이 **아무 흔적 없이** 스토어를 가리는 동안에는, 정직한
+     * 스토어를 `<ws>/node_modules/` 에 두거나 그 이름의 심링크를 밖의 정직한 트리에 거는 것
+     * 만으로 옆에 둔 **사본의 답**이 초록으로 나갔다(실측: vnv 10차 Z2e·Z2e'). 격리 표식은
+     * `quarantined[].excluded`로 흔적을 남기는데 이 축만 남기지 않던 자리다.
+     *
+     * 지금 규율은 격리와 **같다**: 판정에서는 빼되 후보로는 모으고, 범위 안 문서를 선언하면
+     * 끌려오며, 무엇이 얼마나 빠졌는지가 판정 JSON(`annotationScope.skipped`)에 실린다.
+     * 세 방향을 함께 잰다 — 숨을 수 없다(10·11) + 무관한 것은 판정하지 않되 **흔적은 남는다**(12).
+     */
+    const skipped = join(scratch, 'skip-name-ws')
+    mkdirSync(join(skipped, '.git'), { recursive: true })
+    const skippedDocument = honestStore(join(skipped, 'node_modules', 'honest'), 47, SCRATCH_LINE)
+    // 사본은 작업공간의 평범한 자리에 있고 같은 문서를 **다른 문장**에 다시 앵커했다
+    // (고르면 답이 실제로 갈린다 — 갈리지 않으면 이 검사가 공허하다).
+    reboundCopy(join(skipped, 'node_modules', 'honest'), join(skipped, 'zzz-copy'), 48, 'Closing block')
+    const skippedLinks = linkStoreAt(join(skipped, 'link'), skippedDocument, 'ln-skip-name', 'textQuote')
+    const skippedVerdict = checkLinkStore({ storeDir: skippedLinks })
+    const skippedBinding = bindLinkStore({ storeDir: skippedLinks })
+    record(
+      'a store under a skipped directory name (node_modules) cannot hide a document under judgment',
+      !skippedVerdict.pass && skippedVerdict.exitCode === 1 &&
+        skippedVerdict.annotationStores.length === 2 &&
+        skippedVerdict.violations.some((v) => v.rule === 'annotation-store-duplicate-document') &&
+        !skippedBinding.pass && skippedBinding.counts.bound === 0 &&
+        skippedBinding.unbound.length === 1 &&
+        skippedBinding.unbound[0].reason === 'document-declared-by-2-annotation-stores',
+      `${skippedVerdict.annotationStores.length} store(s) judged, ` +
+        `[${skippedVerdict.violations.map((v) => v.rule).join(', ') || 'none'}] (exit ` +
+        `${skippedVerdict.exitCode}); binder ${skippedBinding.counts.bound} binding(s), ` +
+        `[${skippedBinding.unbound.map((row) => row.reason).join(', ') || 'none'}]`,
+    )
+
+    // (11) 같은 배치를 **심링크로**: 그 이름이 작업공간 밖의 정직한 트리를 가리킨다. 이름
+    //      가지치기는 심링크를 따라가는 `_walk`보다 **먼저** 일어나므로, 닫은 축(심링크)이
+    //      이름 한 줄로 다시 열리는지를 따로 잰다(vnv Z2e').
+    const skipLink = join(scratch, 'skip-symlink-ws')
+    mkdirSync(join(skipLink, '.git'), { recursive: true })
+    const skipOutside = join(scratch, 'skip-symlink-outside')
+    const skipLinkDocument = honestStore(join(skipOutside, 'honest'), 49, SCRATCH_LINE)
+    symlinkSync(skipOutside, join(skipLink, 'node_modules'))
+    reboundCopy(join(skipOutside, 'honest'), join(skipLink, 'zzz-copy'), 50, 'Closing block')
+    const skipLinkLinks = linkStoreAt(join(skipLink, 'link'), skipLinkDocument, 'ln-skip-symlink', 'textQuote')
+    const skipLinkVerdict = checkLinkStore({ storeDir: skipLinkLinks })
+    const skipLinkBinding = bindLinkStore({ storeDir: skipLinkLinks })
+    record(
+      'a symlink NAMED node_modules does not reopen the axis the symlink walk closed',
+      !skipLinkVerdict.pass && skipLinkVerdict.exitCode === 1 &&
+        skipLinkVerdict.annotationStores.length === 2 &&
+        skipLinkVerdict.violations.some((v) => v.rule === 'annotation-store-duplicate-document') &&
+        !skipLinkBinding.pass && skipLinkBinding.counts.bound === 0,
+      `${skipLinkVerdict.annotationStores.length} store(s) judged, ` +
+        `[${skipLinkVerdict.violations.map((v) => v.rule).join(', ') || 'none'}] (exit ` +
+        `${skipLinkVerdict.exitCode}); binder ${skipLinkBinding.counts.bound} binding(s)`,
+    )
+
+    // (12) 반대 방향의 대가: **무관한 문서**의 스토어가 그 트리 아래 있으면 판정하지 않는다
+    //      (의존성 트리가 남의 결함을 내 판정으로 흘려보내면 위양성이다). 그러나 조용히
+    //      빠지지는 않는다 — `annotationScope.skipped`가 트리와 **제외된 스토어 수**를 싣는다.
+    const unrelated = join(scratch, 'skip-unrelated-ws')
+    mkdirSync(join(unrelated, '.git'), { recursive: true })
+    const unrelatedDocument = honestStore(join(unrelated, 'main'), 51, SCRATCH_LINE)
+    honestStore(join(unrelated, 'node_modules', 'vendor'), 52, 'A different document with other words.')
+    const unrelatedLinks = linkStoreAt(join(unrelated, 'link'), unrelatedDocument, 'ln-skip-unrelated', 'textQuote')
+    const unrelatedVerdict = checkLinkStore({ storeDir: unrelatedLinks })
+    const unrelatedBinding = bindLinkStore({ storeDir: unrelatedLinks })
+    const skipRows = unrelatedVerdict.annotationScope.skipped ?? []
+    const vendorRow = skipRows.find((row) => row.path.endsWith('node_modules')) ?? null
+    record(
+      'an unrelated store under that name is NOT judged, but the exclusion is recorded (no silent skip)',
+      unrelatedVerdict.pass && unrelatedVerdict.exitCode === 0 &&
+        unrelatedVerdict.annotationStores.length === 1 &&
+        vendorRow !== null && vendorRow.excluded === 1 && Boolean(vendorRow.reason) &&
+        unrelatedBinding.pass && unrelatedBinding.counts.bound === 1,
+      `${unrelatedVerdict.annotationStores.length} store(s) judged (exit ` +
+        `${unrelatedVerdict.exitCode}); skipped [` +
+        `${skipRows.map((row) => `${basename(row.path)} keeps out ${row.excluded}`).join(', ') ||
+          'nothing recorded'}]; binder ${unrelatedBinding.counts.bound} binding(s)`,
+    )
   } finally {
     rmSync(scratch, { recursive: true, force: true })
   }
@@ -1094,6 +1422,18 @@ console.log('\n== C12 anchor endpoints bind to a place in the document (derived,
     `gate [${declaredParts.join(', ')}] · binder [${resolvableParts.join(', ')}]`,
   )
 
+  // (1b) 그 대조는 **선언된** 이름만 본다(`Object.keys`는 상속 키를 보지 않는다). 표가
+  //      `Object.prototype`을 상속하던 동안에는 선언되지 않은 이름 12개가 조회에서 인정됐다
+  //      (vnv W1·W2). 그래서 목록이 아니라 **표의 모양**을 잰다.
+  const inheritedNames = [...Object.getOwnPropertyNames(Object.prototype)].sort()
+  const admittedInherited = inheritedNames.filter((name) => resolverFor(name) !== null)
+  record(
+    'the resolver table owns its names: nothing it would merely inherit is admitted',
+    Object.getPrototypeOf(ANCHOR_PART_RESOLVERS) === null && admittedInherited.length === 0,
+    `prototype ${Object.getPrototypeOf(ANCHOR_PART_RESOLVERS) === null ? 'null' : 'INHERITED'} · ` +
+      `${inheritedNames.length} Object.prototype key(s) tried, ${admittedInherited.length} admitted`,
+  )
+
   // (2) ★ 실사용 link-store: 종단점이 **문서의 그 문장**으로 해소되는가. 기대 문자열은 여기
   //     적어 둔다 — 바인더가 레코드의 사본을 되돌려 주는 것이 아니라 문서에서 읽어 온다는
   //     것을 독립적으로 못 박기 위해서다(문서 텍스트와 레코드의 캡처값도 함께 대조한다).
@@ -1214,7 +1554,167 @@ console.log('\n== C12 anchor endpoints bind to a place in the document (derived,
       )
     }
 
-    // (6) 바인딩도 결정론이다 (좌표·텍스트를 저장하지 않으므로 매번 다시 계산한다).
+    // (6) ★ 계열을 사례가 아니라 **성질**로 닫는다: `Object.prototype`의 이름을 **전부** 앵커
+    //     이름으로 실은 링크 스토어를 실제로 바인딩해 본다. 예전 표에서는 `constructor`가
+    //     좌표 없는 "bound" 행을 만들고 `toString`은 `x resolver is not a function`으로
+    //     죽었다(vnv W1·W2). 지금은 하나도 남김없이 사유 있는 unbound 여야 하고 크래시는 0이다.
+    const inherited = join(scratch, 'inherited-anchor-names')
+    mkdirSync(join(inherited, '.git'), { recursive: true })
+    const inheritedDocument = honestStore(join(inherited, 'main'), 65, SCRATCH_LINE)
+    const inheritedLinks = join(inherited, 'link')
+    mkdirSync(inheritedLinks, { recursive: true })
+    writeFileSync(join(inheritedLinks, LINKS_FILE), stringify({
+      version: 1,
+      plane: 'link',
+      links: inheritedNames.map((name, position) => ({
+        id: `ln-inherited-${String(position).padStart(2, '0')}`,
+        from: { plane: 'annotation', ref: 'a1', document: inheritedDocument, anchor: name },
+        to: { plane: 'graph', ref: 'id:c-traceability' },
+        type: 'tagged',
+        created_by: 'run-link-checks scratch workspace',
+      })),
+    }))
+    writeFileSync(join(inheritedLinks, DECISIONS_FILE),
+      stringify({ version: 1, plane: 'decision', decisions: [] }))
+    let crash = null
+    let inheritedBinding = null
+    try {
+      inheritedBinding = bindLinkStore({ storeDir: inheritedLinks })
+    } catch (error) {
+      crash = error.message
+    }
+    record(
+      'every Object.prototype key used as an anchor name is refused with a reason, never bound',
+      crash === null && inheritedBinding !== null && !inheritedBinding.pass &&
+        inheritedBinding.counts.bound === 0 && inheritedBinding.counts.orphaned === 0 &&
+        inheritedBinding.counts.unbound === inheritedNames.length &&
+        inheritedBinding.unbound.every((row) =>
+          row.reason.startsWith('anchor-part-has-no-resolver:')),
+      crash !== null
+        ? `the binder threw instead of refusing: ${crash}`
+        : `${inheritedNames.length} name(s) tried · ${inheritedBinding.counts.bound} bound · ` +
+          `${inheritedBinding.counts.unbound} unbound, all anchor-part-has-no-resolver · no crash`,
+    )
+
+    /* ---- (8) 전역 거절이 **개별 사유를 덮지 않는다** (진단력) ----
+     *
+     * 링크 하나가 나빠 게이트가 링크 평면을 통째로 거절하면, 예전에는 나머지 종단점의 사유가
+     * 전부 그 평면 사유 하나로 통일됐다(실측: vnv 9차 Y2 — 좋은 링크 2개가 `link-plane-
+     * refused-by-the-gate:…`로 덮였다). 스토어가 커질수록 "어디가 문제인지"를 바인더로 좁힐
+     * 수 없게 되는 자리다. 지금은 사유가 두 층이고, 우선순위(좁은 것 -> 넓은 것)는 그대로다:
+     * 세 종단점이 **세 가지 다른** 답을 내야 한다.
+     *
+     *   ln-a-clean          : 게이트가 볼 수 있는 잘못 없음 -> reasons.endpoint = null (아래 (9))
+     *   ln-b-inherited-name : 좁은 가드가 먼저 답한다 -> anchor-part-has-no-resolver:constructor
+     *   ln-c-bad-type       : 이 링크가 원인 -> endpoint-refused-by-the-gate:link-type-unknown
+     *
+     * 판정 자체는 fail-closed 그대로여야 한다: 바인딩 0 · unbound 3 · pass false.
+     */
+    const mixed = join(scratch, 'plane-refused-mixed')
+    mkdirSync(join(mixed, '.git'), { recursive: true })
+    const mixedDocument = honestStore(join(mixed, 'main'), 66, SCRATCH_LINE)
+    const mixedLinks = join(mixed, 'link')
+    mkdirSync(mixedLinks, { recursive: true })
+    const mixedEndpoint = (anchor) => ({
+      plane: 'annotation', ref: 'a1', document: mixedDocument, anchor,
+    })
+    writeFileSync(join(mixedLinks, LINKS_FILE), stringify({
+      version: 1,
+      plane: 'link',
+      links: [
+        // id 오름차순 (store-format). 셋 다 같은 레코드의 같은 문서를 가리킨다.
+        { id: 'ln-a-clean', from: mixedEndpoint('textQuote'), to: { plane: 'graph', ref: 'id:c-traceability' }, type: 'tagged', created_by: 'run-link-checks scratch workspace' },
+        { id: 'ln-b-inherited-name', from: mixedEndpoint('constructor'), to: { plane: 'graph', ref: 'id:c-traceability' }, type: 'tagged', created_by: 'run-link-checks scratch workspace' },
+        { id: 'ln-c-bad-type', from: mixedEndpoint('textQuote'), to: { plane: 'graph', ref: 'id:c-traceability' }, type: 'inventedRelation', created_by: 'run-link-checks scratch workspace' },
+      ],
+    }))
+    writeFileSync(join(mixedLinks, DECISIONS_FILE),
+      stringify({ version: 1, plane: 'decision', decisions: [] }))
+    const mixedBinding = bindLinkStore({ storeDir: mixedLinks })
+    const reasonOf = (id) => mixedBinding.unbound.find((row) => row.link === id) ?? null
+    const [clean, inheritedName, badType] = ['ln-a-clean', 'ln-b-inherited-name', 'ln-c-bad-type']
+      .map(reasonOf)
+    const layered = clean !== null && inheritedName !== null && badType !== null &&
+      // 판정은 그대로 빨강이고 아무것도 열지 않는다.
+      !mixedBinding.pass && mixedBinding.counts.bound === 0 && mixedBinding.counts.unbound === 3 &&
+      mixedBinding.counts.storesOpened === 0 &&
+      // 우선순위: 좁은 가드가 전역 사유에 가려지지 않는다.
+      inheritedName.reason === 'anchor-part-has-no-resolver:constructor' &&
+      // 나머지 둘의 판정 사유는 평면 사유 하나로 같다 (기존 배치 그대로)...
+      clean.reason === badType.reason && clean.reason.startsWith('link-plane-refused-by-the-gate:') &&
+      // ...그런데 종단점 층에서는 셋이 갈린다.
+      clean.reasons.endpoint === null && clean.gateViolations.length === 0 &&
+      badType.reasons.endpoint === 'endpoint-refused-by-the-gate:link-type-unknown' &&
+      inheritedName.reasons.endpoint === inheritedName.reason &&
+      new Set([clean, inheritedName, badType].map((row) => `${row.reasons.endpoint}`)).size === 3
+    record(
+      'a plane-wide refusal keeps each endpoint\'s own reason (three endpoints, three answers)',
+      layered,
+      [clean, inheritedName, badType].map((row, index) => (row === null
+        ? `[${['ln-a-clean', 'ln-b-inherited-name', 'ln-c-bad-type'][index]}] no row at all`
+        : `${row.link}: ${row.reason} / endpoint ${row.reasons.endpoint}`)).join(' · ') +
+        ` (${mixedBinding.counts.bound} bound, ${mixedBinding.counts.storesOpened} store(s) opened)`,
+    )
+
+    /* ---- (9) `reasons.endpoint: null` 이 **주장하는 범위** ----
+     *
+     * 위 (8)에서 `ln-a-clean`은 `reasons.endpoint: null`을 받았고, 사람이 읽는 채널은 그것을
+     * 한때 "자기 잘못 없음"이라 찍었다. 그 문장은 **과잉 안심**이다: 게이트가 원리적으로 못
+     * 보는 축(편집기만 아는 `loadStore` 거절 — 선언된 전제 두 줄)에서는 자기 잘못이 있는
+     * 종단점도 같은 문장을 받는다(실측: vnv 10차 Z3d). 여기서 그 모양을 실제로 만들어
+     * **대조군과 나란히** 잰다 — 판정은 어느 쪽이든 fail-closed이므로 이것은 문구가 곧 의미인
+     * 자리이고, 문구는 선언이 아니라 이 검사로 매 실행 측정된다.
+     */
+    const editorOnly = join(scratch, 'editor-only-fault')
+    mkdirSync(join(editorOnly, '.git'), { recursive: true })
+    const editorOnlyDocument = honestStore(join(editorOnly, 'main'), 67, SCRATCH_LINE)
+    {
+      // 평문 정체성은 그대로 두고 **내용만** 망가뜨린다 = 게이트가 볼 수 없는 축.
+      const statePath = join(editorOnly, 'main', 'document.json')
+      const state = JSON.parse(readFileSync(statePath, 'utf8'))
+      state.yUpdateBase64 = 'not*valid*base64!!'
+      writeFileSync(statePath, stringify(state))
+    }
+    // 대조군: 평면이 깨끗하면 같은 종단점의 사유는 **자기 스토어**의 거절이다 = 잘못이 있다.
+    const aloneLinks = linkStoreAt(join(editorOnly, 'link-alone'), editorOnlyDocument,
+      'ln-a-unopenable', 'textQuote')
+    const aloneRow = bindLinkStore({ storeDir: aloneLinks }).unbound[0] ?? null
+    // 시험군: 나쁜 타입 링크 하나가 평면을 통째로 빨갛게 만든다 (스토어는 열리지 않는다).
+    const maskedLinks = join(editorOnly, 'link-masked')
+    mkdirSync(maskedLinks, { recursive: true })
+    const maskedEndpoint = { plane: 'annotation', ref: 'a1', document: editorOnlyDocument, anchor: 'textQuote' }
+    writeFileSync(join(maskedLinks, LINKS_FILE), stringify({
+      version: 1,
+      plane: 'link',
+      links: [
+        { id: 'ln-a-unopenable', from: maskedEndpoint, to: { plane: 'graph', ref: 'id:c-traceability' }, type: 'tagged', created_by: 'run-link-checks scratch workspace' },
+        { id: 'ln-z-bad-type', from: maskedEndpoint, to: { plane: 'graph', ref: 'id:c-traceability' }, type: 'inventedRelation', created_by: 'run-link-checks scratch workspace' },
+      ],
+    }))
+    writeFileSync(join(maskedLinks, DECISIONS_FILE),
+      stringify({ version: 1, plane: 'decision', decisions: [] }))
+    const maskedBinding = bindLinkStore({ storeDir: maskedLinks })
+    const maskedRow = maskedBinding.unbound.find((row) => row.link === 'ln-a-unopenable') ?? null
+    // 사람이 읽는 채널을 **실제 명령**으로 잰다 (JSON 만 고치고 text 를 빠뜨리는 자리).
+    const printed = spawnSync(process.execPath,
+      [join(PLANE_EDITOR_DIR, 'bind-links.mjs'), '--store', maskedLinks], { encoding: 'utf8' })
+    const claim = (printed.stdout || '').split('\n')
+      .find((line) => line.includes('this endpoint itself:')) ?? ''
+    record(
+      'the null endpoint reason claims only what the gate can see (the editor axis stays unclaimed)',
+      aloneRow !== null && aloneRow.reason === 'store-refused:document-state-unopenable' &&
+        maskedRow !== null && maskedRow.reasons.endpoint === null &&
+        maskedRow.reason.startsWith('link-plane-refused-by-the-gate:') &&
+        maskedBinding.counts.storesOpened === 0 && maskedBinding.counts.bound === 0 &&
+        claim.includes('no violation the gate can see') &&
+        !claim.includes('no violation of its own'),
+      `alone: ${aloneRow === null ? 'no row' : aloneRow.reason} · under a plane-wide refusal: ` +
+        `${maskedRow === null ? 'no row' : `${maskedRow.reason} / endpoint ${maskedRow.reasons.endpoint}`}` +
+        ` (${maskedBinding.counts.storesOpened} store(s) opened); the text says ` +
+        `${JSON.stringify(claim.replace('        this endpoint itself: ', '').trim())}`,
+    )
+
+    // (7) 바인딩도 결정론이다 (좌표·텍스트를 저장하지 않으므로 매번 다시 계산한다).
     const first = JSON.stringify(bindLinkStore({ storeDir: DEFAULT_STORE_DIR }))
     const second = JSON.stringify(bindLinkStore({ storeDir: DEFAULT_STORE_DIR }))
     record(

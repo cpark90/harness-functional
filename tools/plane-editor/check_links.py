@@ -30,7 +30,9 @@
      편집기가 거절하는 모양이 실재한다: 문서 상태의 평문과 CRDT가 어긋나거나
      `yUpdateBase64`의 **내용**이 유효한 업데이트가 아닌 경우. 아래 3의 어휘 축과 달리 이
      축은 두 층이 공유하는 표면이 없어서 게이트가 원리적으로 볼 수 없고, 그래서 성질
-     테스트가 그것을 `expectedDivergence` 부류로 **매 실행 측정**한다.)
+     테스트가 그것을 `expectedDivergence` 부류로 **매 실행 측정**한다. 반대 방향 —
+     "게이트가 거절하면 바인더도 거절한다" — 은 바인더가 이 명령의 **전역** 판정을
+     직접 읽어 확인한다: 전역이 빨강이면 바인더는 아무것도 열지 않고 exit 1이다.)
      앵커가 orphan이면 그 링크는 여전히 **끊긴 종단점으로 보고**된다(위반이 아니다) —
      레코드가 저장 시점에 측정한 `anchorState` 경로를 그대로 쓴다. 조용히 지우거나 다른
      곳에 다시 겨누는 경로는 어느 층에도 없다.
@@ -75,11 +77,17 @@
      "중복 선언"이 되지 않는다 — 실측: vnv P1b 위양성). (c)를 "형제 전부"로 넓히지 않는 것은
      무관한 문서의 결함이 새어 드는 위양성을 막기 위해서다 — 숨을 수 있는 것은 같은 문서를
      주장하는 스토어뿐이다. 끌려오지 않은 후보도 판정 JSON에 목록으로 남긴다. 같은 닫힘이
-     **발견을 피하는 두 경로**도 막는다: 이름이 `annotations.json`이 아닌 스토어도 후보가 되고
-     (실측: vnv Y3), 격리 표식은 **자기 subtree 안의 문서에 대해서만** 유효하다(실측: vnv Y2b —
-     표식 한 줄로 끊긴 종단점이 사라졌다). 일부러 깨뜨려 둔 대조군 디렉토리는
+     **발견을 피하는 네 경로**도 막는다: 이름이 `annotations.json`이 아닌 스토어도 후보가 되고
+     (실측: vnv Y3), 격리 표식은 **자기 subtree 안의 문서에 대해서만** 유효하며(실측: vnv Y2b —
+     표식 한 줄로 끊긴 종단점이 사라졌다), **디렉토리 심링크도 따라간다**(실측: vnv 9차 Y6 —
+     정직한 스토어를 작업공간 밖에 두고 심링크로만 들여오면 사본 하나만 범위에 남아 사본의
+     답이 초록으로 나갔다), 그리고 **훑기에서 빼는 이름**(`SCAN_SKIP_DIRS` = `.git`·
+     `node_modules`) 아래의 스토어도 후보가 된다(실측: vnv 10차 Z2e·Z2e' — 정직한 스토어를
+     그 이름 아래 두거나 그 이름의 심링크를 밖의 정직한 트리에 걸면 사본의 답이 초록으로
+     나갔고, 격리와 달리 판정 JSON에 **흔적조차 없었다**). 일부러 깨뜨려 둔 대조군 디렉토리는
      `.annotation-store-quarantine` 표식으로 **명시 제외**하며, 제외 사실·사유·제외된 스토어
-     수도 판정 JSON에 실린다(조용한 제외 금지). 발견의 전제는 README "발견의 전제" 절에
+     수도 판정 JSON에 실린다(조용한 제외 금지 — 이름으로 뺀 트리는 같은 규율로
+     `annotationScope.skipped`에 실린다). 발견의 전제는 README "발견의 전제" 절에
      수치로 적혀 있고, 스위트가 매 실행 실측한다(`run-link-checks.mjs` C10).
   3. 링크 타입 어휘 — **그래프에서 파생한다**(목록을 코드에 박지 않는다). 예전에는 다섯
      술어를 상수로 들고 있었고, 그래프 재설계가 `ho:alternativeOf`·`ho:overlapsWith`를
@@ -152,7 +160,13 @@ ANNOTATIONS_FILE = "annotations.json"
 # 편집기가 문서 상태를 두는 파일. 스토어가 **자기 자리의 문서**와 어긋나는지 볼 때 읽는다.
 DOCUMENT_FILE = "document.json"
 
-# 발견(2c)에서 절대 내려가지 않는 디렉토리 — 작업공간의 내용이 아니다.
+# 발견(2c)에서 **판정 대상으로는** 내려가지 않는 디렉토리 — 작업공간이 손으로 쓴 내용이
+# 아니라 빌드 산출·VCS 내부다. 훑는 비용이 나머지 트리를 다 합친 것보다 크기 때문에 판정
+# 범위에서 빼지만, **조용히 빼지는 않는다**: 이 이름 아래의 스토어도 sniff 로 모아 후보로
+# 올리고(격리 표식과 같은 취급), 범위 안 문서를 선언하면 끌려온다. 무엇이 얼마나 빠졌는지는
+# 판정 JSON 의 `annotationScope.skipped` 에 실린다. 한때 이 이름 하나가 **아무 흔적 없이**
+# 스토어를 가렸고, 정직한 스토어를 `<ws>/node_modules/` 에 두거나 그 이름의 심링크를 밖의
+# 정직한 트리에 걸면 옆에 둔 **사본의 답**이 초록으로 나갔다(실측: vnv 10차 Z2e·Z2e').
 SCAN_SKIP_DIRS = frozenset({".git", "node_modules"})
 # 일부러 깨뜨려 둔 스토어(대조군 fixture)를 **명시적으로** 발견 대상에서 뺀다. 조용히
 # 건너뛰는 경로를 만들지 않으려고, 표식 파일의 첫 줄(사유)을 판정 JSON에 그대로 싣는다.
@@ -596,6 +610,13 @@ def _quarantine_reason(directory: str):
     return "(no reason given)"
 
 
+def _skip_reason(name: str) -> str:
+    """이름으로 훑기에서 뺀 사유. 판정 JSON에 그대로 실린다(사람이 읽는 채널에도)."""
+    return (f"not walked for judgment: the directory name {name!r} is build output or VCS "
+            "internals (SCAN_SKIP_DIRS); stores under it are candidates only and are pulled in "
+            "when they declare a document judged outside it")
+
+
 def workspace_root(store_dir: str):
     """링크 스토어가 사는 작업공간(저장소) 루트 = `.git`을 가진 첫 조상. 없으면 None.
 
@@ -634,14 +655,63 @@ def _sniff_annotation_store(path: str) -> bool:
     return _looks_like_annotation_store(payload)
 
 
-def _stores_under(root: str) -> list:
-    """격리된 subtree 안의 스토어 목록 (판정하지 않고 **무엇이 가려졌는지** 알기 위해서만).
+def _walk(root: str):
+    """`os.walk`와 같은 계약이되 **디렉토리 심링크를 따라간다** (사이클은 realpath로 끊는다).
 
-    격리 트리는 일부러 깨뜨려 둔 파일이 사는 곳이므로 여기서는 아무것도 raise 하지 않는다.
+    왜 따라가는가: 발견은 "작업공간의 이름 공간에 있는 스토어"를 판정 대상으로 삼는데,
+    심링크는 그 이름 공간의 일부다. 따라가지 않던 동안에는 정직한 스토어를 작업공간 **밖**에
+    두고 이름만 심링크로 들여오면 그 스토어가 발견에서 빠지고, 옆에 둔 **사본**만 범위에 남아
+    사본의 답이 조용히 초록으로 나갔다(실측: vnv 9차 Y6). 격리 표식·파일 이름으로는 못 숨는데
+    심링크로는 숨을 수 있다면 그것은 성질의 빈 칸이다.
+
+    두 가지를 지킨다.
+      - **사이클**: 이미 방문한 실경로는 다시 내려가지 않는다. 이 저장소에도 루트를 다시
+        가리키는 심링크가 있다(`staging/harness-recipes/central`).
+      - **같은 실체의 두 이름**: 같은 디렉토리를 두 이름으로 보아도 스토어는 한 번만 나온다.
+        경로가 발견에 들어갈 때 realpath로 정규화되므로(`annotation_scope`) 가짜 "중복 선언"이
+        생기지 않는다(실측 기준: vnv Y4 심링크 쌍둥이 — 스위트 C10이 매 실행 잰다).
+
+    디렉토리가 아닌 것은 전부 `filenames`로 낸다(`os.walk`와 같다) — 깨진 심링크를 조용히
+    건너뛰면 이름이 `annotations.json`인 파일을 읽지 못했을 때 멈추는 fail-closed가 풀린다.
+    """
+    visited = {os.path.realpath(root)}
+    stack = [os.path.abspath(root)]
+    while stack:
+        current = stack.pop()
+        try:
+            entries = list(os.scandir(current))
+        except OSError:
+            continue
+        dirnames, filenames = [], []
+        for entry in entries:
+            (dirnames if entry.is_dir(follow_symlinks=True) else filenames).append(entry.name)
+        dirnames.sort()
+        filenames.sort()
+        # 호출자는 `os.walk`처럼 `dirnames[:]`를 잘라 가지치기한다 — yield 뒤에 읽는다.
+        yield current, dirnames, filenames
+        for name in reversed(dirnames):
+            path = os.path.join(current, name)
+            real = os.path.realpath(path)
+            if real in visited:
+                continue
+            visited.add(real)
+            stack.append(path)
+
+
+def _stores_under(root: str) -> list:
+    """가려진 subtree 안의 스토어 목록 (판정하지 않고 **무엇이 가려졌는지** 알기 위해서만).
+
+    쓰이는 자리는 둘이고 규율은 같다 — 격리 표식(`.annotation-store-quarantine`)으로 뺀 트리,
+    그리고 이름으로 뺀 트리(`SCAN_SKIP_DIRS`). 둘 다 "빼되 흔적은 남긴다"이므로 여기서 모은
+    것은 **후보**가 되고, 범위 안 문서를 선언하면 그때 끌려온다.
+
+    여기서는 `SCAN_SKIP_DIRS`를 다시 적용하지 **않는다**: 그러면 `node_modules/x/node_modules`
+    처럼 한 겹 더 들어간 자리가 다시 조용한 은신처가 된다(이 wave 가 없앤 결함이 정확히
+    "이름 한 줄로 흔적 없이 빠지는 자리"다). 가려진 트리는 일부러 깨뜨려 둔 파일이 사는 곳일
+    수 있으므로 아무것도 raise 하지 않는다.
     """
     found: list = []
-    for current, dirnames, filenames in os.walk(root):
-        dirnames[:] = [name for name in sorted(dirnames) if name not in SCAN_SKIP_DIRS]
+    for current, _dirnames, filenames in _walk(root):
         for name in sorted(filenames):
             if name.endswith(".json") and _sniff_annotation_store(os.path.join(current, name)):
                 found.append(os.path.join(current, name))
@@ -651,12 +721,22 @@ def _stores_under(root: str) -> list:
 def scan_annotation_stores(root: str, named_only: bool) -> dict:
     """`root` 아래의 주석 스토어를 발견한다.
 
-    반환 `{found, unnamed, quarantined, quarantinedStores}`:
+    반환 `{found, unnamed, quarantined, quarantinedStores, skipped, skippedStores}`:
       found            — 곧바로 판정에 넣는 스토어
       unnamed          — 이름이 `annotations.json`이 아니어서 **후보로만** 둔 스토어
                          (작업공간 훑기에서만 생긴다; 범위 안 문서를 선언하면 끌려온다)
       quarantined      — (디렉토리, 사유)
       quarantinedStores— 격리 표식 아래에서 발견된 스토어와 그 격리 루트
+      skipped          — (디렉토리, 사유) — 이름으로 훑기에서 뺀 트리(`SCAN_SKIP_DIRS`)
+      skippedStores    — 그 트리 아래에서 발견된 스토어와 그 트리의 루트
+
+    훑기는 **디렉토리 심링크를 따라간다**(`_walk`) — 심링크는 작업공간의 이름 공간이므로
+    그 뒤에 숨을 수 없다. 대가는 적어 둔다: 작업공간 밖을 가리키는 심링크가 있으면 그쪽
+    트리도 훑는다(sniff 예산 안에서).
+
+    `SCAN_SKIP_DIRS` 이름의 트리는 **판정 대상에서만** 빠지고 후보로는 모인다(격리와 같은
+    취급). 그 이름이 판정 JSON에 흔적 없이 스토어를 가리던 동안에는, 정직한 스토어를
+    `<ws>/node_modules/` 에 두는 것만으로 옆에 둔 사본의 답이 초록으로 나갔다(vnv 10차 Z2e).
 
     `named_only`(작업공간 루트 훑기)는 **편집기가 쓰는 파일 이름**(`annotations.json`)을
     무조건 판정하고, 다른 이름의 JSON은 sniff로 후보에만 올린다 — 저장소 전체를 무조건
@@ -664,7 +744,8 @@ def scan_annotation_stores(root: str, named_only: bool) -> dict:
     디렉토리**는 이름과 무관하게 통째로 판정한다: 스토어 하나를 지목하면 그 디렉토리의
     형제 스토어도 함께 판정된다(한 파일만 골라 물려 쌍둥이 스토어를 숨기는 P2b 경로를 닫는다).
     """
-    result = {"found": [], "unnamed": [], "quarantined": [], "quarantinedStores": []}
+    result = {"found": [], "unnamed": [], "quarantined": [], "quarantinedStores": [],
+              "skipped": [], "skippedStores": []}
     root = os.path.abspath(root)
     if not os.path.isdir(root):
         return result
@@ -673,12 +754,17 @@ def scan_annotation_stores(root: str, named_only: bool) -> dict:
         result["quarantined"].append((_repo_path(root), reason))
         result["quarantinedStores"].extend((path, root) for path in _stores_under(root))
         return result
-    for current, dirnames, filenames in os.walk(root):
+    for current, dirnames, filenames in _walk(root):
         keep = []
         for name in sorted(dirnames):
-            if name in SCAN_SKIP_DIRS:
-                continue
             directory = os.path.join(current, name)
+            if name in SCAN_SKIP_DIRS:
+                # 이름으로 뺀다 — 그러나 **조용히는 아니다**: 그 아래의 스토어를 후보로 모으고
+                # 어느 트리가 얼마나 빠졌는지를 판정 JSON에 싣는다(격리와 같은 규율).
+                result["skipped"].append((_repo_path(directory), _skip_reason(name)))
+                result["skippedStores"].extend(
+                    (path, directory) for path in _stores_under(directory))
+                continue
             marker = _quarantine_reason(directory)
             if marker is None:
                 keep.append(name)
@@ -750,7 +836,7 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
     내 판정으로 새어 든다. 대신 **같은 문서를 주장하는 것만** 끌어온다 — 숨을 수 있는 것은
     그것뿐이기 때문이다. 끌려오지 않은 후보도 판정 JSON에 목록으로 남긴다(조용한 제외 금지).
 
-    같은 닫힘이 **발견을 피하는 두 경로**도 함께 막는다. 둘 다 "범위 안 문서를 선언한
+    같은 닫힘이 **발견을 피하는 세 경로**도 함께 막는다. 셋 다 "범위 안 문서를 선언한
     스토어는 판정을 피할 수 없다"는 한 성질의 따름이다.
 
       - **이름**: 이름이 `annotations.json`이 아니어서 작업공간 훑기에 걸리지 않은 스토어도
@@ -760,6 +846,10 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
         판정되는 문서를 선언한 스토어는 표식으로 가려지지 않는다(실측: vnv Y2b — 표식 한
         줄로 끊긴 종단점이 사라졌다). 대조군 트리처럼 그 문서가 격리 안에만 사는 경우에는
         격리가 그대로 유효하므로, 일부러 깨뜨려 둔 fixture 는 계속 제외된다.
+      - **심링크**: 디렉토리 심링크 뒤의 스토어도 훑는다(`_walk`). 예전에는 정직한 스토어를
+        작업공간 **밖**에 두고 이름만 심링크로 들여오면 사본 하나만 범위에 남았다(실측: vnv
+        9차 Y6). 경로는 전부 realpath 로 정규화되므로 같은 실체를 두 이름으로 보아도 스토어는
+        하나이고(가짜 중복 선언 없음 — vnv Y4), 사이클은 `_walk` 가 끊는다.
     """
     explicit = []
     seen = set()
@@ -773,8 +863,10 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
     root = workspace_root(store_dir)
     scanned: list = []
     quarantined: dict = {}
+    skipped: dict = {}
     discovered: list = []
     # 판정에 넣지 않은 후보. 무엇이 왜 빠졌는지가 판정 JSON에 남아야 조용한 제외가 없다.
+    # `hidden`이 있는 행은 어떤 트리가(격리 표식 / 이름) 그것을 가렸는지까지 싣는다.
     candidates: list = []
 
     def take(scan: dict) -> None:
@@ -784,28 +876,32 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
                 seen.add(real)
                 discovered.append(real)
 
-    def add_candidate(path: str, reason: str, quarantine=None) -> None:
+    def add_candidate(path: str, reason: str, hidden=None, kind=None) -> None:
         real = os.path.realpath(path)
         if real in seen:
             return
         for row in candidates:
             if row["path"] != real:
                 continue
-            # 호출자가 그 디렉토리를 **직접 지목**해 다시 찾은 후보는 격리가 더 이상 가리지
-            # 않는다 — 격리는 발견을 막는 표식이지, 지목을 무르는 표식이 아니다.
-            if quarantine is None and row["quarantine"] is not None:
-                row["quarantine"] = None
+            # 호출자가 그 디렉토리를 **직접 지목**해 다시 찾은 후보는 격리·이름 제외가 더 이상
+            # 가리지 않는다 — 둘 다 발견을 막는 것이지, 지목을 무르는 것이 아니다.
+            if hidden is None and row["hidden"] is not None:
+                row["hidden"] = None
+                row["hiddenKind"] = None
                 row["reason"] = reason
             return
-        candidates.append({"path": real, "reason": reason, "quarantine": quarantine})
+        candidates.append({"path": real, "reason": reason, "hidden": hidden, "hiddenKind": kind})
 
     def absorb(scan: dict) -> None:
         quarantined.update(dict(scan["quarantined"]))
+        skipped.update(dict(scan["skipped"]))
         take(scan)
         for path in scan["unnamed"]:
             add_candidate(path, "not-named")
         for path, quarantine_root in scan["quarantinedStores"]:
-            add_candidate(path, "quarantined", quarantine_root)
+            add_candidate(path, "quarantined", quarantine_root, "quarantined")
+        for path, skip_root in scan["skippedStores"]:
+            add_candidate(path, "under-a-skipped-directory-name", skip_root, "skipped")
 
     # 무조건 판정하는 것: 작업공간 루트가 가진 스토어 + **링크 스토어 자신의 디렉토리**.
     # 뒤쪽은 옛 기본값(`<store>/annotations.json`)을 이름에 매이지 않게 넓힌 것이다.
@@ -825,10 +921,13 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
         scanned.append(directory)
         scan = scan_annotation_stores(directory, named_only=False)
         quarantined.update(dict(scan["quarantined"]))
+        skipped.update(dict(scan["skipped"]))
         for path in scan["found"]:
             add_candidate(path, "another-document")
         for path, quarantine_root in scan["quarantinedStores"]:
-            add_candidate(path, "quarantined", quarantine_root)
+            add_candidate(path, "quarantined", quarantine_root, "quarantined")
+        for path, skip_root in scan["skippedStores"]:
+            add_candidate(path, "under-a-skipped-directory-name", skip_root, "skipped")
 
     # 문서 정체성에 대한 닫힘: 범위 안 문서를 주장하는 후보를 더 이상 없을 때까지 끌어온다.
     pulled = True
@@ -843,10 +942,11 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
             document = _declared_document(row["path"])
             if document is None or document not in declarers:
                 continue
-            if row["quarantine"] is not None and not any(
-                    not _within(path, row["quarantine"]) for path in declarers[document]):
-                # 그 문서를 판정하는 스토어가 전부 같은 격리 안에 있다 = 격리가 자기 안의
-                # 문서를 가린 것이므로 유효하다(대조군 fixture 트리가 이 경우다).
+            if row["hidden"] is not None and not any(
+                    not _within(path, row["hidden"]) for path in declarers[document]):
+                # 그 문서를 판정하는 스토어가 전부 같은 가림 트리 안에 있다 = 가림(격리 표식
+                # 이든 이름이든)이 자기 안의 문서를 가린 것이므로 유효하다(대조군 fixture
+                # 트리·의존성 트리가 이 경우다). 밖에서 판정되는 문서를 선언하면 끌려온다.
                 continue
             candidates.remove(row)
             seen.add(row["path"])
@@ -854,9 +954,9 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
             pulled = True
     excluded: dict = {}
     for row in candidates:
-        if row["quarantine"] is not None:
-            excluded[_repo_path(row["quarantine"])] = excluded.get(
-                _repo_path(row["quarantine"]), 0) + 1
+        if row["hidden"] is not None:
+            shown = _repo_path(row["hidden"])
+            excluded[shown] = excluded.get(shown, 0) + 1
     return {
         "workspaceRoot": _repo_path(root) if root else None,
         "roots": sorted(_repo_path(directory) for directory in scanned),
@@ -864,14 +964,20 @@ def annotation_scope(store_dir: str, annotation_paths: list) -> dict:
         # 호출자가 **이름을 댄** 경로 (읽지 못하면 사용 오류로 멈춘다 — 발견분과 다르다).
         "named": sorted(explicit),
         "discovered": sorted(_repo_path(path) for path in discovered),
-        # 발견은 됐지만 판정에 넣지 않은 것 + 그 사유. 격리로 빠진 것은 아래 quarantined 의
-        # excluded 수로 세고, 여기에는 **다른 문서**의 스토어만 목록으로 남긴다.
+        # 발견은 됐지만 판정에 넣지 않은 것 + 그 사유. 가림 트리(격리 표식·이름)로 빠진 것은
+        # 아래 quarantined·skipped 의 excluded 수로 세고, 여기에는 **다른 문서**의 스토어만
+        # 목록으로 남긴다.
         "outOfScope": sorted(
             ({"path": _repo_path(row["path"]), "reason": row["reason"]}
-             for row in candidates if row["quarantine"] is None),
+             for row in candidates if row["hidden"] is None),
             key=lambda row: (row["path"], row["reason"])),
         "quarantined": [{"path": path, "reason": reason, "excluded": excluded.get(path, 0)}
                         for path, reason in sorted(quarantined.items())],
+        # 이름으로 훑기에서 뺀 트리. 격리와 **같은 규율**로 실린다 — 조용한 제외 금지.
+        # `excluded`는 그 트리 아래에서 발견됐지만 판정에 넣지 않은 스토어 수다(범위 안 문서를
+        # 선언한 것은 끌려오므로 여기 세어지지 않는다).
+        "skipped": [{"path": path, "reason": reason, "excluded": excluded.get(path, 0)}
+                    for path, reason in sorted(skipped.items())],
         "paths": sorted(explicit + discovered),
     }
 
@@ -1810,7 +1916,8 @@ def run(store_dir: str, annotation_paths: list) -> dict:
             for store in sorted(annotations["stores"], key=lambda store: store["path"])
         ],
         # 무엇을 **발견해서** 판정했는가. 범위를 숨기지 않는 것이 I-3의 핵심이라 판정 JSON에
-        # 싣는다: 훑은 루트, 인자로 지목된 것, 발견된 것, 그리고 격리된 디렉토리와 그 사유.
+        # 싣는다: 훑은 루트, 인자로 지목된 것, 발견된 것, 격리된 디렉토리와 그 사유, 그리고
+        # **이름으로 훑기에서 뺀** 트리와 그 사유(`skipped` — 조용한 제외 금지의 넷째 축).
         "annotationScope": {
             "workspaceRoot": scope["workspaceRoot"],
             "roots": scope["roots"],
@@ -1818,6 +1925,7 @@ def run(store_dir: str, annotation_paths: list) -> dict:
             "discovered": scope["discovered"],
             "outOfScope": scope["outOfScope"],
             "quarantined": scope["quarantined"],
+            "skipped": scope["skipped"],
         },
         # 끊긴 종단점은 **위반이 아니라 상태**다. 그래서 pass에는 영향을 주지 않고, 대신
         # 언제나 출력에 실린다 — 조용히 사라지지도, 다른 곳을 가리키지도 않게.
@@ -1849,6 +1957,10 @@ def _print_text(result: dict) -> None:
     for quarantined in scope["quarantined"]:
         print(f"    quarantined: {quarantined['path']} ({quarantined['excluded']} store(s) kept "
               f"out) — {quarantined['reason']}")
+    # 이름으로 뺀 트리도 같은 자리에 찍는다 — 사람이 읽는 채널에서도 조용한 제외는 없다.
+    for skipped in scope["skipped"]:
+        print(f"    skipped: {skipped['path']} ({skipped['excluded']} store(s) kept out) — "
+              f"{skipped['reason']}")
     for out_of_scope in scope["outOfScope"]:
         print(f"    out of scope: {out_of_scope['path']} — {out_of_scope['reason']}")
     for store in result["annotationStores"]:

@@ -155,24 +155,49 @@ node tools/plane-editor/bind-links.mjs --format json # 판정 JSON
     [204,267) "Selector multiplexing recovers anchors after destructive edits."
 ```
 
-규율 셋이 이 명령을 지배한다(근거는 `src/link-binding.mjs` 머리말).
+규율 넷이 이 명령을 지배한다(근거는 `src/link-binding.mjs` 머리말).
 
 1. **바인딩은 `loadStore`가 연 스토어에만 건다.** 게이트 exit 0은 **필요조건이지 충분조건이
    아니다**: 문서 상태의 평문과 CRDT가 어긋나거나 `yUpdateBase64`의 **내용**이 유효한 업데이트가
    아니면 게이트는 초록을 주고 편집기는 그 스토어를 열지 못한다(게이트는 CRDT를 해독하지 않는다).
    그런 스토어의 바인딩은 **0**이고 사유가 판정 JSON에 남으며 명령은 exit 1이다. 스토어당
    `loadStore` 호출 수도 판정에 실린다(`counts.loadStoreCalls`).
-2. **해소는 기존 strict 규칙을 그대로 탄다** — 우회 경로를 만들지 않는다. 문서 정체성(규칙 0)·
+2. **그 필요조건을 이 명령이 직접 확인한다 — 단독으로도 fail-closed다.** 한동안 이 문구는
+   구현보다 강했다: 바인더가 **스토어별** 게이트 규칙만 보았기 때문에, 게이트가 전역 exit 1을
+   내도(`link-type-unknown`) 바인더는 PASS를 냈다(실측: vnv 8차 W4). 지금은 전제가 셋이고 셋 다
+   판정 JSON에 값으로 남는다.
+   - **게이트 전역 판정** (`gate.pass`) 이 빨강이면 어떤 스토어도 열지 않고 종단점마다
+     `link-plane-refused-by-the-gate:<규칙>` 사유를 남긴다 (exit 1).
+   - **한 문서를 선언한 스토어는 정확히 하나여야 한다.** 백업 사본·export·두 번째 체크아웃으로
+     후보가 둘이 되면 예전에는 발견 순서로 한쪽을 골랐고, 그래서 사본 디렉토리 **이름**을 바꾸는
+     것만으로 같은 링크가 다른 문장을 가리켰다(W3a/W3b). 지금은 고르지 않고 거절한다
+     (`document-declared-by-N-annotation-stores`, `ambiguousDocuments`에 그 문서가 실린다).
+   - **앵커 이름은 해소표의 own key로만 조회한다.** 표가 `Object.prototype`을 상속하던 동안에는
+     `anchor: "constructor"`가 좌표 없는 "bound" 행을 만들었다(W1).
+   - **앵커 종단점인지는 `anchor` 키의 존재로 정한다**(값의 truthiness가 아니다). `anchor: ""`·
+     `0`·`null`은 종단점 집합에서 조용히 빠져 `anchorEndpoints 0 · unbound 0`이 됐고, 게이트를
+     무르게 한 반사실에서 그 자리가 `pass: true`였다(vnv 9차 X2·X3). 게이트도 키의 존재로
+     판정하므로 두 층이 같은 집합을 센다.
+
+   네 자리 다 negative control로 코퍼스에 있고(스위트 C4b — 바인더 대조군 4건) 매 실행 측정된다.
+   전역 거절이 나도 **종단점별 사유는 남는다**: 판정 사유(`reason`)는 우선순위(좁은 것 -> 넓은
+   것) 그대로 두고 `reasons.{endpoint, plane}`·`gateViolations`를 함께 실어, **게이트가 볼 수
+   있는** 잘못이 없는 종단점은 `reasons.endpoint: null`로 구분된다(vnv 9차 Y2 — 좋은 링크 2개가
+   평면 사유 하나로 덮이던 자리). `null`을 "자기 잘못 없음"으로 읽으면 안 된다: 전역 거절 아래
+   에서는 스토어를 열지 않으므로 편집기만 아는 축은 평가되지 않는다(vnv 10차 Z3d · 스위트
+   C12 (9)). exit 은 그대로 1이다.
+3. **해소는 기존 strict 규칙을 그대로 탄다** — 우회 경로를 만들지 않는다. 문서 정체성(규칙 0)·
    구조적 guard·출처 증거·블록 정체성이 그대로 적용되고, `blockContext`는 해소된 범위가 **지금
    든 블록**의 CRDT item id가 레코드가 캡처한 것과 같을 때만 내준다(다르면 orphan — 오해소
    불허가 복구율보다 우선한다).
-3. **orphan은 위반이 아니라 상태다.** 앵커가 끊기면 바인더는 사유와 함께 `orphaned`로
+4. **orphan은 위반이 아니라 상태다.** 앵커가 끊기면 바인더는 사유와 함께 `orphaned`로
    보고하고(exit 0 유지), 게이트도 같은 링크를 `brokenEndpoints`로 보고한다. 지우지도, 다른
    곳에 다시 겨누지도 않는다.
 
 ## 아직 열지 않은 것
 
-**가중(weight)은 여전히 싣지 않는다** — 사용자 결정 대기다(`docs/feedback/`의 가중 결정 문서).
+**가중(weight)은 여전히 싣지 않는다** — 사용자 결정 대기다
+(`docs/feedback/link-plane-weight-decision.md`, `status: open`).
 그래프의 `ho:Link`는 `ho:linkWeight`(0..1)와 그 출처를 요구하지만, 이 평면의 레코드 스키마는
 `{id, from, to, type, evidence?, created_by}` 그대로이고 검사기는 **모르는 필드를 거절한다**.
 즉 값이 몰래 들어올 수는 없고, 넣으려면 결정이 먼저다. 이번에 연 앵커 종단점은 가중이 앉을

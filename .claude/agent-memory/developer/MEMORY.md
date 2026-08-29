@@ -116,4 +116,8 @@
 - [plane-editor-close-the-family-with-a-property](plane-editor-close-the-family-with-a-property.md) — 계열은 사례가 아니라 성질로 닫는다(전수 대조).
 - [plane-editor-document-axis-fail-closed](plane-editor-document-axis-fail-closed.md) — fail-closed는 한 축만 닫으면 소용없다(문서 축=N1·N2·N6). 성질의 오라클=진짜 loadStore.
 - [plane-editor-derive-vocabulary-from-graph](plane-editor-derive-vocabulary-from-graph.md) — 어휘 상수 1개가 대조군 N개를 인질로. 파생+표기로 형식 분리, "따라간다"는 그래프 사본 변형으로 증명(C11).
+- [plane-editor-anchor-endpoint-binding](plane-editor-anchor-endpoint-binding.md) — 위치는 참조하되 복사 금지(파생성은 문서를 편집해 증명). 바인딩은 여는 층에·loadStore 1회. 죽은 선언은 fixture 부류로 살린다(뿌리별 코드 분리).
+- [plane-editor-binder-fail-closed-alone](plane-editor-binder-fail-closed-alone.md) — 아래층 단독 판정도 fail-closed: 상위 게이트의 **전역** 판정을 읽고, 후보가 둘이면 고르지 말고 거절, 신뢰 못할 이름은 own key 조회. 사유 우선순위(좁은 것 먼저)가 가드의 생사.
+- [plane-editor-endpoint-set-and-namespace-discovery](plane-editor-endpoint-set-and-namespace-discovery.md) — 두 층은 **같은 술어**로 집합을 세라(키 존재 vs truthiness). 발견은 심링크(이름 공간)를 따라가고 realpath로 가짜 중복을 막는다(덮는 장치 둘이면 반사실도 둘). 전역 거절은 `reason` 그대로 두고 사유를 **층으로 추가**.
+- [plane-editor-silent-exclusion-and-claim-scope](plane-editor-silent-exclusion-and-claim-scope.md) — 성능으로 좁힌 규칙(`SCAN_SKIP_DIRS`)은 은신처다: 판정에서만 빼고 **후보로 모아** 문서 닫힘으로 끌어오며 흔적(`skipped[]`)을 남긴다(격리와 같은 규율·비용은 값으로). 진단 문장은 **주장 범위**를 밝힌다("게이트가 볼 수 있는 잘못은 없다") — 진단력을 위해 `storesOpened 0`을 무르지 않는다.
 - [concept-facet-axis-b1](concept-facet-axis-b1.md) — 계층=노드 말고 닫힌값 속성(broader 0.5=발견성 반감).

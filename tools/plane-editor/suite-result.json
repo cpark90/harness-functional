@@ -3470,8 +3470,8 @@
       "pass": true,
       "status": "checked",
       "filesScanned": 146,
-      "asciiChars": 465487,
-      "hangulChars": 57826,
+      "asciiChars": 503804,
+      "hangulChars": 67496,
       "violations": [],
       "note": "산문 한글 / 용어·식별자·문서 fixture 영어. 손으로 쓴 파일 전수를 스캔해 ASCII·한글·명시 허용 기호 밖의 문자가 0인지 기계적으로 확인한다 (gr-lang: Korean/English only)."
     }
