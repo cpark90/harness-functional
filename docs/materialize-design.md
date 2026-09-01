@@ -1,9 +1,11 @@
 # Materialize design: the build projection (recipe → harness file tree)
 
-This document defines `central/tools/materialize.py`, the **build projection**
-of the harness ontology. (Every tool lives in `harness-functional`, checked out
-here as `./central/`; the graph it reads — the union root, the neutral parts
-library and the recipes — lives in this repo.) It is the counterpart to the
+This document defines `tools/materialize.py`, the **build projection** of the
+harness ontology. The tool lives **here** (harness-functional, with every other
+tool); the graph it reads — the union root, the neutral parts library and the
+recipes — lives in **harness-concrete**, which checks this repo out as
+`./central/` and therefore invokes it as `central/tools/materialize.py`. Command
+examples below are written from that calling side. It is the counterpart to the
 approved feedback `recipe-to-buildable-harness.md`, since retired as fully
 applied — its P1–P5 outcome is recorded in
 `central/docs/feedback/verified/materialize-p3p4p5-finalize.md`. A recipe is a
@@ -13,14 +15,22 @@ reads; `validate.py` checks; `materialize.py` **builds**.
 
 > **BIND + Lock increment.** The ODR BIND axis (implementation *candidates*, a
 > deterministic *selection policy*) and the ③ *Lock* snapshot (reproducible
-> builds, `--lock`) are specified in **[`docs/odr-bind-lock.md`](odr-bind-lock.md)**
-> — read it alongside this document for how `materialize.py` chooses among
-> implementations and reproduces a past build byte-identically.
+> builds, `--lock`) split across the two repos: the **vocabulary**
+> (`ho:Candidate` and friends) is here, in
+> [`odr-vocabulary-and-verify.md`](odr-vocabulary-and-verify.md); the
+> **individuals, policy ordering and lock contract** are in
+> **`harness-concrete/docs/odr-bind-lock.md`**. Read both alongside this document
+> for how `materialize.py` chooses among implementations and reproduces a past
+> build byte-identically. What `materialize.py` itself does about it — atomic
+> emit and stable emitted filenames — is specified below.
 >
 > **VERIFY increment (maturity 3–4).** The ODR VERIFY axis — capability
-> **`ho:Contract`s** and `central/tools/verify_contract.py`, which judges the
-> materialized tree against the spec — is specified in
-> **[`docs/odr-contract-verify.md`](odr-contract-verify.md)**. With it the project
+> **`ho:Contract`s** and `tools/verify_contract.py`, which judges the
+> materialized tree against the spec — splits the same way: contract vocabulary
+> and the judge's design in
+> [`odr-vocabulary-and-verify.md`](odr-vocabulary-and-verify.md), the contracts
+> themselves and the worked evidence in
+> **`harness-concrete/docs/odr-contract-verify.md`**. With it the project
 > reaches **ODR levels 3–4 demonstrated** (contract-checked artifacts, and
 > implementation-independence proven via an INV-4 candidate swap); this document's
 > EMIT is what those contracts are run against.
@@ -43,7 +53,8 @@ materializes as a full harness tree with no manual cloning:
 ## retrieve ↔ materialize symmetry
 
 The ontology is never handed to an agent whole; both tools are **projections**
-of the union, in opposite directions:
+of the union, in opposite directions (the two-projection principle: chunks
+d-0013 and **d-0162**):
 
 | | `retrieve.py` (read) | `materialize.py` (build) |
 |---|---|---|
@@ -60,6 +71,13 @@ way the parts library alone does. `ho:artifactTemplate` is a build-only concern:
 
 ## Validation gate — "only a validated harness materializes"
 
+> **Promoted (2026-09).** The general principle — a build projection runs only on
+> a union that passes validation, and is byte-deterministic (fixed section order,
+> IRI-sorted members, no timestamps, unresolved references recorded as stubs
+> rather than silently dropped) — is now agentic-knowledge-base decision chunk
+> **d-0162**. What follows is this tool's mechanics: which check it calls, what it
+> emits, and how paths resolve.
+
 Before emitting a single file, `materialize.py` calls `validate.run_structured()`
 (the same structured check `validate.py --json` uses) over the composed union.
 If the union does not `PASS` (SHACL, reachability, capability satisfaction) the
@@ -68,6 +86,26 @@ nothing. This makes the build honest — a file tree is only ever produced from 
 connected, well-typed, capability-complete graph. (Verified: pointing the loader
 at an incomplete catalog that omits the parts library makes the union fail
 validation and materialize refuses with exit 1, no output directory created.)
+
+## Atomic emit — the "nothing half-written" contract holds
+
+"Nothing half-written" is a **structural guarantee**, not a hope. The `--lock`
+content-hash check (the lock format itself is specified in
+`harness-concrete/docs/odr-bind-lock.md`) runs mid-emit, after a file is copied,
+so a naive build that wrote straight into `--out` would leave a partial tree
+(`.claude/agents/`, `tools/<impl>`) on a hash mismatch. Instead `materialize()`
+builds the **whole tree into a sibling temp staging dir** (`tempfile.mkdtemp` in
+`--out`'s parent, so it is on the same filesystem) and runs every gate —
+selection-policy resolution *and* the `--lock` content-hash check — while writing
+into staging. Only on **full success** is staging placed at `--out` by an
+**atomic rename** (`os.replace`): when `--out` does not exist this is a single
+atomic move; when it pre-exists the old tree is renamed aside and removed only
+after the new tree is in place (restored if the swap itself fails). On **any**
+failure the staging dir is removed and `--out` is left **untouched** (or absent
+if it never existed) — never a half-merged tree. Determinism and happy-path
+output are unchanged: the staging path never enters any emitted file, so a fresh
+build is byte-identical to before, and a pre-existing `--out` is cleanly replaced
+rather than partially overwritten.
 
 ## CLI
 
@@ -167,8 +205,8 @@ resolved against these roots in priority order, first existing file wins:
 1. the **tools' repo root** (`ontology_lib.ROOT` — the parent of the running
    `tools/` directory, i.e. the `central/` checkout of `harness-functional`),
    which is where the shipped `tools/materialize_templates/` fragments live;
-2. the **catalog's directory** (`dirname(HARNESS_CATALOG)`) — **this repo's
-   root** when a recipe union is materialized via `HARNESS_CATALOG`, so a recipe
+2. the **catalog's directory** (`dirname(HARNESS_CATALOG)`) — **the concrete
+   repo's root** when a recipe union is materialized via `HARNESS_CATALOG`, so a recipe
    can ship its own template fragments next to its `.ttl`.
 
 A path that is set but resolves to no file is a hard error (misconfiguration),
@@ -284,6 +322,20 @@ from the repo alone; the imported corpus recipes use **canonical harness-100
 URLs**, which materialize to `status: resolved` where the corpus clone is present
 (`HARNESS_100_CLONE`) and to stubs where it is not.
 
+### Stable emitted filenames (candidate-backed tools)
+
+Where a tool binds several implementation **candidates** (the ODR BIND axis —
+`ho:implementationCandidate`, vocabulary in
+[`odr-vocabulary-and-verify.md`](odr-vocabulary-and-verify.md), individuals and
+selection policy in `harness-concrete/docs/odr-bind-lock.md`), the emitted
+filename is derived from the **tool**, not from the selected candidate's file:
+`tool-docgraph` → `tools/docgraph.py` (extension from the selected file). So
+swapping the implementation candidate does **not** rename the file or break
+callers — the same tool "slot" is realised by a different implementation, which is
+exactly ODR's behavioural-equivalence notion of "same software". A degenerate
+direct-ref tool keeps its ref's basename (the increment-1/2 behaviour described
+above).
+
 ## Standard / docs scaffold (P5)
 
 Attachable blueprint fragments (a standard document, a `docs/` tree) are **fetched**
@@ -309,7 +361,7 @@ faithful byte-copy of a concrete artifact, not a rendered template. (Component
 ## References, not stored artifacts (the recipe/materialize contract)
 
 A recipe stores **spec + explanation + references** to concrete build artifacts,
-**never the concrete documents themselves** (`docs/recipes-design.md`). The three
+**never the concrete documents themselves** (`harness-concrete/docs/recipes-design.md`). The three
 reference predicates and their emitters are symmetric: `ho:implementationRef`
 (tool code → `tools/<name>`), `ho:scaffold` (standard/doc → mirrored path) and
 skill `ho:artifactTemplate` (skill body → `.claude/skills/<name>/SKILL.md`) all

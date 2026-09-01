@@ -37,3 +37,8 @@ orchestrator↔inspection, dispatch)과 `.claude/skills`·commands 같은 구조
 
 **어휘가 없는 소스 요소를 만나면 = schema를 확장하라는 신호이지, 조용히 건너뛰라는 신호가
 아니다.** 커버리지는 그래프 정합성과 별개의 축이며, 소스 대비로만 검증된다.
+
+> **2026-09 재판정**: 이 일반 원칙은 이미 agentic-knowledge-base 결정 청크
+> **d-0015**(조립 워크플로 + coverage audit 게이트)에 담겨 있다 — 별도 청크로
+> 승격하지 않는다. 이 문서는 그 원칙이 나온 **사건 기록**(어떤 요소를 왜
+> 놓쳤는가)과 `ho:` 쪽 예방 배선(`id:gr-structural-coverage`)으로 남는다.

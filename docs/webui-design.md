@@ -21,6 +21,12 @@
 
 ## 1. 목적과 불변식 (왜 UI로 승격하나)
 
+> **이송 표기 (2026-09)**: 일반 원칙 — 저작 UI는 SSOT를 fork하지 않고, 폼을
+> 스키마로 구속하며, 저장은 에이전트와 **같은 검증 게이트**를 타고 실패 시
+> 롤백하고, 영속은 파일 전체 재직렬화가 아니라 노드 블록 치환으로 한다 — 은
+> agentic-knowledge-base 결정 청크 **d-0163**으로 이송되었다. 이 문서는 그
+> 원칙의 이 구현(FastAPI·`ttl_writer`·API 계약·배포)만 담는다.
+
 이 프로젝트의 가치는 *flat OWL 파일 = SSOT + git-diff 리뷰 + validate/retrieve 파이프라인*
 이다(agentic-knowledge-base 청크 d-0013). web UI는 이 가치를 **깨지 않고** 사람의 편집을 같은 게이트에 태우기
 위해 존재한다 — **웹도구는 상태를 fork하지 않는다.** 같은 `ontology_lib`/`validate.py`/

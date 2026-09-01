@@ -8,6 +8,13 @@ central repo directly) and implements the decisions in
 `ONTOLOGYSTYLE.md §1a–1d` (that file is the format origin — this guide only adds
 the federation-specific rules).
 
+> **Promoted (2026-09).** The general principles behind D1/D3/D4 now live as
+> agentic-knowledge-base decision chunks: catalog-resolved union assembly
+> **d-0156**, validate the union not the file **d-0157**, owner-segmented entity
+> namespaces **d-0158**. The shapes-vs-convention asymmetry noted below is chunk
+> **d-0019**. This guide keeps only the concrete steps: real IRIs, real commands,
+> real CI template.
+
 ## What lives where (D2)
 
 - **Functional repo** (`harness-functional`, formerly `harness_ontology`): the TBox vocabulary

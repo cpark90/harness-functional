@@ -38,9 +38,11 @@ Contract individuals live where the ABox lives — the CONCRETE repo
 
 Composition honours HARNESS_CATALOG / HARNESS_ROOT_ONTOLOGY exactly like
 validate.py / materialize.py, so a recipe union verifies the same way the
-central store does. The contract grammar is documented in harness-concrete's
-docs/odr-contract-verify.md (ODR VERIFY is a LOGICAL-level concern and moved
-there with the 2026-09 ladder split; this repo keeps only the vocabulary).
+central store does. This tool's design spec — the contract vocabulary, the two
+mechanisms and the structural grammar — is docs/odr-vocabulary-and-verify.md IN
+THIS REPO (tool design lives with the tool, vocabulary with the TBox). The
+contracts themselves and the worked level-3/4 evidence are in harness-concrete's
+docs/odr-contract-verify.md.
 """
 from __future__ import annotations
 

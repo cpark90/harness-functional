@@ -1,7 +1,9 @@
 # ONTOLOGYSTYLE.md
 
 > **이송 표기 (2026-09)**: 일반 원칙(3대 실패 모드와 방어선 d-0014, 토큰 예산
-> d-0016, 형식 저장·좁은 읽기 d-0013)은 agentic-knowledge-base의 결정 청크로
+> d-0016, 형식 저장·좁은 읽기 d-0013, **만들기 전에 검색·단일 책임 d-0160**,
+> **서술은 그래프가 못 보여주는 것만 d-0161**, **개체 이름공간의 소유자 세그먼트
+> d-0158**)은 agentic-knowledge-base의 결정 청크로
 > 이송되었다. 이 문서는 `ho:` TTL 저작의 **운영 규칙**만 담으며,
 > harness-functional(TBox·shapes)과 harness-concrete(abox·레시피) 양쪽에
 > 적용된다. abox 관련 절의 파일 경로는 harness-concrete 기준으로 읽는다.
@@ -24,17 +26,17 @@
 - **[지킴]** 일관성이 최우선. 한 파일·한 abox 안에서 스타일을 섞지 않는다. 기존
   파일(harness-concrete의 `ontology/abox/core/<group>/*.ttl`)의 지역 컨벤션이 있으면
   그것을 따른다.
-- **[지킴]** 노드는 자기설명적으로. 좋은 `skos:prefLabel`과 `skos:definition`이 주석보다
-  낫다. definition은 "무엇을 하는 노드인가"가 아니라 **"왜 존재하고 언제 고르는가"**를 적는다.
-- **[지킴]** 노드는 작고 **단일 책임**. 한 `SystemPrompt` = 한 페르소나, 한 `Guardrail`
-  = 한 정책, 한 `Tool` = 한 capability. 여러 정책·페르소나를 한 노드에 섞으면 재사용·검색·
-  예산 계산이 모두 나빠진다 (구현판의 "함수는 작고 한 가지에 집중"과 같은 규칙).
-- **[지킴]** 중복 대신 재사용. 새 노드를 만들기 전에
+- **[지킴]** 노드는 자기설명적으로. definition에 무엇을 적는가는 청크 **d-0161**
+  (서술은 그래프가 못 보여주는 것만 적는다) — `ho:` 적용은 §1d.
+- **[지킴]** 노드는 작고 **단일 책임**(청크 **d-0160**). `ho:` 매핑: 한 `SystemPrompt`
+  = 한 페르소나, 한 `Guardrail` = 한 정책, 한 `Tool` = 한 capability
+  (구현판의 "함수는 작고 한 가지에 집중"과 같은 규칙).
+- **[지킴]** 중복 대신 재사용(청크 **d-0160**). 이 저장소의 검색 명령은
   `HARNESS_CATALOG=catalog-v001.xml python3 central/tools/retrieve.py "<개념>"`
-  (harness-concrete에서 실행 — 개체가 그쪽에 있다)으로 같은 것이 이미 있는지 찾는다.
-  같은 뜻의 노드를 둘 만드는 것이 이 체계가 막으려는 drift다.
-- **[권장]** 영리하거나 특이한 모델링을 경계한다. "TBox가 금지하지 않았다"가 "써도 된다"는
-  아니다. 등록된 관용 패턴(harness-concrete의 중앙 core 부품 라이브러리)을 먼저 따른다.
+  (harness-concrete에서 실행 — 개체가 그쪽에 있다).
+- **[권장]** 영리하거나 특이한 모델링을 경계한다(청크 **d-0160**). "TBox가 금지하지
+  않았다"가 "써도 된다"는 아니다. 등록된 관용 패턴 = harness-concrete의 중앙 core
+  부품 라이브러리.
 - **[지킴]** 매직 IRI·매직 문자열 금지. `ho:maturity` 값은 `draft | reviewed | stable |
   deprecated` 넷만. 태그·capability·domain은 등록된 individual만 가리킨다.
 - **[지킴]** 들여쓰기는 **스페이스만**, 4칸. 탭을 쓰지 않는다.
@@ -126,10 +128,11 @@
 
 ## 1d. 주석·definition 표준
 
-- **[지킴]** `skos:definition`/`rdfs:comment`는 **그래프가 스스로 못 보여주는 것만** 적는다:
-  선택의 이유(언제 이 노드를 고르나·기각한 대안), 제약(latency/cost/privacy), 불변식.
-- **[지킴]** 다음은 쓰지 않는다: label 재진술("Coding harness는 coding harness다"), 수정
-  이력·리뷰 대화성 코멘트, 주석 처리된 죽은 트리플. (발견 시 삭제 대상.)
+> 내용 규칙의 원칙은 청크 **d-0161**로 이송되었다 — 무엇을 적고 무엇을 쓰지 않는가
+> (선택의 이유·제약·불변식을 적고, label 재진술·수정 이력·죽은 트리플은 쓰지 않는다).
+> 아래는 그 규칙의 `ho:` 적용 대상과 이 저장소의 서식 규약이다.
+
+- **[지킴]** 적용 술어는 `skos:definition`/`rdfs:comment`다. 위반 항목은 발견 시 삭제 대상.
 - **[지킴]** TTL 파일 상단 배너는 그 abox의 역할 요약 1–3줄 + 공개 계약(어떤 harness군을
   담는지)만. 중앙 core 부품 파일(harness-concrete의 `ontology/abox/core/<group>/*.ttl`)의
   배너 스타일(`####`, `#====`)을 따른다.
@@ -150,7 +153,8 @@
 
 개체 IRI는 **`https://harness-ontology.dev/id/<domain>/<slug>`** 꼴로 민팅한다
 (`docs/federation-design.md` D3). `<domain>`은 repo/기여자 스코프를 나타내는 짧은
-kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
+kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다. (원칙은 청크 **d-0158**
+— 소유자 세그먼트로 이름공간을 나누고, 개체 IRI와 문서 IRI를 구분한다.)
 
 - **[지킴]** `core`는 **중앙 중립 부품 전용 예약어**다. harness-concrete의 중앙 부품
   라이브러리(`ontology/abox/core/**`) 개체만 `.../id/core/`를 쓴다. 레시피 로컬 개체와

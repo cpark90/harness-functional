@@ -19,9 +19,10 @@ CLAUDE.md + MANIFEST.json. Increment 2 (this file) adds first-class roles (P4:
 .claude/agents/<role>.md per ho:hasRole), tool implementation refs (P3:
 ho:implementationRef fetched/copied into tools/<basename>) and standard/docs
 scaffold (P5: ho:scaffold / ho:artifactTemplate fragments rendered into the
-tree). See harness-concrete's docs/materialize-design.md (the design doc moved
-there with the 2026-09 ladder split — materialization consumes instances, which
-are a CONCRETE-level concern; this repo keeps only the vocabulary and the tool).
+tree). The design doc is docs/materialize-design.md IN THIS REPO — it is this
+tool's design spec, so it lives with the tool (it briefly sat in harness-concrete
+after the 2026-09 ladder split and drifted out of date there). The instances it
+consumes stay in harness-concrete, a CONCRETE-level concern.
 
 Emitted text is SELF-CONTAINED. Graph text (skos:definition / ho:promptText) may
 name a neighbouring node by its authoring token — id:chan-dispatch,
