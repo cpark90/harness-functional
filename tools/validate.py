@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Validate the harness ontology.
 
-Layers of defense (see docs/DESIGN.md):
+Layers of defense (rationale: agentic-knowledge-base chunk d-0014 "three failure modes and three defenses"):
   1. OWL RL reasoning        -> logical consistency, type/inverse closure
   2. SHACL shapes            -> local structural invariants (orphans, drift)
   3. Global reachability     -> disconnected islands (orphan components)
@@ -160,9 +160,18 @@ def check_assembly_order(g: Graph):
             else:
                 by_order[order] = sec
 
+    harnesses = sorted(g.subjects(RDF.type, HO.Harness),
+                       key=lambda n: lib.label_of(g, n))
+    if not harnesses:
+        # TBox-only union (the functional repo validated alone): no harness
+        # instances exist, so nothing's assembly order can be undefined. The
+        # invariant is enforced where the instances live — the concrete repo's
+        # union gate (schema + parts library + recipe).
+        print("✓ no harness instances in this union (TBox-only) — skipped")
+        return True, []
+
     holders_with_own = set()
-    for h in sorted(g.subjects(RDF.type, HO.Harness),
-                    key=lambda n: lib.label_of(g, n)):
+    for h in harnesses:
         sections = list(g.objects(h, HO.hasAssemblySection))
         if sections:
             holders_with_own.add(h)

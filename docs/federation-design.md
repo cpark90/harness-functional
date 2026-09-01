@@ -1,276 +1,164 @@
-# Federation design: GitHub-connected ontologies + pure-data repos
+# Federation design: 사다리로 나뉜 두 저장소의 union 조립
 
-This document records the architecture for **federating** the harness ontology
-across multiple GitHub repositories, the way
-[`lu-w/auto`](https://github.com/lu-w/auto) federates an automotive ontology:
-one authoritative schema/tooling repo plus one or more **pure-data** ABox
-repos, composed into a single union graph by `owl:imports` + a Protégé-style
-catalog.
+하네스 지식을 여러 GitHub 저장소로 **연합(federate)** 하는 구조를 기록한다.
+[`lu-w/auto`](https://github.com/lu-w/auto)가 자동차 온톨로지를 연합하는 방식과
+같다 — 스키마·도구 저장소 하나와 데이터 저장소 하나 이상을, `owl:imports` +
+Protégé 카탈로그로 **하나의 union 그래프**로 합친다.
 
-Source of intent: the user inquiry and the inspection analysis in
-`docs/feedback/inquiries/benchmark.md` (see its §2 gap analysis and §3/§4
-recommendations, with file:line evidence). The four confirmed decisions below
-were approved by the user in that cycle.
+**2026-09 재배치**: 저장소 분할 기준이 "스키마/데이터"에서 **추상화 사다리**로
+바뀌었다 (agentic-knowledge-base 청크 d-0005). 아래 D1·D3·D4는 그대로이고,
+D2(분할)만 사다리 기준으로 다시 실현되었다.
 
-## Confirmed decisions
+## 확정 결정
 
-- **D1 — federation loading = `owl:imports` + catalog.** The union graph is
-  assembled by resolving `owl:imports` through a Protégé `catalog-v001.xml`
-  (ontology IRI → local file), **not** by directory glob and **not** by git
-  submodules. This is exactly the mechanism `auto` uses (benchmark.md §1) and is
-  the standard OWL federation primitive.
-- **D2 — split repos.** A central **schema + tooling** repo (TBox + SHACL shapes
-  + `validate`/`retrieve`/webui + guideline + CI) vs. one or more **pure-data**
-  ABox repos (only Turtle individuals). This matches the user's "storage repo =
-  pure data, clone/edit/push" request (benchmark.md §3b). *This dispatch only
-  **prepares** the split — it does not create new git repos* (see §Migration).
-- **D3 — domain/contributor sub-namespace.** Individual IRIs are minted as
-  `https://harness-ontology.dev/id/<domain>/<slug>` so independent repos cannot
-  collide on a bare slug (benchmark.md §3c). `core` is reserved for the central
-  ontology.
-- **D4 — two-tier validation gate.** A contributor runs the central `validate.py`
-  locally, **and** each data repo's CI pulls the central `validate.py` to gate
-  PRs (benchmark.md §3b, §4). The anti-orphan / anti-drift / buildable
-  guarantees only hold over the **union** graph, so validation must always run
-  against the composed union, never a single data file in isolation.
+- **D1 — 연합 로딩 = `owl:imports` + 카탈로그.** union 그래프는 Protégé
+  `catalog-v001.xml`(온톨로지 IRI → 로컬 파일)을 통해 `owl:imports`를 해석해
+  조립한다. 디렉토리 glob도, git submodule도 아니다. 표준 OWL 연합 기본기다.
+- **D2 — 사다리 기준 저장소 분할.** `harness-functional`(하네스의 ODD +
+  functional: TBox 어휘 + SHACL shapes + 공용 도구) 대
+  `harness-concrete`(하네스의 logical + concrete: union root + A-Box 중립 부품
+  라이브러리 + 조립 명세). **어휘가 위, 개체가 아래**다.
+- **D3 — 도메인 하위 네임스페이스.** 개체 IRI는
+  `https://harness-ontology.dev/id/<domain>/<slug>`로 민팅해 독립 저장소끼리
+  맨 slug에서 충돌하지 않게 한다. `core`는 중립 부품 라이브러리 예약어다.
+- **D4 — 2단 검증 게이트.** 기여자가 로컬에서 `validate.py`를 돌리고, **또한**
+  데이터 저장소 CI가 그것을 끌어와 PR을 게이트한다. 반-고아 / 반-drift /
+  조립가능 보장은 **union** 위에서만 성립하므로, 검증은 언제나 합쳐진 union을
+  대상으로 하고 단일 파일을 홀로 검증하지 않는다.
 
-## Why the union graph is the load-bearing invariant
+## union이 하중을 받는 불변식인 이유
 
-`docs/DESIGN.md` derives all three guarantees — anti-orphan (reachability +
-SHACL connectivity), anti-drift (controlled TBox vocabulary), buildable
-(capability satisfaction) — from validating **one merged, reasoned graph**.
-Federation must therefore preserve "there is a single union to validate."
-`owl:imports` + catalog gives exactly that: the import closure *is* the union.
-A cross-repo edge (repo A's individual `hasComponent` repo B's individual) is
-only reachable/type-checkable once both are pulled into the union, which is why
-D1 (composition) and D4 (validate-the-union) are two halves of one design.
+세 보장 — 반-고아(도달성 + SHACL 연결성), 반-drift(통제 어휘), 조립가능
+(capability 충족) — 은 전부 **하나로 합쳐 추론된 그래프**를 검증하는 데서
+나온다 (근거: agentic-knowledge-base 청크 d-0014). 그러므로 연합은 "검증할
+union이 하나 있다"를 보존해야 한다. `owl:imports` + 카탈로그가 정확히 그것을
+준다 — import 폐포가 곧 union이다. 저장소를 가로지르는 간선(A의 개체가 B의
+개체를 `hasComponent`)은 둘 다 union에 들어와야 도달·타입 검사가 되며, 이것이
+D1(조립)과 D4(union 검증)가 한 설계의 양면인 이유다.
 
-## Architecture
+## 구조
 
-### Repo layout (D2)
+### 저장소 배치 (D2)
 
 ```
-central repo  (schema + tooling; authoritative)
-├── ontology/
-│   ├── harness-ontology.ttl        # root owl:Ontology — owl:imports the rest
-│   ├── tbox/harness.ttl            # the vocabulary (owl:Ontology .../schema)
-│   ├── shapes/harness-shapes.ttl   # SHACL (validation-only, NOT imported)
-│   └── abox/                       # central "core"-domain data (seed, examples)
-├── tools/                          # validate.py, retrieve.py, ontology_lib.py, webui
-├── catalog-v001.xml                # ontology IRI → local file (Protégé format)
-├── ONTOLOGYSTYLE.md, docs/…        # authoring rules + this design
-└── .github/workflows/validate.yml  # central CI gate
+harness-functional  (어휘 + 도구; ODD + functional 수준)
+├── ontology/tbox/harness.ttl        # 어휘 (owl:Ontology .../schema)
+├── ontology/shapes/harness-shapes.ttl  # SHACL — 검증 전용, import 안 함
+├── tools/                           # validate·retrieve·materialize·gen_recipe_catalog·webui
+├── HARNESS-ODD.md, ONTOLOGYSTYLE.md, docs/
+└── catalog-v001.xml                 # schema 한 줄
 
-data repo(s)  (pure Turtle ABox; per contributor / per domain)
-├── <domain>.ttl                    # owl:Ontology .../data/<domain>,
-│                                   #   owl:imports the central TBox IRI
-├── catalog-v001.xml                # maps the central TBox IRI → a local clone
-└── .github/workflows/validate.yml  # pulls central validate.py to gate PRs (D4)
+harness-concrete   (개체 + 조립; logical + concrete 수준)
+├── ontology/harness-ontology.ttl    # union ROOT — schema + 모든 core 유닛 import
+├── ontology/abox/core/<group>/*.ttl # 중립 부품 라이브러리 (.../data/core/<type>)
+├── recipes/<name>/<name>.ttl        # 조립 명세 (.../recipes/<name>)
+├── catalog-v001.xml                 # 생성 파일 — CENTRAL/LOCAL/RECIPE 3블록
+├── central/                         # harness-functional 체크아웃 (gitignored)
+└── .github/workflows/validate.yml   # central validate.py를 끌어와 PR 게이트 (D4)
 ```
 
-The central repo carries **all tools**; a data repo carries **only data** (plus
-a thin CI stub and a catalog). Working on a data repo = clone it (and the
-central repo, for the TBox + tools), edit TTL, run the central `validate.py`
-against the union, push / open a PR.
+**functional은 개체를 담지 않고, concrete은 어휘를 정의하지 않는다.** 도구는
+전부 functional에 있고 concrete이 `central/`로 체크아웃해 쓴다. concrete에서
+작업하기 = concrete을 클론하고 functional을 `central/`로 클론한 뒤, TTL을
+편집하고 union에 대해 `central/tools/validate.py`를 돌리고 PR을 연다.
 
-### Composition: how the union is assembled (D1)
+### union 조립 방식 (D1)
 
-1. A **root ontology** `ontology/harness-ontology.ttl` declares
-   `<https://harness-ontology.dev/ontology> a owl:Ontology` and `owl:imports`
-   the TBox IRI plus each ABox ontology IRI.
-2. `catalog-v001.xml` (at the repo root, Protégé "auto" format) maps every
-   ontology IRI to a local file:
+1. **root 온톨로지**는 concrete의 `ontology/harness-ontology.ttl`이다 —
+   `<https://harness-ontology.dev/ontology> a owl:Ontology`를 선언하고 schema
+   IRI와 각 A-Box 유닛 IRI를 `owl:imports` 한다. **root가 개체 쪽에 있는 것이
+   재배치의 핵심**이다: union의 대부분이 개체이고, 어휘는 그 한 부분이다.
+2. `catalog-v001.xml`이 모든 온톨로지 IRI를 로컬 파일로 사상한다:
 
-   | ontology IRI | local file |
-   |---|---|
-   | `…/ontology` | `ontology/harness-ontology.ttl` |
-   | `…/schema` | `ontology/tbox/harness.ttl` |
-   | `…/data/core/<type>` | `ontology/abox/core/<group>/<type>.ttl` (per-component-type units, grouped into DA-4 taxonomy subdirs; logical IRI is position-independent, the catalog is the IRI→path map) |
-   | `…/data/<domain>` | *external pure-data repo — none active today (see Status below)* |
-   | `…/data/authored` | `ontology/abox/authored.ttl` (webui output, optional) |
+   | 온톨로지 IRI | 로컬 파일 | 저장소 |
+   |---|---|---|
+   | `…/schema` | `central/ontology/tbox/harness.ttl` | functional |
+   | `…/ontology` (root) | `ontology/harness-ontology.ttl` | concrete |
+   | `…/data/core/<type>` | `ontology/abox/core/<group>/<type>.ttl` | concrete |
+   | `…/recipes/<name>` | `recipes/<name>/<name>.ttl` | concrete |
 
-3. `tools/ontology_lib.load_graph()` reads the catalog, then does a BFS from the
-   root ontology IRI following `owl:imports` transitively, resolving each IRI to
-   a local file through the catalog and parsing it once. The import closure is
-   the union. SHACL shapes are **never** imported (they are validation-only, kept
-   out of the data graph exactly as before).
-4. If the catalog / root ontology is absent or resolves nothing, the loader
-   **falls back to the legacy directory glob** (`ontology/**/*.ttl`, skipping
-   `shapes/`), so a partial checkout still loads.
+3. `tools/ontology_lib.load_graph()`가 카탈로그를 읽고 root IRI에서
+   `owl:imports`를 따라 BFS하며 각 IRI를 로컬 파일로 해석해 한 번씩 파싱한다.
+   import 폐포가 union이다. SHACL shapes는 **절대 import하지 않는다**
+   (검증 전용이라 데이터 그래프에 섞이지 않는다).
+4. 카탈로그나 root가 없으면 로더는 디렉토리 glob으로 **폴백**하므로 부분
+   체크아웃에서도 로드된다.
 
-Each importable file declares its own `owl:Ontology` and imports what it depends
-on: the central `core` data imports the schema; an external `<domain>` data unit
-would import the schema **and** `core` if it references core individuals (see D3).
-This makes the dependency explicit and is what a real external data repo does:
-`owl:imports <https://harness-ontology.dev/schema>`.
+**IRI는 위치 독립이다.** 2026-09 재배치에서 A-Box와 root가 저장소를 옮겼지만
+IRI는 하나도 바뀌지 않았다 — 카탈로그의 경로만 바뀌었다. 이것이 카탈로그 기반
+연합을 하드코딩 glob보다 택한 이유다.
 
-An external data repo joins the federation by (a) adding its ontology IRI +
-local path to a catalog and (b) being listed in the composing root's
-`owl:imports`. No tool code changes — that is the point of catalog-based
-federation over a hardcoded glob.
+### 카탈로그 생성 (드리프트 가드)
 
-### IRI sub-namespace (D3)
+concrete의 카탈로그는 손으로 유지하지 않고
+`central/tools/gen_recipe_catalog.py`가 디스크에서 결정론적으로 생성한다.
+세 블록이 나온다:
 
-- **Entity IRIs:** `https://harness-ontology.dev/id/<domain>/<slug>`.
-  - `<slug>` keeps the existing prefix + kebab-full-word rule
-    (`ONTOLOGYSTYLE.md §2`): `h-…`, `tool-…`, `gr-…`, `sp-…`, `c-…`, …
-  - `<domain>` is a short kebab segment naming the repo/contributor scope.
-    `core` is **reserved** for the central ontology. A contributor picks a
-    domain segment that is unlikely to collide (project or org name).
-- **Ontology (document) IRIs** are separate from entity IRIs:
-  `https://harness-ontology.dev/data/<domain>`. (The document that *contains*
-  the individuals, used by `owl:imports`/catalog, is not the same as the IRIs of
-  the individuals themselves — standard OWL practice.)
-- **In Turtle**, this is expressed purely through the prefix binding, so node
-  bodies stay unchanged: a `core`-domain file binds
-  `@prefix id: <…/id/core/> .` and writes `id:h-coding`; a file that also
-  references core nodes binds a second prefix `@prefix core: <…/id/core/> .`
-  and writes `core:tool-editor`. Because two prefixes can point at the same
-  namespace, cross-domain references resolve to the same IRI in the union.
+- **CENTRAL** — functional의 카탈로그를 `central/` 접두어를 붙여 복사(schema).
+- **LOCAL** — 이 저장소의 `ontology/**` 유닛(root + 모든 core 부품). 각 IRI는
+  그 파일의 `owl:Ontology` 헤더에서 읽는다 — 경로에서 추측하지 않는다.
+- **RECIPE** — `recipes/<name>/` 하나당 한 줄.
 
-### Validation gate (D4)
+CI가 `--check` 모드로 돌려 디스크와 어긋나면 실패시킨다. 손으로 세 곳에
+목록을 복제하던 시절 실제로 드리프트가 났고(카탈로그 누락으로 **부분** union만
+로드된 채 검증이 통과), 이 생성기가 그 중복을 없앤다.
 
-Two tiers, both validating the **union**, never a lone file:
+### IRI 하위 네임스페이스 (D3)
 
-1. **Contributor-local:** clone the central repo (TBox + tools) alongside the
-   data repo, point the catalog at the local clones, run
-   `/usr/bin/python3 tools/validate.py` → must print `PASS`. This is the fast
-   feedback loop and is required before opening a PR
-   (`docs/CONTRIBUTING-ONTOLOGY.md`).
-2. **CI on the data repo:** the data repo's `validate.yml` checks out its own
-   TTL **and** the central repo, composes the union via the catalog, and runs
-   the central `validate.py`. A non-zero exit fails the PR check. This keeps the
-   fail-at-contribution property the inquiry warned would otherwise be lost when
-   tools leave the data repo (benchmark.md §3b).
+- **개체 IRI**: `https://harness-ontology.dev/id/<domain>/<slug>`.
+  `<slug>`는 `ONTOLOGYSTYLE.md §2`의 접두사 + kebab 규약(`h-…`, `tool-…`,
+  `gr-…`, `sp-…`, `c-…`)을 따른다. `<domain>`은 저장소·기여자 범위를 나타내는
+  짧은 kebab 세그먼트이며 `core`는 중립 부품 라이브러리 예약어다.
+- **온톨로지(문서) IRI**는 개체 IRI와 별개다: `…/data/<domain>`,
+  `…/recipes/<name>`. 개체를 *담는 문서*의 IRI와 개체 자신의 IRI는 다르다는
+  표준 OWL 관행이다.
+- **Turtle에서는 prefix 바인딩으로만** 표현해 노드 본문을 그대로 둔다. 레시피는
+  자기 도메인을 `@prefix id:`로, 중립 부품 참조를 `@prefix core:`로 묶는다.
+  두 prefix가 같은 네임스페이스를 가리키면 union에서 같은 IRI로 해석되어
+  cross-domain 간선이 성립한다.
 
-The central repo keeps its own `.github/workflows/validate.yml`; the data-repo
-variant is provided as a template (`docs/ci/data-repo-validate.yml`).
+### 검증 게이트 (D4)
 
-## Migration plan
+두 단, 둘 다 **union**을 검증한다:
 
-Done in this dispatch (code + docs only, no new repos, no git):
-
-1. **Loader (D1).** Rewrote `tools/ontology_lib.load_graph()` to resolve
-   `owl:imports` via the catalog, with a glob fallback. Public functions
-   (`load_graph`, `instance_nodes`, `instance_edges`, `label_of`,
-   `most_specific_types`) keep their signatures so `validate.py`, `retrieve.py`
-   and `tools/webui/server.py` are unchanged callers.
-2. **Catalog + root (D1).** Added `catalog-v001.xml` and
-   `ontology/harness-ontology.ttl`; added `owl:Ontology` headers to the ABox
-   files so they are importable units.
-3. **IRI migration (D3).** Re-based the central individuals: `seed.ttl` →
-   `core` domain (`…/id/core/<slug>`). An external data unit would bind its own
-   `@prefix id: <…/id/<domain>/>` and rewrite references to central nodes through
-   a `core:` prefix — text-surgical (prefix rebind + the specific cross-domain
-   references), the TTL is not machine-reserialized.
-4. **Guideline + CI template (D4).** `docs/CONTRIBUTING-ONTOLOGY.md` and
-   `docs/ci/data-repo-validate.yml`.
-
-Status of external data units:
-
-- **No active external data repo.** The federation currently loads **schema +
-  core** only. The earlier `lpranging` domain-specific modeling — a concrete
-  worked pilot of the split — was **RETIRED** per the neutral-parts principle:
-  the ontology is a library of generalised, domain-independent reusable parts,
-  not the description of one specific harness. Its reusable governance parts
-  (verify-then-proceed, design-for-loss, traceability, no-arbitrary-decision,
-  least-privilege, report-over-prompt, controlled-vocabulary guardrails; the
-  orchestrator-workers pattern + multi-agent workflow; a methodical persona) were
-  neutralised and folded into the `core` data units (`ontology/abox/core/**/*.ttl`,
-  split per component type and grouped into DA-4 taxonomy subdirs),
-  and the domain-coupled nodes (UWB/RTLS/low-power tasks, tools, persona and
-  concepts) were dropped. Consequently `…/data/lpranging` appears in **no**
-  catalog entry or root `owl:imports`, and `staging/` holds no payload. The
-  federation infra (D1 owl:imports + catalog, D3 IRI scheme, D4 two-tier gate)
-  remains fully available for a **future** external domain part-collection.
-  *(The previously-published pilot data repo, if any, is retired by inspection at
-  git time — out of scope here.)*
-
-Follow-ups for any future external data repo still need **inspection + the
-user's GitHub account** (out of scope for developer; noted for orchestrator):
-- **Central-repo publication + a stable resolver.** For catalogs across machines
-  to agree, the `https://harness-ontology.dev/…` IRIs should eventually resolve
-  (GitHub Pages / release tarball, as `auto` does with GitHub releases). Today
-  the catalog maps IRIs to local clones, which is sufficient for local + CI
-  validation.
-- **webui domain-aware authoring.** The webui currently authors into the `core`
-  domain (its `id:` prefix binds to `…/id/core/`). Letting a human pick a target
-  domain in the editor UI is a webui-scoped follow-up; the loader and data model
-  already support it.
-
-## Example external data-repo layout (D2 made concrete)
-
-No external data repo is active today (see Status of external data units). The
-layout below is the **generic template** a future pure-data `<domain>` repo would
-follow — a concrete instance simply substitutes its own domain segment:
-
-```
-harness-data-<domain>/             # pure data, no tools
-├── <domain>.ttl                   # owl:Ontology  …/data/<domain>
-│                                  #   owl:imports   …/schema , …/data/core
-├── catalog-v001.xml               # maps …/schema and …/data/core to local
-│                                  #   clones of the central + core repos
-└── .github/workflows/validate.yml # == docs/ci/data-repo-validate.yml
-```
-
-Its individuals are `…/id/<domain>/<slug>`; its references to shared central
-components (`core:tool-editor`, `core:h-coding`, `core:gr-lang`, …) are
-`…/id/core/<slug>`, resolved in the union. Running the central `validate.py`
-over `schema ∪ core ∪ <domain>` is what proves a cross-domain harness is
-connected, well-typed and buildable.
-
-## Composing the full federated union (when an external data repo exists)
-
-**Status:** there is no active external data repo; central loads **schema +
-core** only (see Status of external data units). The recipe below is how the
-full federated union would be recomposed **once** a `<domain>` data repo exists —
-central's own loaded union stays `schema + core`, but the federated invariants
-(anti-orphan / anti-drift / buildable) must be checked over the **full** union
-that includes every external data repo, so a split must never silently drop a
-domain from federated validation.
-
-There are two equivalent ways to recompose `schema ∪ core ∪ <domain>`, both
-using the **central** `validate.py` (shapes and tools always come from central):
-
-1. **Run from the data repo (the D4 gate — preferred).** Clone central next to
-   the data repo and point the central loader at the *data repo's* catalog, whose
-   root ontology's `owl:imports` closure is the union. This is exactly what the
-   data repo's CI does:
+1. **기여자 로컬** — concrete에서 functional을 `central/`로 두고:
 
    ```bash
-   git clone https://github.com/<owner>/harness-data-<domain> <domain>
-   git clone https://github.com/hhmm2728/harness_ontology <domain>/central
-   HARNESS_CATALOG="$PWD/<domain>/catalog-v001.xml" \
-   HARNESS_ROOT_ONTOLOGY="https://harness-ontology.dev/data/<domain>" \
-   /usr/bin/python3 <domain>/central/tools/validate.py     # PASS = full union OK
+   git clone https://github.com/cpark90/harness-functional central
+   HARNESS_CATALOG=catalog-v001.xml \
+   HARNESS_ROOT_ONTOLOGY=https://harness-ontology.dev/ontology \
+   python3 central/tools/validate.py            # 전체 union
+   HARNESS_ROOT_ONTOLOGY=https://harness-ontology.dev/recipes/<name> \
+   python3 central/tools/validate.py            # 레시피 하나 (schema+부품+그 레시피)
    ```
 
-   The data repo's catalog maps `…/schema` → `central/ontology/tbox/harness.ttl`,
-   each central `…/data/core/<type>` → `central/ontology/abox/core/<group>/<type>.ttl`
-   (the core unit is split per component type, grouped into DA-4 taxonomy subdirs;
-   the logical IRI is position-independent, so only the catalog path mirrors the
-   move), and `…/data/<domain>` → its local
-   `<domain>.ttl`. Nothing in central changes.
+2. **concrete CI** — 자기 TTL과 functional을 체크아웃해 카탈로그로 union을
+   조립하고 central `validate.py`를 돌린다. 비영 종료면 PR 체크 실패.
+   PR이 레시피 디렉토리만 건드리면 바뀐 레시피만, 그 밖(카탈로그·워크플로·
+   central 변경)이면 전 레시피를 검증한다.
 
-2. **Run from central over all repos.** Clone the external data repo somewhere,
-   then supply a catalog that lists `…/schema`, `…/data/core` **and**
-   `…/data/<domain>` (pointing at the clone's `<domain>.ttl`), with a root
-   ontology that imports all three. Point `HARNESS_CATALOG` /
-   `HARNESS_ROOT_ONTOLOGY` at it. (Equivalently, temporarily add the
-   `…/data/<domain>` entry back to central's catalog/root against the clone.)
+**functional 쪽 게이트는 좁다.** 그 저장소에는 개체가 없으므로 `make validate`가
+schema를 root로 삼아 TBox 정합성·라벨 중복·SHACL만 본다. 개체가 필요한
+불변식(assemblyOrder, capability 충족, 도달성)은 인스턴스가 사는 concrete의
+union 게이트가 강제한다.
 
-Because a data repo carries its own catalog and imports (option 1), it is the
-canonical "compose the full union" recipe and needs no edit to central.
+`workflow_dispatch`가 필요한 이유: functional의 어휘가 바뀌면 레시피는 하나도
+바뀌지 않아도 전 레시피 게이트를 다시 돌려야 한다 (HARNESS-ODD 조건부 규정).
 
-## Recipe repos: composing harnesses from the neutral parts
+## 새 데이터 저장소를 연합에 넣기
 
-The federated data-repo mechanism above has a concrete, first-class use: a
-**recipe repo** that stores many harness **blueprints**, each `owl:imports`-ing
-the central neutral parts and composing a complete `ho:Harness` from them (adding
-only the domain bindings a specialization needs). This keeps central a neutral
-parts library while "how the parts are assembled" lives in recipes. The first
-such repo is `cpark90/harness-recipes` (renamed from the retired
-`harness-data-lpranging`), whose worked example recipe reconstructs the retired
-`lpranging` harness as a composition over the core parts. Its layout, the anatomy
-of a recipe unit, and its clone-central → compose-union → central-`validate.py`
-gate are specified in **`docs/recipes-design.md`**.
+미래에 도메인별 부품 모음을 별도 저장소로 두려면 (a) 그 온톨로지 IRI + 로컬
+경로를 카탈로그에 넣고 (b) 조립하는 root의 `owl:imports`에 올린다. 도구 코드는
+바뀌지 않는다 — 그것이 카탈로그 기반 연합의 요점이다. 개체는
+`…/id/<domain>/<slug>`, 중립 부품 참조는 `…/id/core/<slug>`로 쓰고, union
+검증이 그 저장소를 가로지르는 하네스가 연결·타입 정합·조립가능함을 증명한다.
+
+## 미해결
+
+- **IRI 해석기(resolver)** — 여러 기계의 카탈로그가 합의하려면
+  `https://harness-ontology.dev/…`가 실제로 해석되어야 한다(GitHub Pages 또는
+  릴리스 타르볼, `auto`가 하는 방식). 지금은 카탈로그가 IRI를 로컬 클론으로
+  사상하며, 로컬·CI 검증에는 충분하다.
+- **webui의 도메인 인지 저작** — webui는 현재 `core` 도메인으로 저작한다.
+  편집기에서 대상 도메인을 고르게 하는 것은 webui 범위의 후속 작업이며,
+  로더와 데이터 모델은 이미 지원한다.

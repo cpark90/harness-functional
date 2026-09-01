@@ -36,7 +36,7 @@ model: opus
   - **verification** = 구조 게이트. `python3 tools/validate.py`가 **PASS**인가:
     SHACL 연결성 shape, 전역 reachability(orphan island 없음), capability 충족
     (`requires`↔`provides`), 중복 label 없음, 논리 일관성. FAIL이면 어느 net이 왜
-    걸렸는지 근거와 함께 낸다. (기준: `docs/DESIGN.md` + `ONTOLOGYSTYLE.md` §1a·1b·1c.)
+    걸렸는지 근거와 함께 낸다. (기준: `ONTOLOGYSTYLE.md` §1a·1b·1c + agentic-knowledge-base 청크 d-0014.)
   - **validation** = 목적 부합. 새 harness가 **요청을 실제로 충족**하는가:
     `python3 tools/retrieve.py "<원 request>"`로 그 harness가 base 후보로 검색되는지,
     capability gap이 실제로 메워졌는지, `HarnessShape` 최소 구성(1 SystemPrompt + ≥1

@@ -1,49 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Protégé-style OASIS XML catalog: maps ontology IRIs to local files so the
-     union graph is assembled by owl:imports resolution (see docs/federation-design.md,
-     D1). tools/ontology_lib.load_graph() reads this; an external data repo ships
-     its own catalog mapping the central IRIs (.../schema, .../data/core) to local
-     clones. Paths are relative to this catalog's directory (the repo root). -->
-<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-    <uri id="root"       name="https://harness-ontology.dev/ontology"       uri="ontology/harness-ontology.ttl"/>
-    <uri id="schema"     name="https://harness-ontology.dev/schema"         uri="ontology/tbox/harness.ttl"/>
-    <!-- The central `core` data unit is split into MULTIPLE per-component-type
-         documents grouped into DA-4 taxonomy subdirectories under
-         ontology/abox/core/<group>/; each maps its own ontology IRI
-         .../data/core/<type> (position-independent) to its local file. The
-         subdirectory is presentation only — the catalog is the IRI→path map.
-         See ONTOLOGYSTYLE §4. -->
-    <uri id="core-concepts"      name="https://harness-ontology.dev/data/core/concepts"       uri="ontology/abox/core/vocab/concepts.ttl"/>
-    <uri id="core-capabilities"  name="https://harness-ontology.dev/data/core/capabilities"   uri="ontology/abox/core/spec/capabilities.ttl"/>
-    <uri id="core-constraints"   name="https://harness-ontology.dev/data/core/constraints"    uri="ontology/abox/core/spec/constraints.ttl"/>
-    <uri id="core-model-configs" name="https://harness-ontology.dev/data/core/model-configs"  uri="ontology/abox/core/substrate/model-configs.ttl"/>
-    <uri id="core-tools"         name="https://harness-ontology.dev/data/core/tools"          uri="ontology/abox/core/operational/tools.ttl"/>
-    <uri id="core-guardrails"    name="https://harness-ontology.dev/data/core/guardrails"     uri="ontology/abox/core/behavioral/guardrails.ttl"/>
-    <uri id="core-patterns"      name="https://harness-ontology.dev/data/core/patterns"       uri="ontology/abox/core/spec/patterns.ttl"/>
-    <uri id="core-workflows"     name="https://harness-ontology.dev/data/core/workflows"      uri="ontology/abox/core/process/workflows.ttl"/>
-    <uri id="core-system-prompts" name="https://harness-ontology.dev/data/core/system-prompts" uri="ontology/abox/core/behavioral/system-prompts.ttl"/>
-    <uri id="core-domains-tasks" name="https://harness-ontology.dev/data/core/domains-tasks"  uri="ontology/abox/core/spec/domains-tasks.ttl"/>
-    <uri id="core-harnesses"     name="https://harness-ontology.dev/data/core/harnesses"      uri="ontology/abox/core/wholes/harnesses.ttl"/>
-    <uri id="core-roles"         name="https://harness-ontology.dev/data/core/roles"          uri="ontology/abox/core/organization/roles.ttl"/>
-    <uri id="core-channels"      name="https://harness-ontology.dev/data/core/channels"       uri="ontology/abox/core/organization/channels.ttl"/>
-    <!-- Units split out of the grab-bag files by DA-4 type (roles→observation+memory,
-         domains-tasks→information-space, harnesses→assembly-sections). -->
-    <uri id="core-observation"   name="https://harness-ontology.dev/data/core/observation"    uri="ontology/abox/core/observational/observation.ttl"/>
-    <uri id="core-memory"        name="https://harness-ontology.dev/data/core/memory"         uri="ontology/abox/core/state/memory.ttl"/>
-    <uri id="core-information-space" name="https://harness-ontology.dev/data/core/information-space" uri="ontology/abox/core/information-space/information-space.ttl"/>
-    <uri id="core-assembly-sections" name="https://harness-ontology.dev/data/core/assembly-sections" uri="ontology/abox/core/assembly/assembly-sections.ttl"/>
-    <!-- Run-time acceptance leaves (TestScenario / FailurePolicy) relocated out
-         of the workflows unit into their own DA-4 verification group. -->
-    <uri id="core-verification"  name="https://harness-ontology.dev/data/core/verification"   uri="ontology/abox/core/verification/verification.ttl"/>
-    <uri id="data-auth"  name="https://harness-ontology.dev/data/authored"  uri="ontology/abox/authored.ttl"/>
-    <!-- NOTE: no external domain data unit is currently part of the federation.
-         The `lpranging` domain-specific modeling was RETIRED per the neutral-
-         parts principle (the ontology stores generalised, domain-independent
-         reusable parts, not a specific harness's description); its reusable
-         governance parts now live neutralised in the `core` data units. The D1
-         owl:imports + catalog federation infra
-         and the D3 IRI scheme remain available: a future external domain part-
-         collection joins the union by adding its ontology IRI + local path here
-         and to the root owl:imports. See docs/federation-design.md. -->
+<!-- Protégé-style OASIS XML catalog for the FUNCTIONAL repo.
 
+     This repo holds the harness FUNCTIONAL level (the vocabulary: TBox schema
+     + SHACL shapes — what a harness IS, described in labels/definitions) and
+     the harness ODD (HARNESS-ODD.md). The union root, the ABox core parts
+     library and the assembly specs live in the CONCRETE repo
+     (harness-concrete, formerly harness-recipes): logical level = candidates/
+     selection policies/constraints, concrete level = neutral parts + recipes.
+     IRIs are location-independent (D3) — moving files between repos never
+     changes an IRI; only catalogs change. Shapes are validation-only and are
+     deliberately NOT in the catalog (loaded directly by tools/validate.py). -->
+<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <uri id="schema" name="https://harness-ontology.dev/schema" uri="ontology/tbox/harness.ttl"/>
 </catalog>

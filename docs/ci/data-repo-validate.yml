@@ -37,7 +37,7 @@ on:
 
 env:
   # The central schema+tooling repo (owner/name). Change to your fork/mirror.
-  CENTRAL_REPO: cpark90/harness-ontology
+  CENTRAL_REPO: cpark90/harness-functional
   CENTRAL_REF: main
   # This data repo's ontology (document) IRI — its import closure IS the union.
   # Example domain only (ONTOLOGYSTYLE §2a); set to your own .../data/<domain>.

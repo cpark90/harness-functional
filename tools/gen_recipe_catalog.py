@@ -135,12 +135,38 @@ def discover_recipes(repo: Path) -> list[tuple[str, str, str]]:
     return found
 
 
+def discover_local_units(repo: Path) -> list[tuple[str, str, str]]:
+    """Walk ``<repo>/ontology/**/*.ttl`` → sorted [(id, iri, rel_path)].
+
+    The concrete repo carries the union ROOT and the ABox core parts library
+    locally (they moved here from the functional repo — logical/concrete level
+    content lives with the assemblies). Each unit's IRI is read from its own
+    ``owl:Ontology`` header, so the catalog never guesses from a path. Shapes
+    never live under a data repo's ontology/ (they stay central,
+    validation-only).
+    """
+    ont = repo / "ontology"
+    if not ont.is_dir():
+        return []
+    found: list[tuple[str, str, str]] = []
+    for ttl in sorted(ont.rglob("*.ttl")):
+        iri = recipe_root_iri(ttl)
+        rel = ttl.relative_to(repo).as_posix()
+        slug = iri.rstrip("/").rsplit("/", 1)[-1]
+        cid = "root" if iri == "https://harness-ontology.dev/ontology" else f"local-{slug}"
+        found.append((cid, iri, rel))
+    return found
+
+
 def build_catalog(central: list[tuple[str, str, str]],
+                  local: list[tuple[str, str, str]],
                   recipes: list[tuple[str, str, str]]) -> str:
     """Render the recipe repo's catalog-v001.xml (deterministic, aligned)."""
     rows: list[tuple[str, str, str]] = []
     for cid, name, uri in central:
         rows.append((cid, name, CENTRAL_PREFIX + uri))
+    for cid, name, uri in local:
+        rows.append((cid, name, uri))
     for name, iri, rel in recipes:
         rows.append((f"recipe-{name}", iri, rel))
     id_w = max(len(f'id="{r[0]}"') for r in rows)
@@ -163,15 +189,16 @@ def build_catalog(central: list[tuple[str, str, str]],
     out.append("     CI runs it in `check` mode, which fails if this file is out of sync")
     out.append("     with the recipes/*/ directories or the central catalog (drift guard).")
     out.append("")
-    out.append("     Two blocks. CENTRAL: the central neutral-parts library — root, schema,")
-    out.append("     every .../data/core/<type> per-component-type unit and data/authored —")
-    out.append("     copied from central's own catalog-v001.xml with a `central/` prefix so")
-    out.append("     the recipe repo's ./central/ checkout resolves. New central core units")
-    out.append("     propagate here on regeneration, so recipes never silently drop one.")
-    out.append("     RECIPE: one <uri> per recipes/<name>/, the IRI read from each recipe")
-    out.append("     TTL's owl:Ontology header. Each recipe owl:imports the central ROOT")
-    out.append("     (.../ontology), whose closure is schema + every core unit, so a")
-    out.append("     recipe's validated union is exactly (whole central + that recipe).")
+    out.append("     Three blocks. CENTRAL: the functional repo (harness-functional,")
+    out.append("     formerly harness_ontology) — the schema (TBox vocabulary), copied from")
+    out.append("     its catalog-v001.xml with a `central/` prefix so this repo's ./central/")
+    out.append("     checkout resolves. LOCAL: this repo's own units — the union ROOT and")
+    out.append("     every .../data/core/<type> ABox parts unit (they live HERE: logical +")
+    out.append("     concrete level content sits with the assemblies), IRIs read from each")
+    out.append("     TTL's owl:Ontology header. RECIPE: one <uri> per recipes/<name>/.")
+    out.append("     Each recipe owl:imports the ROOT (.../ontology), whose closure is")
+    out.append("     schema + every core unit, so a recipe's validated union is exactly")
+    out.append("     (schema + whole parts library + that recipe).")
     out.append("")
     out.append("     Validate one recipe locally (central cloned into ./central/):")
     out.append("       HARNESS_CATALOG=catalog-v001.xml \\")
@@ -179,9 +206,12 @@ def build_catalog(central: list[tuple[str, str, str]],
     out.append("       /usr/bin/python3 central/tools/validate.py")
     out.append("     Paths are relative to this catalog's directory (the repo root). -->")
     out.append('<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">')
-    out.append("    <!-- CENTRAL neutral parts library (from central/catalog-v001.xml, prefixed central/). -->")
+    out.append("    <!-- CENTRAL functional repo units (from central/catalog-v001.xml, prefixed central/). -->")
     for cid, name, uri in central:
         out.append(line(cid, name, CENTRAL_PREFIX + uri))
+    out.append("    <!-- LOCAL units: union root + ABox core parts library (ontology/**, IRI from each header). -->")
+    for cid, name, uri in local:
+        out.append(line(cid, name, uri))
     out.append("    <!-- RECIPE units (one per recipes/<name>/; IRI from each TTL's owl:Ontology header). -->")
     for name, iri, rel in recipes:
         out.append(line(f"recipe-{name}", iri, rel))
@@ -215,7 +245,8 @@ def main() -> int:
         return 0
 
     central = read_central_entries(CENTRAL_CATALOG)
-    generated = build_catalog(central, recipes)
+    local = discover_local_units(repo)
+    generated = build_catalog(central, local, recipes)
     catalog_path = repo / "catalog-v001.xml"
 
     if args.check:

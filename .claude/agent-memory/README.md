@@ -1,5 +1,16 @@
 # 에이전트 역할 메모리 (agent-memory)
 
+> **2026-09 저장소 재배치 — 저장된 메모리를 읽을 때 주의.** 이 저장소가 추상화
+> 사다리 기준으로 둘로 갈라졌다: **harness-functional**(여기 — 어휘 TBox·shapes·
+> 공용 도구·ODD)과 **harness-concrete**(개체 abox·레시피·조립 명세, 구
+> harness-recipes). 재배치 이전에 쌓인 메모리 파일은 `ontology/abox/**`,
+> `recipes/`, `docs/DESIGN.md`, `docs/recipes-design.md`, `docs/odr-*.md`,
+> `docs/materialize-design.md`를 **이 저장소 기준으로** 가리킨다 — 전부
+> harness-concrete로 옮겼거나(개체·조립 문서) agentic-knowledge-base 청크
+> d-0013~d-0020으로 이송되었다(일반 방법론). 메모리의 **교훈 내용은 유효하되
+> 경로는 재해석**하고, 갱신할 때 새 위치로 고쳐 쓴다. 현재 배치는
+> `../../README.md`와 `../../docs/federation-design.md`가 원본이다.
+
 역할별 에이전트가 cold-start에서 특화하기 위한 **디렉토리 메모리**. 각 에이전트는 세션 시작 시
 `<role>/MEMORY.md`와 그 폴더를 읽어 역할 컨텍스트를 세우고, 재사용 지식을 이 폴더에 파일로
 축적한다. **git 저장소에 커밋되어 세션·머신 간 유지된다.**

@@ -1,4 +1,11 @@
 # ONTOLOGYSTYLE.md
+
+> **이송 표기 (2026-09)**: 일반 원칙(3대 실패 모드와 방어선 d-0014, 토큰 예산
+> d-0016, 형식 저장·좁은 읽기 d-0013)은 agentic-knowledge-base의 결정 청크로
+> 이송되었다. 이 문서는 `ho:` TTL 저작의 **운영 규칙**만 담으며,
+> harness-functional(TBox·shapes)과 harness-concrete(abox·레시피) 양쪽에
+> 적용된다. abox 관련 절의 파일 경로는 harness-concrete 기준으로 읽는다.
+
 이 온톨로지 스타일은 노드 저작(authoring)·composition 시, 매 세션 시작 시 읽는다.
 코드 스타일 문서 `CODESTYLE.md`(구현 repo)의 온톨로지판이다 — 그쪽이 소스 코드의
 단일 진실 공급원이라면, 이 문서는 `ontology/` TTL 저작의 단일 진실 공급원이다.
@@ -30,7 +37,7 @@
 
 `ontology/`에서 **고립 노드(orphan)는 예외가 아니라 build failure**다. `validate.py`의
 SHACL 연결성 shape + 전역 reachability BFS가 이를 강제한다. (설계 원칙은
-`docs/DESIGN.md` "Orphaned nodes → structural validation" 참조.)
+agentic-knowledge-base 청크 d-0014 "3대 실패 모드와 방어선" 참조.)
 
 - **[지킴]** 새 노드는 **같은 커밋 안에서** 그래프에 연결한다. 나중에 잇겠다며 뜬 노드를
   남기지 않는다 — reachability BFS가 island로 잡는다.
@@ -50,7 +57,7 @@ SHACL 연결성 shape + 전역 reachability BFS가 이를 강제한다. (설계 
 ## 1b. 강인성 — 어휘 통제 (anti-drift)
 
 의미가 조용히 갈라지는 것(drift)을 손실만큼 정상 위험으로 다룬다. TBox와 SKOS 통제
-어휘가 방어선이다. (원칙: `docs/DESIGN.md` "Context drift → controlled vocabulary".)
+어휘가 방어선이다. (원칙: agentic-knowledge-base 청크 d-0014.)
 
 - **[지킴]** **TBox가 유일한 어휘**다. 새 `ho:` 클래스·프로퍼티를 발명하지 않는다. 기존
   클래스/프로퍼티/`ho:Concept`를 재사용한다. 근사 동의어 클래스나 untyped edge를 만드는
@@ -70,7 +77,7 @@ SHACL 연결성 shape + 전역 reachability BFS가 이를 강제한다. (설계 
 ## 1c. 강인성 — 예산 (anti-rot)
 
 그래프는 커져도 agent가 읽는 context는 유계여야 한다. `retrieve.py`의 예산 상한이 방어선
-이므로, 노드는 **예산 계산이 정확하도록** 저작한다. (원칙: `docs/DESIGN.md` "Context rot".)
+이므로, 노드는 **예산 계산이 정확하도록** 저작한다. (원칙: agentic-knowledge-base 청크 d-0013·d-0016.)
 
 - **[지킴]** **텍스트를 지닌 노드에는 `ho:tokenEstimate`를 반드시 붙인다**
   (`promptText`가 있는 SystemPrompt/Instruction/Guardrail/Example, 그리고 Tool/Workflow).
@@ -289,7 +296,7 @@ kebab 세그먼트로, 독립 repo 간 slug 충돌·orphan을 막는다.
   각 타입을 자기 그룹에 둔다(예: roles.ttl→roles+observation+memory).
 - **[지킴]** 스키마(클래스·프로퍼티)는 `tbox/`, 개체는 `abox/`. abox에서 새 클래스·프로퍼티를
   선언하지 않는다. 용어상 **TBox+shapes = ontology 층, ABox = knowledge graph 층**이며
-  `ontology/`는 두 층을 함께 담는 저장소 디렉토리다(`docs/DESIGN.md` §Terminology) — 이 문서의
+  `ontology/`는 두 층을 함께 담는 저장소 디렉토리다(`README.md`·`docs/federation-design.md` — 2026-09 재배치로 두 층이 harness-functional/harness-concrete로 갈라졌다) — 이 문서의
   나머지 `ontology/…` 표기는 그 경로를 가리킨다.
 - **[권장]** 짧은 노드(레이블만)는 **한 줄**로:
   `id:dom-coding a ho:Domain ; skos:prefLabel "Software coding" ; ho:salience 0.9 .`

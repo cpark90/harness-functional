@@ -10,7 +10,7 @@ the federation-specific rules).
 
 ## What lives where (D2)
 
-- **Central repo** (`harness_ontology`): the TBox vocabulary
+- **Functional repo** (`harness-functional`, formerly `harness_ontology`): the TBox vocabulary
   (`ontology/tbox/harness.ttl`), SHACL shapes, and all tools
   (`validate.py` / `retrieve.py` / webui). This is authoritative; you do **not**
   copy it.
@@ -101,7 +101,7 @@ always validate the composed union, never your file alone.
 
 1. Clone the central repo next to your data repo (your catalog points at it):
    ```bash
-   git clone https://github.com/hhmm2728/harness_ontology central
+   git clone https://github.com/cpark90/harness-functional central
    pip install -r central/requirements.txt   # rdflib / pyshacl / owlrl
    ```
 2. Validate the union locally (use an interpreter that has the three deps;

@@ -3,7 +3,7 @@
 로컬 Python 웹서버 + Docker 패키징으로, 에이전트와 사람이 **같은
 `ontology/*.ttl`을 단일 진실공급원(SSOT)** 으로 공유하며 관리하는 관리도구의 아키텍처
 문서다. 원 제안·결정 이력은 `docs/feedback/webui-management-tool.md`(승인됨), 온톨로지
-자체 설계는 `docs/DESIGN.md`, TTL 저작 규약은 `ONTOLOGYSTYLE.md`.
+자체 설계는 `docs/federation-design.md`와 agentic-knowledge-base 청크 d-0013·d-0014, TTL 저작 규약은 `ONTOLOGYSTYLE.md`.
 
 > 상태: **구현 존재(as-built) · 미검증(스모크 전) · 미커밋**. 이 문서는 as-built 코드에
 > 정박한 설계 기록이며, 남은 작업(검증·커밋·열린 결정)은 §9에 둔다.
@@ -11,7 +11,7 @@
 ## 1. 목적과 불변식 (왜 UI로 승격하나)
 
 이 프로젝트의 가치는 *flat OWL 파일 = SSOT + git-diff 리뷰 + validate/retrieve 파이프라인*
-이다(`docs/DESIGN.md`). web UI는 이 가치를 **깨지 않고** 사람의 편집을 같은 게이트에 태우기
+이다(agentic-knowledge-base 청크 d-0013). web UI는 이 가치를 **깨지 않고** 사람의 편집을 같은 게이트에 태우기
 위해 존재한다 — **웹도구는 상태를 fork하지 않는다.** 같은 `ontology_lib`/`validate.py`/
 `retrieve.py`로 읽고 쓰므로, 사람이 고치든 에이전트가 고치든 동일 불변식이 걸린다.
 

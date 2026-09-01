@@ -30,12 +30,13 @@ the tools enforce locally, so the knowledge base compounds instead of rotting.
    cd tools/webui/frontend && npm install && npm run build   # → tools/webui/static/
    cd ../../.. && PYTHONPATH=tools uvicorn tools.webui.server:app --port 8000
    ```
-3. **Or edit the TTL by hand** under `ontology/abox/` using the existing
-   vocabulary — see `ONTOLOGYSTYLE.md` for naming, predicate order and the
-   [지킴] rules.
+3. **Or edit the TTL by hand** — this repo carries the TBox
+   (`ontology/tbox/`) and shapes only; individuals (`abox/`, recipes) live in
+   **harness-concrete**. See `ONTOLOGYSTYLE.md` for naming, predicate order and
+   the [지킴] rules.
 4. **Validate locally** before pushing:
    ```bash
-   python3 tools/validate.py        # must print PASS
+   make validate                    # must print PASS (schema-root gate)
    ```
    (Use an interpreter that has `rdflib`/`pyshacl`/`owlrl`; inside Docker they
    are already installed.)
