@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
-"""Generate a recipe repo's federation registries from the on-disk recipes/*/.
+"""Generate the CONCRETE repo's federation registries from its on-disk recipes/*/.
+
+Repo roles after the 2026-09 ladder split: this file ships in the FUNCTIONAL
+repo (harness-functional — the TBox vocabulary, the shapes and this shared
+tooling, referred to below as "central"), and it is RUN AGAINST the CONCRETE
+repo (harness-concrete — the union ROOT, the ABox core parts library and the
+recipes; referred to below as the "recipe repo" / "data repo"). The concrete
+repo checks the functional repo out as ``./central/`` and invokes this as
+``python3 central/tools/gen_recipe_catalog.py --repo .``.
 
 The single source of truth for "which recipes exist" is the set of directories
-under a recipe repo's ``recipes/*/``; each holds one ``<name>/<name>.ttl`` whose
+under the recipe repo's ``recipes/*/``; each holds one ``<name>/<name>.ttl`` whose
 ``owl:Ontology`` header declares the recipe's root IRI. Historically that list
 was hand-duplicated in three places (the repo ``catalog-v001.xml``, the CI
 ``validate.yml`` matrix, and the central data-repo template), and it drifted at
@@ -56,6 +64,11 @@ from rdflib import Graph, RDF, OWL
 # the recipe repo's `central` checkout directory.
 CENTRAL_ROOT = Path(__file__).resolve().parent.parent
 CENTRAL_CATALOG = CENTRAL_ROOT / "catalog-v001.xml"
+# STALE DEFAULT — kept only so the flag has a value. It names the pre-2026-09
+# staging layout (`<central>/staging/harness-recipes`), which no longer exists
+# in the functional repo. Always pass --repo explicitly; the supported
+# invocation is `python3 central/tools/gen_recipe_catalog.py --repo .` from
+# harness-concrete. (Changing the value is a behaviour change, not a doc fix.)
 DEFAULT_REPO = CENTRAL_ROOT / "staging" / "harness-recipes"
 
 # The recipe repo checks the central clone out into this subdirectory (see the

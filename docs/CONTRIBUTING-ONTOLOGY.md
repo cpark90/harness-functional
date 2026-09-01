@@ -13,7 +13,12 @@ the federation-specific rules).
 - **Functional repo** (`harness-functional`, formerly `harness_ontology`): the TBox vocabulary
   (`ontology/tbox/harness.ttl`), SHACL shapes, and all tools
   (`validate.py` / `retrieve.py` / webui). This is authoritative; you do **not**
-  copy it.
+  copy it. Since the 2026-09 ladder split it holds **no individuals**.
+- **Concrete repo** (`harness-concrete`, formerly `harness-recipes`): the union
+  root, the **neutral core parts library** — the `.../data/core/<type>` units
+  under `ontology/abox/core/<group>/*.ttl`, i.e. every `id/core/` individual —
+  and the recipes. If your data references a shared central node (`core:…`),
+  that node lives here, so you clone this repo too.
 - **Your data repo**: pure Turtle ABox only — no tools. Typically one data-unit
   TTL, a `catalog-v001.xml`, and a CI workflow.
 
@@ -23,8 +28,11 @@ is what keeps anti-drift intact across repos.
 ## One-time setup
 
 1. Create your data repo with a single data-unit TTL (e.g. `mydomain.ttl`).
-2. Declare it as an importable ontology that imports the central TBox (and the
-   central `core` data if you reference shared nodes):
+2. Declare it as an importable ontology that imports the central TBox — plus
+   **each** `.../data/core/<type>` unit whose nodes you reference. The core is
+   split per component type (`guardrails`, `tools`, `workflows`, `roles`,
+   `capabilities`, `concepts`, `harnesses`, …); there is no single
+   `.../data/core` document, so import the units, not a parent IRI:
 
    ```turtle
    @prefix ho:    <https://harness-ontology.dev/schema#> .
@@ -35,12 +43,15 @@ is what keeps anti-drift intact across repos.
 
    <https://harness-ontology.dev/data/mydomain> a owl:Ontology ;
        owl:imports <https://harness-ontology.dev/schema> ,
-                   <https://harness-ontology.dev/data/core> .
+                   <https://harness-ontology.dev/data/core/tools> ,
+                   <https://harness-ontology.dev/data/core/guardrails> .
    ```
 
-3. Add a `catalog-v001.xml` that resolves the central IRIs to a local clone of
-   the central repo and your data unit to its local file (see the CI template
-   `docs/ci/data-repo-validate.yml` for the exact entries).
+3. Add a `catalog-v001.xml` that resolves every imported IRI to a local path:
+   the schema (and shapes) to your **harness-functional** clone, each
+   `.../data/core/<type>` unit to your **harness-concrete** clone, and your data
+   unit to its local file (see the CI template `docs/ci/data-repo-validate.yml`,
+   including its note that the template itself still assumes a single checkout).
 4. Copy `docs/ci/data-repo-validate.yml` to `.github/workflows/validate.yml`
    and set its three `env` values.
 
@@ -83,7 +94,8 @@ That last one is enforced in two places on purpose. The shapes close the **value
 set** (`ho:ConceptFacetShape`: one value, one of the five) but carry **no
 `sh:minCount`**: this shapes file is the federation gate that validates *your*
 union too, so a presence constraint here would fail every data repo whose
-concepts predate the axis (the recipes repo alone carries ~239). Central
+concepts predate the axis (harness-concrete alone carried ~239 at the time of
+that decision). Central
 coverage is enforced instead by `tools/lint_uniformity.py`, scoped to the
 `id/core/` namespace and not part of your repo's CI — a missing facet therefore
 surfaces in that linter, never in `validate.py`. Do not "fix" the asymmetry by
@@ -99,11 +111,16 @@ components via `core:` where possible.
 The invariants only hold over the **union** (central TBox + core + your data), so
 always validate the composed union, never your file alone.
 
-1. Clone the central repo next to your data repo (your catalog points at it):
+1. Clone the two central repos next to your data repo (your catalog points at
+   them):
    ```bash
-   git clone https://github.com/cpark90/harness-functional central
+   git clone https://github.com/cpark90/harness-functional central   # TBox + shapes + tools
+   git clone https://github.com/cpark90/harness-concrete   concrete  # core parts (id/core/ nodes)
    pip install -r central/requirements.txt   # rdflib / pyshacl / owlrl
    ```
+   The second clone is only needed if your data imports any
+   `.../data/core/<type>` unit; the shapes always come from `central/`
+   (`validate.py` resolves them relative to its own checkout).
 2. Validate the union locally (use an interpreter that has the three deps;
    `/usr/bin/python3` here):
    ```bash

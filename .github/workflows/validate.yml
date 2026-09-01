@@ -1,6 +1,13 @@
-# CI gate for contributions. Every push / pull request must keep the ontology
-# connected, well-typed and buildable — the same invariants the local tools and
-# the web UI enforce. A non-zero exit fails the check (see docs/DESIGN.md).
+# CI gate for contributions to the FUNCTIONAL repo. Every push / pull request
+# must keep the vocabulary well-typed and internally consistent — the same
+# invariants the local tools enforce. A non-zero exit fails the check.
+# (Rationale: agentic-knowledge-base decision chunks d-0013/d-0014; the former
+# docs/DESIGN.md was retired into those chunks in the 2026-09 reorg.)
+#
+# SCOPE: this repo holds no individuals, so the instance-dependent axes
+# (reachability, capability satisfaction, assembly order, capacity fit) pass
+# vacuously here and are really enforced by harness-concrete's union gate.
+# Equivalent local command: `make validate`.
 name: validate-ontology
 
 on:

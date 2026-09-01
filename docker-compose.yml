@@ -4,6 +4,14 @@
 # ontology/ is bind-mounted read-write so edits made in the UI land in the host's
 # TTL files (the single source of truth) and the container stays stateless.
 #
+# 2026-09 ladder split — READ THIS BEFORE EXPECTING TO AUTHOR HERE: this repo's
+# ontology/ now holds only the TBox (tbox/) and the SHACL shapes (shapes/); the
+# individuals the editor authors moved to harness-concrete
+# (ontology/abox/core/<group>/*.ttl). The editor's write path is repo-local
+# (ttl_writer.ABOX_DIR = <repo>/ontology/abox), so mounting THIS repo's ontology/
+# gives the UI an empty ABox to edit. Repointing it is an open item —
+# docs/webui-design.md §9.
+#
 # tools/ is intentionally NOT mounted: the Dockerfile builds the Svelte frontend
 # into tools/webui/static/ and bakes tools/ into the image. Mounting the host's
 # tools/ would shadow that built static/ with the host's (un-built) one — a blank

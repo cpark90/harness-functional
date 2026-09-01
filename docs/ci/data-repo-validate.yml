@@ -18,16 +18,30 @@
 #                       <https://harness-ontology.dev/data/core/tools> ,
 #                       ... (each central .../data/core/<type> unit it references) .
 #     and mints individuals under .../id/<domain>/<slug> (ONTOLOGYSTYLE §2a). The
-#     central core is split per component type, grouped into DA-4 taxonomy subdirs
-#     (ontology/abox/core/<group>/<type>.ttl; the logical .../data/core/<type> IRI
-#     is position-independent, the catalog is the IRI->path map), so map
-#     every .../data/core/<type> IRI, not a single .../data/core.
-#   * this repo ships a catalog-v001.xml mapping the central IRIs to the checked
-#     -out central clone and its own data unit to the local file, e.g.:
+#     core parts library is split per component type, grouped into DA-4 taxonomy
+#     subdirs (ontology/abox/core/<group>/<type>.ttl; the logical
+#     .../data/core/<type> IRI is position-independent, the catalog is the
+#     IRI->path map), so map every .../data/core/<type> IRI, not a single
+#     .../data/core.
+#   * this repo ships a catalog-v001.xml mapping every imported IRI to a local
+#     path, e.g.:
 #       <uri name="https://harness-ontology.dev/schema"    uri="central/ontology/tbox/harness.ttl"/>
-#       <uri name="https://harness-ontology.dev/data/core/tools" uri="central/ontology/abox/core/operational/tools.ttl"/>
-#       ... (one <uri> per central .../data/core/<type> unit) ...
+#       <uri name="https://harness-ontology.dev/data/core/tools" uri="concrete/ontology/abox/core/operational/tools.ttl"/>
+#       ... (one <uri> per .../data/core/<type> unit) ...
 #       <uri name="https://harness-ontology.dev/data/<domain>" uri="<domain>.ttl"/>
+#
+# !! STALE AFTER THE 2026-09 LADDER SPLIT — this template checks out ONE repo,
+#    but the two halves it needs now live in two:
+#      * harness-functional (checked out below as ./central) — the TBox schema,
+#        the SHACL shapes and the tooling (validate.py resolves shapes via
+#        lib.ONT_DIR, i.e. under the checkout that holds validate.py, so shapes
+#        keep coming from here).
+#      * harness-concrete   — the ABox core parts library (.../data/core/<type>).
+#        There is NO ontology/abox in harness-functional any more, so a data repo
+#        that imports any .../data/core/<type> unit must check harness-concrete
+#        out as well (e.g. path: concrete) and point those catalog entries at it.
+#    The job below has not been updated for that second checkout and has no live
+#    user; treat it as a worked example of the union pattern, not a drop-in file.
 name: validate-ontology-data
 
 on:

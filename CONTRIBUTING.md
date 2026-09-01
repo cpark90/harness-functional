@@ -13,8 +13,14 @@ the tools enforce locally, so the knowledge base compounds instead of rotting.
 
 ## The loop
 
+Contributions to **this** repo are vocabulary: TBox classes/properties, SHACL
+shapes and the shared tooling. Individuals (guardrails, prompts, tools,
+harnesses) and recipes are contributed to **harness-concrete** instead.
+
 1. **Fork & clone** the repo.
-2. **Run the web UI** (easiest way to author without hand-writing TTL):
+2. **Run the web UI** (easiest way to author individuals without hand-writing
+   TTL — note it targets the ABox, which lives in harness-concrete, not here;
+   see "Scope of the web UI" below):
    ```bash
    docker compose up          # → http://127.0.0.1:8000
    ```
@@ -46,8 +52,10 @@ the tools enforce locally, so the knowledge base compounds instead of rotting.
 
 ## Rules of thumb
 
-- **Never load the whole stored graph to make a change** — use
-  `python3 tools/retrieve.py "<request>"` and work from the pack.
+- **Never load the whole stored graph to make a change** — work from a
+  `retrieve.py` pack. Projection needs individuals, so run it from
+  harness-concrete: `HARNESS_CATALOG=catalog-v001.xml python3
+  central/tools/retrieve.py "<request>"`.
 - **Reuse the vocabulary.** New nodes reuse existing `ho:` classes/properties and
   `skos:Concept` tags. A new concept must be connected (a `skos:broader` parent
   or something it tags) in the same PR, or validation flags it as an orphan.
@@ -61,6 +69,14 @@ the tools enforce locally, so the knowledge base compounds instead of rotting.
 The UI is a **local authoring aid**, not a hosted service: it binds to
 `127.0.0.1`, has no authentication, and writes directly to your working copy.
 Collaboration and review happen through git/PRs, not a shared server.
+
+**After the 2026-09 split its write path has no target in this repo.** The
+editor authors individuals under `<repo>/ontology/abox/`, and this repo has no
+`ontology/abox` — the ABox moved to harness-concrete. Reading and validating
+compose across repos through `HARNESS_CATALOG`, but the write path and the
+file-mtime lock are repo-local, so serving it straight out of
+harness-functional shows an empty graph. Repointing it is an open item
+(`docs/webui-design.md` §9). Until then, author TTL by hand (step 3).
 
 By contributing you agree that your contributions are licensed under the
 project's [Apache License 2.0](LICENSE).

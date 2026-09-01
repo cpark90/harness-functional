@@ -29,14 +29,18 @@ Two verification mechanisms, chosen per-contract via ho:contractKind:
 Exit code is non-zero if ANY contract fails, so this drops into CI / a gate.
 Reporting is deterministic (contracts sorted by IRI).
 
-Usage:
-    /usr/bin/python3 tools/verify_contract.py h-lpranging --tree build/lpranging
-    /usr/bin/python3 tools/verify_contract.py h-lpranging --tree build/lpranging --format json
+Contract individuals live where the ABox lives — the CONCRETE repo
+(harness-concrete), which checks this repo out as ./central/. Run it from there:
+
+    HARNESS_CATALOG=catalog-v001.xml \
+    /usr/bin/python3 central/tools/verify_contract.py h-lpranging --tree build/lpranging
+    ... --format json
 
 Composition honours HARNESS_CATALOG / HARNESS_ROOT_ONTOLOGY exactly like
 validate.py / materialize.py, so a recipe union verifies the same way the
-central store does. The contract grammar is documented in
-docs/odr-contract-verify.md.
+central store does. The contract grammar is documented in harness-concrete's
+docs/odr-contract-verify.md (ODR VERIFY is a LOGICAL-level concern and moved
+there with the 2026-09 ladder split; this repo keeps only the vocabulary).
 """
 from __future__ import annotations
 

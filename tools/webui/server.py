@@ -17,6 +17,15 @@ Validation always reloads from disk so the verdict is against current TTL.
   PUT  /api/node        upsert a node (surgical TTL write) gated by validate
   POST /api/validate    structured validate.py result
   POST /api/retrieve    request-scoped context pack (retrieve.project)
+
+2026-09 ladder split — WHERE THE EDITABLE GRAPH IS: this repo
+(harness-functional) holds only the TBox + shapes; the individuals the editor
+authors moved to the CONCRETE repo (harness-concrete,
+`ontology/abox/core/<group>/*.ttl`). The load path composes through
+HARNESS_CATALOG, but the WRITE path (ttl_writer.ABOX_DIR) and the mtime
+signature are REPO-LOCAL, so served straight out of harness-functional the
+editor sees an empty ABox. See ttl_writer.abox_files() — repointing the write
+path is a behaviour change, not a docstring one.
 """
 from __future__ import annotations
 

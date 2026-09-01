@@ -219,13 +219,21 @@ def render_block(node: dict, existing: dict | None = None,
 
 
 def abox_files() -> list[str]:
-    """Every ABox TTL under `ontology/abox`, at any depth, path-sorted.
+    """Every ABox TTL under `<this file's repo>/ontology/abox`, any depth, sorted.
 
     The glob must be RECURSIVE: the ABox is organised into per-group
     directories (`abox/core/<group>/<type>.ttl`, ONTOLOGYSTYLE §4), so a flat
     `abox/*.ttl` matches nothing and the UI would silently see an empty
     ontology. `**` with recursive=True also matches zero directories, so a
-    flat file such as `abox/authored.ttl` is still found."""
+    flat file such as `abox/authored.ttl` is still found.
+
+    2026-09 ladder split: ABOX_DIR is REPO-LOCAL (derived from this file's
+    path), but the ABox itself moved to the CONCRETE repo (harness-concrete,
+    `ontology/abox/core/<group>/*.ttl`). Under the FUNCTIONAL repo
+    (harness-functional, where this file ships) the directory does not exist,
+    so this returns [] and the editor's write path has nothing to target —
+    unlike validate/retrieve, which compose across repos via HARNESS_CATALOG.
+    Repointing the write path is a behaviour change, not a docstring one."""
     return sorted(glob.glob(os.path.join(ABOX_DIR, "**", "*.ttl"),
                             recursive=True))
 

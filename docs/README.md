@@ -11,6 +11,7 @@
 | [`federation-design.md`](federation-design.md) | 두 저장소의 union 조립 — D1(imports+catalog)·D2(사다리 분할)·D3(IRI)·D4(2단 게이트) |
 | [`CONTRIBUTING-ONTOLOGY.md`](CONTRIBUTING-ONTOLOGY.md) | 어휘 기여 절차 |
 | [`webui-design.md`](webui-design.md) | 온톨로지 관리 web UI 아키텍처 (도구는 `tools/webui/`) |
+| [`materialize-design.md`](materialize-design.md) | 빌드 투영 — 레시피 union을 실행 가능한 파일 트리로. 도구 `tools/materialize.py`의 설계 명세 |
 | [`ci/data-repo-validate.yml`](ci/data-repo-validate.yml) | 데이터 저장소 CI 템플릿 |
 
 ## 진행 중 / 규범이 살아있는 계획 (`plans/`)
@@ -46,5 +47,8 @@
 이송되었다: 형식 저장·좁은 읽기 d-0013, 3대 실패 모드와 방어선 d-0014, 조립
 워크플로 d-0015, 토큰 예산 d-0016, 교훈 승격 d-0017.
 logical·concrete 수준 문서(`recipes-design`, `odr-bind-lock`,
-`odr-contract-verify`, `composition-methodology`, `materialize-design`)는
-harness-concrete의 `docs/`로 이관되었다.
+`odr-contract-verify`, `composition-methodology`)는 harness-concrete의 `docs/`로
+이관되었다. `materialize-design`은 한 번 그쪽으로 갔다가 **되돌아왔다** — 그 문서의
+실체는 `tools/materialize.py`의 설계 명세이고, 도구와 문서가 갈라져 있던 동안
+실제로 잘못된 서술(`ontology_lib.ROOT`의 의미)이 생겼다. **도구 설계 문서는 도구와
+함께 둔다**가 그 결론이다.

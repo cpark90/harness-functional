@@ -20,15 +20,18 @@ orchestrator↔inspection, dispatch)과 `.claude/skills`·commands 같은 구조
 ## 예방 (두 축)
 
 1. **중립 온톨로지 guardrail** — `id:gr-structural-coverage`("Structural coverage
-   completeness", `ontology/abox/core/guardrails.ttl`). 규칙: 시스템을 모델로 반영할 때
+   completeness"). 개체는 **harness-concrete**의
+   `ontology/abox/core/behavioral/guardrails.ttl`에 있다. 규칙: 시스템을 모델로 반영할 때
    소스 구조 요소를 빠짐없이 열거해 각각을 표현에 매핑하고, 어휘가 없는 요소는 조용히
    건너뛰지 말고 **schema 확장 신호**로 본다. done 선언 전에 소스 대비 커버리지를 검증한다.
    `id:h-multiagent`의 `ho:hasGuardrail`에 배선. `gr-traceability`(기록 불변·provenance)·
    `gr-no-arbitrary-decision`(미결 판단 에스컬레이션)과는 구분되는 **반영 완전성** 정책이다.
-2. **CLAUDE.md 프로세스 게이트** — §"Composing a new harness (the intended workflow)"에
-   step 7로 **source→representation coverage audit(vnv dispatch)** 를 추가. `validate.py`
-   초록만으로는 done이 아니며, 표현되지 않은 harness-구조적 요소(role/tool/guardrail/
-   **channel**/standard)는 GAP, 담을 어휘 범주가 없으면 TBox 확장을 트리거한다.
+2. **프로세스 게이트** — 조립 워크플로의 마지막 단계로 **source→representation coverage
+   audit(vnv dispatch)** 를 둔다. `validate.py` 초록만으로는 done이 아니며, 표현되지 않은
+   harness-구조적 요소(role/tool/guardrail/**channel**/standard)는 GAP, 담을 어휘 범주가
+   없으면 TBox 확장을 트리거한다. (2026-09 이송: 이 워크플로 규범의 원본은 이제
+   agentic-knowledge-base의 결정 청크 **d-0015**(조립 워크플로 + coverage audit)이다 —
+   당시 이 항목이 가리킨 CLAUDE.md의 "Composing a new harness" 절은 남아 있지 않다.)
 
 ## 일반 원칙
 

@@ -2,6 +2,13 @@
 
 > 작성: orchestrator (2026-07-23). 사용자 요청: ObservationArea를 observation space + area of interest로 분리 + 의미 모호한 부분 전체 정리.
 > 방법: TBox 29 클래스 정의를 훑어 **정의가 겹치거나 자기지칭(A를 A로 정의)하는** 혼동쌍 식별.
+>
+> **읽는 법 (2026-09 재배치)**: **감사 자체는 완료**되었고(A의 3분할은 TBox에 반영되어
+> `ho:ObservationSpace`/`ho:AreaOfInterest`/`ho:AreaOfObservation`로 존재한다), 이 문서가
+> 계속 유효한 것은 **B~F의 정의 경계 규범**과 G의 taxonomy 구조다. 아래 "인스턴스
+> refactor"·"ABox" 항목은 **harness-concrete**(`ontology/abox/core/**`)에서 일어난
+> 작업을 가리킨다 — 이 저장소(harness-functional)에는 TBox와 shapes만 있다. 클래스·프로퍼티
+> 개수도 작성 시점 값이므로 인용하지 말고 현재 TBox에서 다시 센다.
 
 ## A. ObservationArea → ObservationSpace + AreaOfInterest + AreaOfObservation (3분할 — 사용자 명시)
 현 `ho:ObservationArea`가 **세 개념을 뭉갬**(sensing/attention 이론의 표준 3구분). 분리:
@@ -13,7 +20,7 @@
   > **`ho:observedTokenVolume`으로 분리**했다. `tokenEstimate`는 이제 **노드 자신의 텍스트 비용**만 뜻한다.
 - **정렬**: AoO가 AoI를 **cover**(`ho:coversInterest` AoO→AoI): 원하는 걸 실제로 관측. AoI⊄AoO 간극 = partiality/loss = 비효율. 셋 다 ObservationSpace ⊆ cognitiveCapacity.
 - **관계**: Agent → ObservationSpace(1) → { AreaOfInterest(≥1, 원함) , AreaOfObservation(≥1, 실제) }, AoO `coversInterest` AoI.
-- **기존 인스턴스 refactor**: 현 `oa-<agent>-external/internal` 10개(실제 관측 서술) → **AreaOfObservation**로 retype. 각 agent에 ObservationSpace 1(projectsFrom global-state, unobserved) + AreaOfInterest(역할 정보요구) 신설. `agentObservation`은 Agent→ObservationSpace로 재지정, propertyChain rollup은 space→area까지 확장.
+- **기존 인스턴스 refactor** (개체 작업 — harness-concrete): 현 `oa-<agent>-external/internal` 10개(실제 관측 서술) → **AreaOfObservation**로 retype. 각 agent에 ObservationSpace 1(projectsFrom global-state, unobserved) + AreaOfInterest(역할 정보요구) 신설. `agentObservation`은 Agent→ObservationSpace로 재지정, propertyChain rollup은 space→area까지 확장.
 
 ## B. Workflow vs DesignPattern (정의 예시 중복 — 실제 conflation)
 - Workflow="control-flow strategy (single-shot, **ReAct, plan-execute**, multi-agent)"; DesignPattern="reusable composition pattern (**ReAct, plan-then-execute**, orchestrator-workers, reflection)". **동일 예시(ReAct/plan-execute)를 양쪽이 나열** → 경계 모호.
@@ -57,9 +64,9 @@
 - `ho:Concept`(⊑ skos:Concept, tagging vocab): 그대로.
 
 ### 리스크
-순수 TBox 재부모화 — ABox/tools/shapes 무변경. validate PASS·materialize byte-identity·recipe 무영향 기대. 중간 superclass는 INSTANCE_CLASSES 불요(직접 인스턴스 없음; leaf가 여전히 직접 타입).
+순수 TBox 재부모화 — ABox(harness-concrete)/tools/shapes 무변경. 양쪽 저장소 validate PASS·materialize byte-identity·recipe 무영향 기대. 중간 superclass는 INSTANCE_CLASSES 불요(직접 인스턴스 없음; leaf가 여전히 직접 타입).
 
 ## 성격·리스크
-- **A**=구조 분리(신규 클래스 2 + 기존 ObservationArea 인스턴스 refactor + tools/shapes) — MAS-W4 vnv 완료 후.
+- **A**=구조 분리(신규 클래스 2 + 기존 ObservationArea 인스턴스 refactor[harness-concrete] + tools/shapes) — MAS-W4 vnv 완료 후. **TBox 쪽은 반영됨**: 현 `ontology/tbox/harness.ttl`에 `ho:ObservationSpace`·`ho:AreaOfInterest`·`ho:AreaOfObservation` 세 클래스가 있고 `ho:ObservationArea`는 남아 있지 않다(개체 refactor 상태는 harness-concrete에서 확인).
 - **B~F**=**정의(skos:definition) 명확화 편집**(그래프 구조 무변경, materialize 무영향, orphan/ripple 없음, altLabel 보강). 저위험.
 - 순서: MAS-W4(현 ObservationArea 검증) 완료 반영 → A(분리) → B~F(정의 정리) → vnv 재판정.

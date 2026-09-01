@@ -4,6 +4,20 @@
 > 각 agent를 **partially-observed distributed**로 가정, **인지영역(observation region) ≡ 역할**로 일치,
 > **harness = agent를 coding한 source code**. 이에 맞게 온톨로지를 세분화.
 > 성격: 기존 Role/Memory/Channel/least-privilege/bounded-context를 관통해 **통일하는 이론 backbone** — 폐기가 아니라 승격·세분화.
+>
+> **읽는 법 (2026-09 재배치 + 후속 개정)**. 이 문서가 살아 있는 이유는 **이론 backbone**
+> (Dec-POMDP 대응, 4단 정보공간 투영 사슬, 관측≠행동 분리)이지 아래의 wave 지시가 아니다.
+> 두 가지를 보정해 읽는다:
+> 1. **`ho:ObservationArea`는 더 이상 없다.** 이 문서가 쓴 단일 클래스는 이후
+>    `docs/plans/disambiguation-audit.md` §A에서 **`ho:ObservationSpace`(Ω_i) +
+>    `ho:AreaOfInterest`(원하는 관측) + `ho:AreaOfObservation`(실제 관측)** 셋으로 분할됐고,
+>    area 크기 술어도 `ho:tokenEstimate`에서 **`ho:observedTokenVolume`**으로 분리됐다.
+>    현 TBox가 원본이다 — 이 문서의 클래스·술어 이름을 그대로 저작하지 않는다.
+> 2. **저장소가 둘로 갈렸다.** TBox·shapes는 **harness-functional**
+>    (`ontology/tbox/harness.ttl`·`ontology/shapes/harness-shapes.ttl`), 개체(ABox)는
+>    **harness-concrete**(`ontology/abox/core/<group>/*.ttl`)다. 아래의 `roles.ttl`·
+>    `harnesses.ttl`·`domains-tasks.ttl` 같은 flat 파일명은 재배치 이전 표기이며, 지금은
+>    concrete의 그룹 디렉토리(`organization/`·`wholes/`·`spec/` …)에 흩어져 있다.
 
 ## 1. 프레임 (선택한 형식)
 현 시스템(orchestrator + dispatch되는 worker + 별도 세션 inspection)을 **탈중앙 부분관측 다중에이전트 시스템**
@@ -75,8 +89,8 @@ Local Observation(O_i)은 4단계 중첩 정보공간의 **투영 사슬 말단*
 - 인지능력: `ho:cognitiveCapacity`(datatype int, domain ho:Agent) — loss-free 세션 크기. (mc-* ModelConfig 파생값과 정합; 필요시 ModelConfig에도 선언해 agent가 상속.)
 - 관측 술어: `ho:observationKind`(datatype internal|external) · `ho:observesComponent`(ObservationArea→HarnessComponent) · `ho:observesChannel`(→Channel) · `ho:observesMemory`(→Memory) · datatype `ho:observedFileScope`·`ho:unobserved`. (area 크기는 기존 `ho:tokenEstimate` 재사용.)
 **shape**(harness-shapes.ttl): `ho:AgentShape`(agentRole min1 · **agentObservation min1**[hard] · **cognitiveCapacity min1** · prefLabel · maturity) + `ho:ObservationAreaShape`(observationKind sh:in{internal,external} min1 · tokenEstimate min1 · prefLabel · maturity · observes* ≥1 soft). 용량적합(Σarea ≤ capacity)은 SHACL 합산 한계로 **tool/리뷰 검사**(값은 기록).
-**ABox**(roles.ttl 개체 + harnesses.ttl 배선): 이 repo 운영 agent 5개 — orchestrator/developer/vnv/inspection/synthesizer. 각 `agentRole`=대응 Role, `agentObservation`=internal+external area(≥1), `agentFunction`=Capability. ObservationArea 개체를 role별로 선언(예: orchestrator external={전 dispatch 채널·feedback}·internal={자기 계획상태}·unobserved=worker 내부; developer external={자기 brief·배정 노드 read·budget=pack}·internal={자기 role/memory}·unobserved=타 노드·타 worker; inspection external={설계그래프 전체 read·feedback}, A=feedback만). **host=`h-multiagent`에 `hasAgent` 배선**(hasAgent는 emitter 없어 CLAUDE.md byte 불변 — Memory 선례; materialize round-trip으로 byte-identity 확인). ObservationArea는 HarnessComponent이므로 rollup/배선으로 orphan 0(B1 교훈).
-**문서**: harness=source-code / agent=compiled-composite / O·A·π·b 대응을 `docs/`(신규 mas-model.md 또는 composition-methodology 절)에 명문화.
+**ABox**(harness-concrete — 당시 flat `roles.ttl` 개체 + `harnesses.ttl` 배선, 지금은 각각 `abox/core/organization/`·`abox/core/wholes/`): 운영 agent 5개 — orchestrator/developer/vnv/inspection/synthesizer. 각 `agentRole`=대응 Role, `agentObservation`=internal+external area(≥1), `agentFunction`=Capability. ObservationArea 개체를 role별로 선언(예: orchestrator external={전 dispatch 채널·feedback}·internal={자기 계획상태}·unobserved=worker 내부; developer external={자기 brief·배정 노드 read·budget=pack}·internal={자기 role/memory}·unobserved=타 노드·타 worker; inspection external={설계그래프 전체 read·feedback}, A=feedback만). **host=`h-multiagent`에 `hasAgent` 배선**(hasAgent는 emitter 없어 CLAUDE.md byte 불변 — Memory 선례; materialize round-trip으로 byte-identity 확인). ObservationArea는 HarnessComponent이므로 rollup/배선으로 orphan 0(B1 교훈).
+**문서**: harness=source-code / agent=compiled-composite / O·A·π·b 대응을 명문화. (재배치 후 후보 위치는 **harness-concrete의 `docs/composition-methodology.md`** — 조립 방법론 문서가 그쪽으로 이관됐다.)
 
 ## 5. 이 재정리가 통일하는 것 (기존 부품 = MAS facet)
 Agent=분산노드 · agentRole(Role)=mandate/π_i · agentFunction(Capability)/roleTool=A_i · persona+guardrail+workflow=π_i ·
@@ -86,7 +100,10 @@ Memory tier=b_i · Channel=통신 · DesignPattern=topology · bounded-context/l
 
 ## 6. 확정 결정 (사용자 2026-07-23) + wave 계획
 - **Q1 Agent**: `ho:Agent` **신설**(role+인지영역+기능 포함 composite). **Q2**: **풀 MAS 레이어**. **Q3**: ObservationArea **internal/external** 구분 + **다중 AOI, ≥1 필수(hard)**. **Q4**: **MAS 우선**, revfactory P2~P4는 B1-clean에서 대기.
-- **Wave 계획(순차, 파일 배타)**:
+- **Wave 계획(순차, 파일 배타)** — 아래 wave는 **작성 당시(단일 저장소·`ObservationArea` 시절)
+  의 기록**이다. 재배치 후 W1은 harness-functional, W2·W3의 ABox 몫은 harness-concrete이고,
+  `roles.ttl`→`abox/core/organization/roles.ttl`, `harnesses.ttl`→`abox/core/wholes/harnesses.ttl`,
+  `domains-tasks.ttl`→`abox/core/spec/domains-tasks.ttl`, 관측 개체→`abox/core/observational/observation.ttl`:
   - **MAS-W1**(TBox+shapes): 위 클래스/술어/propertyChain + AgentShape/ObservationAreaShape. 파일 `tbox/harness.ttl`+`shapes/harness-shapes.ttl`. validate PASS(인스턴스 0).
   - **MAS-W2**(ABox): Agent 5 + ObservationArea(internal/external) 개체 + `h-multiagent` hasAgent 배선. 파일 `roles.ttl`+`harnesses.ttl`. validate PASS + materialize byte-identity(CLAUDE.md 불변) + recipe federate spot-check. (진행 중)
   - **MAS-W3**(정보공간 계층 §3e): TBox `ho:EnvironmentSpace`/`ho:GlobalState` + 4 투영속성(`tbox/harness.ttl`) · tools `INSTANCE_LINK_PREDICATES` +4(`ontology_lib.py`) · ABox env-space/global-state 개체 + `h-multiagent hasGlobalState` + ObservationArea들에 `projectsFrom`(`roles.ttl`+`harnesses.ttl`+`domains-tasks.ttl`). **W2 후**(ObservationArea projectsFrom 링크가 roles.ttl 재편집). validate PASS + reachability(투영 사슬).

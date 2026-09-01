@@ -10,6 +10,24 @@ baseline: validate.py PASS · lint_uniformity.py PASS · check_determinism.py PA
 ---
 # Phase 0 — 기존 lane 형식화 (평면×자산 매핑 · 재사용 경계 · 형식화 GAP)
 
+> **⚠ 2026-09 재배치 — 이 문서는 분할 이전(2026-08-28)의 실측 스냅샷이다.** 아래의 모든
+> `파일:줄` 인용·개수는 **단일 저장소(구 `harness_ontology`) 시점**의 값이며, 그 뒤 사다리
+> 재배치로 자산이 갈라졌다. 다음 세 가지로 치환해 읽는다 — 인용의 줄 번호는 재검증하지
+> 않았으므로 **그대로 신뢰하지 말고 필요할 때 다시 확인한다**:
+> - **`ontology/abox/**`(18 TTL)·개체 수·`abox/authored.ttl`** → 이제 **harness-concrete**의
+>   `ontology/abox/core/<group>/*.ttl`. 이 저장소(**harness-functional**)에는 개체가 없고
+>   `ontology/tbox/`·`ontology/shapes/`만 있다.
+> - **`docs/DESIGN.md`** → **삭제됨**. 그 내용은 agentic-knowledge-base의 결정 청크로 이송됐다
+>   (형식 저장·좁은 읽기 d-0013, 3대 실패 모드와 방어선 d-0014, 조립 워크플로 d-0015,
+>   토큰 예산 d-0016, 교훈 승격 d-0017). "설계 결정 평면"의 저장 위치 서술은 이제
+>   `docs/feedback/verified/**` + `docs/plans/**` + `docs/verify/**` + **그 청크들**이다.
+> - **하드 6축 게이트**(reachability·capability·assemblyOrder·capacityFit 포함)는 개체가 있는
+>   **harness-concrete의 union 게이트**에서만 실질적으로 걸린다. 이 저장소의 `make validate`는
+>   TBox 정합성·SHACL·라벨 중복의 좁은 게이트다.
+>
+> **살아 있는 부분**은 5평면 프레임, 재사용 경계, GAP 목록(A1~E3), §4의 Phase 1 계약이다 —
+> 그것들은 자산이 어느 저장소에 있든 성립한다.
+
 > **이 문서가 하는 일**: 설계 원본 `tool_suggestion.md` v0.2가 정의한 5개 지식 평면을,
 > **이 repo에 이미 존재하는 원시 구현**에 1:1로 대응시키고 Phase 1+가 어디까지 재사용할 수
 > 있는지 경계를 긋는다. **신규 구현은 없다** — 새 코드·새 그래프 노드·기존 파일 수정 모두 없고,

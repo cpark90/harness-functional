@@ -19,7 +19,9 @@ CLAUDE.md + MANIFEST.json. Increment 2 (this file) adds first-class roles (P4:
 .claude/agents/<role>.md per ho:hasRole), tool implementation refs (P3:
 ho:implementationRef fetched/copied into tools/<basename>) and standard/docs
 scaffold (P5: ho:scaffold / ho:artifactTemplate fragments rendered into the
-tree). See docs/materialize-design.md.
+tree). See harness-concrete's docs/materialize-design.md (the design doc moved
+there with the 2026-09 ladder split — materialization consumes instances, which
+are a CONCRETE-level concern; this repo keeps only the vocabulary and the tool).
 
 Emitted text is SELF-CONTAINED. Graph text (skos:definition / ho:promptText) may
 name a neighbouring node by its authoring token — id:chan-dispatch,
@@ -28,14 +30,17 @@ for the agent reading the built document. The build therefore renders from a
 projection of the graph in which those tokens are resolved to prefLabel/rdfs:label
 (see IriTokenResolver); the stored ontology keeps its disambiguation unchanged.
 
-Usage:
-    /usr/bin/python3 tools/materialize.py h-techdoc --out build/techdoc
-    /usr/bin/python3 tools/materialize.py https://harness-ontology.dev/id/techdoc/h-techdoc \
-        --out build/techdoc --format json
+Usage — run it where the instances are, i.e. the CONCRETE repo
+(harness-concrete), which checks this repo out as ./central/:
+
+    HARNESS_CATALOG=catalog-v001.xml \
+    /usr/bin/python3 central/tools/materialize.py h-techdoc --out build/techdoc
+    ... https://harness-ontology.dev/id/techdoc/h-techdoc --out build/techdoc --format json
 
 Composition honours HARNESS_CATALOG / HARNESS_ROOT_ONTOLOGY exactly like
 validate.py and retrieve.py, so a recipe union materializes the same way the
-central store does.
+central store does. There are no harness individuals in this repo alone, so
+running it here has nothing to materialize.
 """
 from __future__ import annotations
 

@@ -4,20 +4,31 @@ orchestrator 계획 문서. 사용자 결정 원본은 `docs/feedback/block-anch
 ("사용자 결정" 절), 1단계 판정은 `docs/verify/weighted-link-phase1-verify.md`
 (PASS-with-notes, **2단계 진입 = 조건부 GO**).
 
+> **2026-09 재배치 — 이 계획은 두 저장소에 걸친다.** 아래 개수·엣지는 사다리 분할 이전에
+> 잰 값이며, 이전 대상인 `skos:broader`/`ho:tagged` 엣지와 새로 저작할 `ho:Link` 개체는 전부
+> **harness-concrete**(`ontology/abox/core/**` + `recipes/<name>/`)에 산다. shapes·도구
+> (`harness-shapes.ttl`·`lint_uniformity.py`·`retrieve.py`·`measure_links.py`)는
+> **harness-functional**에 있다. 즉 **2a는 functional, 2b·2c는 concrete**이고 게이트는
+> concrete의 union 게이트다 — 착수 전 개수를 그 저장소에서 다시 잰다(아래 값은 재검증
+> 대상). 진입 조건 2("1단계 커밋")도 두 저장소의 커밋으로 갈라진다.
+
 ## 무엇을 옮기는가
 
 `skos:broader` **70** + `ho:tagged` **224** = **294개 crisp 엣지**를 `ho:Link`로 이전한다.
+(개수는 재배치 이전 실측 — 착수 시 harness-concrete에서 재측정한다.)
 초기값 규칙(1단계에서 확정): **`linkWeight 1.0` + `weightOrigin "asserted"`** — 저작 행위가
 완전 소속을 단언한 것이므로 1.0으로 진입하되, **`asserted`는 보호되지 않아** 측정이 정제할 수
 있고, 사람이 확정·수정한 값(`curated`)만 재측정이 건너뛴다.
 
 ## 진입 조건 (둘 다 충족해야 착수)
 
-1. **F-1 해소** — `tools/plane-editor/check_links.py`·`link-store/links.json`의 폐기 어휘 소비
-   제거(병행 세션 lane). `validate.py`가 `ontology/` 밖을 보지 않으므로 중앙 게이트로는 영구
-   미검출인 위반이다. 그 세션의 **어휘 파생 wave**가 green + 양방향 성질(어휘 추가/은퇴에 게이트
-   판정이 따라 바뀜)을 세우면 충족.
+1. **F-1 해소** — `tools/plane-editor/check_links.py`·`link-store/links.json`(harness-functional)의
+   폐기 어휘 소비 제거(병행 세션 lane). `validate.py`가 `ontology/` union 밖을 보지 않으므로
+   중앙 게이트로는 영구 미검출인 위반이다. 그 세션의 **어휘 파생 wave**가 green + 양방향
+   성질(어휘 추가/은퇴에 게이트 판정이 따라 바뀜)을 세우면 충족.
 2. **1단계 커밋** — F-1 해소 후 land. 미커밋 상태에서 대량 이전을 쌓으면 되돌리기가 불가능해진다.
+   재배치 후에는 **양쪽 저장소의 커밋**이며, 어휘·shape가 먼저 land해야 concrete가 초록으로
+   따라올 수 있다(lockstep 순서).
 
 ## 순서 — expand → migrate → contract (안전 이전 3단)
 
@@ -53,7 +64,8 @@ R-A(아래)가 즉시 터진다.
 
 ### 관측 — 이 문제의 일반형 (후속 후보, 이번 범위 아님)
 
-F-1은 lane 하나의 사고가 아니라 **연합 구조의 일반형**이다: `validate.py`는 `ontology/`만 스캔하므로,
+F-1은 lane 하나의 사고가 아니라 **연합 구조의 일반형**이다: `validate.py`는 catalog가 해석한
+`ontology/` union만 스캔하므로,
 중앙 어휘를 소비하는 **그래프 밖 소비자**(링크 평면, 앞으로 나올 도구들)의 파손을 중앙은 **알 수
 없다**. 중앙 게이트가 초록이어도 소비자는 빨간 상태일 수 있다. 대응은 두 방향이며 둘 다 이번
 2단계 범위 밖이다 — ① 소비자가 각자 자기 게이트를 갖고 **어휘를 목록으로 베끼지 말고 출처를
@@ -75,5 +87,10 @@ F-1은 lane 하나의 사고가 아니라 **연합 구조의 일반형**이다: 
 ## 게이트 공통
 
 각 단계마다 `validate.py`·`lint_uniformity.py`·`check_determinism.py` PASS + **negative control
-(교정 쌍둥이 포함, 공허한 참 배제)** + staging recipe 3종 union PASS + materialize dangling 0.
+(교정 쌍둥이 포함, 공허한 참 배제)** + 레시피 union PASS + materialize dangling 0.
+**개체를 보는 게이트는 전부 harness-concrete에서 돈다** —
+`HARNESS_CATALOG=catalog-v001.xml HARNESS_ROOT_ONTOLOGY=https://harness-ontology.dev/ontology
+python3 central/tools/validate.py`(전체 union), 레시피 하나는
+`HARNESS_ROOT_ONTOLOGY=https://harness-ontology.dev/recipes/<name>`. 어휘·shape를 고친
+단계(2a)는 harness-functional의 `make validate`도 함께 PASS여야 한다.
 단계마다 vnv 판정을 받고, **이전 단계 판정 통과가 다음 단계 진입 조건**이다.

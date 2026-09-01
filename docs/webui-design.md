@@ -1,12 +1,23 @@
 # 온톨로지 관리 web UI — 설계 (design)
 
-로컬 Python 웹서버 + Docker 패키징으로, 에이전트와 사람이 **같은
-`ontology/*.ttl`을 단일 진실공급원(SSOT)** 으로 공유하며 관리하는 관리도구의 아키텍처
-문서다. 원 제안·결정 이력은 `docs/feedback/webui-management-tool.md`(승인됨), 온톨로지
-자체 설계는 `docs/federation-design.md`와 agentic-knowledge-base 청크 d-0013·d-0014, TTL 저작 규약은 `ONTOLOGYSTYLE.md`.
+로컬 Python 웹서버 + Docker 패키징으로, 에이전트와 사람이 **같은 TTL을 단일
+진실공급원(SSOT)** 으로 공유하며 관리하는 관리도구의 아키텍처 문서다. 원 제안·결정
+이력은 승인 후 refresh된 피드백 항목 `webui-management-tool`(현재 `docs/feedback/`에
+남아 있지 않다 — 승인 게이트를 통과한 결정 요약은 아래 §9). 온톨로지 자체 설계는
+`docs/federation-design.md`와 agentic-knowledge-base 청크 d-0013·d-0014, TTL 저작 규약은
+`ONTOLOGYSTYLE.md`.
 
 > 상태: **구현 존재(as-built) · 미검증(스모크 전) · 미커밋**. 이 문서는 as-built 코드에
 > 정박한 설계 기록이며, 남은 작업(검증·커밋·열린 결정)은 §9에 둔다.
+>
+> **2026-09 재배치 주의 — 이 도구가 편집하려는 그래프는 더 이상 이 저장소에 없다.**
+> 사다리 분할로 개체(A-Box)는 harness-concrete(`ontology/abox/core/<group>/*.ttl`)로
+> 옮겨갔고, harness-functional에는 TBox와 shapes만 남았다. 읽기·검증 경로는
+> `HARNESS_CATALOG`로 저장소를 건너 조립되지만, **쓰기 경로(`ttl_writer.ABOX_DIR`)와
+> mtime 시그니처는 저장소-로컬**이라 이 저장소에서 그대로 띄우면 편집기가 빈 A-Box를
+> 본다. 아래 본문의 `ontology/*.ttl`·`abox/` 표기는 **as-built 당시(단일 저장소) 기준**
+> 으로 읽고, 쓰기 경로를 concrete로 돌리는 것은 **문서가 아니라 코드 변경**이므로 §9의
+> 남은 작업에 있다.
 
 ## 1. 목적과 불변식 (왜 UI로 승격하나)
 
@@ -99,7 +110,8 @@ ontology/*.ttl   (호스트 볼륨 마운트 — 컨테이너 밖 SSOT)
 
 ## 7. 동시성·보안
 
-- **동시성**: CLI 에이전트(developer)와 웹(사람)이 같은 abox를 쓸 수 있다. 웹 쓰기는
+- **동시성**: CLI 에이전트(developer)와 웹(사람)이 같은 abox(재배치 후: harness-concrete의
+  `ontology/abox/**`)를 쓸 수 있다. 웹 쓰기는
   ① `_mtimes`로 read-이후 변경 감지(409), ② temp+`os.replace` 원자 교체, ③ 노드 블록 단위 커밋.
 - **보안**: compose가 `127.0.0.1:8000:8000`으로 **루프백 바인딩**(기본 0.0.0.0은 TTL write·추론
   실행 도구를 네트워크 노출). 인증 없음 = **로컬 신뢰 전제**임을 README/compose 주석에 명시.
@@ -121,7 +133,7 @@ ontology/*.ttl   (호스트 볼륨 마운트 — 컨테이너 밖 SSOT)
 
 ## 9. 결정 기록 & 남은 작업
 
-### 확정된 결정 (`docs/feedback/webui-management-tool.md`)
+### 확정된 결정 (원본 피드백 항목 `webui-management-tool` — 승인·적용 후 refresh되어 채널에서 제거됨)
 - **A/B/C**: 즉시저장+validate 게이트+diff / v1 네 화면 전부 / 위치 `tools/webui/`. ✅
 - **D**: 저장=TTL-in-git 유지(rdflib in-process, store 인터페이스 추상화 여지), 그래프=Cytoscape.js.
 - **E**: developer 경계를 `tools/**` 소스까지 확장(일반 구현자). ✅ (CLAUDE.md·developer.md 반영)
@@ -162,5 +174,11 @@ ontology/*.ttl   (호스트 볼륨 마운트 — 컨테이너 밖 SSOT)
    그래프 로드·노드 편집·validate PASS·retrieve pack. 판정·증거는 `docs/verify/`. Docker 부재
    환경이면 최소한 server import + `validate.py --json` + ttl_writer 라운드트립 + frontend
    `npm run build` 스모크.
-3. **커밋 (inspection)**: git 첫 커밋(사용자 요청 시). tbox/abox/shapes 불변 → `validate.py`는
+3. **커밋 (inspection)**: git 첫 커밋(사용자 요청 시). tbox/shapes 불변 → `make validate`는
    계속 PASS여야 한다(도구가 그래프 의미를 바꾸지 않음).
+4. **[2026-09 재배치가 새로 만든 작업 — 미착수] 쓰기 경로의 저장소 분리**: `ttl_writer.ABOX_DIR`
+   와 `server._signature()`가 자기 저장소의 `ontology/`를 보므로, 개체가 harness-concrete로
+   옮겨간 지금 편집기의 write path는 이 저장소에서 대상이 없다. 읽기·검증은
+   `HARNESS_CATALOG`로 이미 저장소를 건너므로, 쓰기·mtime 축도 같은 방식으로 외부화하는 것이
+   최소 변경이다(설계 결정 → orchestrator 소관). 그 전까지 web UI 저작은 **harness-concrete
+   기준으로 서빙해야** 의미가 있으며, 그 구성은 아직 **미검증**이다.

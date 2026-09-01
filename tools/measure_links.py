@@ -7,6 +7,14 @@ lane. This tool is the first measurement path: it recomputes ho:linkWeight for
 every link whose kind has a registered measure, from graph-structural evidence
 only, and (with --apply) writes the values back into the authored TTL.
 
+WHERE TO RUN IT (2026-09 ladder split): ho:Link individuals live in the CONCRETE
+repo (harness-concrete). The READ path composes through HARNESS_CATALOG exactly
+like validate.py, but --apply rewrites TTL by globbing
+`<this file's repo root>/ontology/abox/**` (see _apply_to_ttl), which is
+repo-local — and the FUNCTIONAL repo (harness-functional, where this file
+ships) has no ontology/abox at all. Aiming --apply at harness-concrete's ABox
+is a behaviour change, not a doc fix; see docs/plans/weighted-link-phase2-plan.md.
+
 WHY STRUCTURAL, NEVER STRING SIMILARITY: the approved decision record
 (docs/feedback/block-anchor-intent-restore.md, orchestrator 주석) bans
 similarity-only measures — this repo measured that text similarity cannot

@@ -43,6 +43,13 @@ Usage:
 With --out, writes <recipe-dir>/<dirname>.ttl (matching recipes/<name>/<name>.ttl);
 otherwise prints the TTL to stdout. Flags are printed to stderr and embedded as a
 header comment block. Deterministic: same input -> byte-identical output.
+
+WHERE THE OUTPUT GOES (2026-09 ladder split): recipes are a CONCRETE-level
+artifact and live in harness-concrete (`recipes/<name>/`), which checks this
+repo out as ./central/ and runs this as
+`python3 central/tools/import_corpus.py <corpus-dir> --out recipes/<name>`.
+The `core:` IRIs the draft references resolve to that repo's ABox core parts
+library; this repo (harness-functional) holds only the vocabulary.
 """
 import argparse
 import os
